@@ -1,0 +1,88 @@
+{
+  "expo": {
+    "name": "ZipTasker",
+    "slug": "ziptasker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "androidStatusBar": {
+      "backgroundColor": "#535151",
+      "translucent": false
+    },
+    "ios": {
+      "supportsTablet": true,
+      "userInterfaceStyle": "automatic",
+      "bundleIdentifier": "com.alpha.ziptasker"
+    },
+    "android": {
+      "userInterfaceStyle": "automatic",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.alpha.ziptasker",
+      "googleServicesFile": "./assets/google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "node_modules/@expo-google-fonts/inter/Inter_400Regular.ttf",
+            "node_modules/@expo-google-fonts/inter/Inter_500Medium.ttf",
+            "node_modules/@expo-google-fonts/inter/Inter_600SemiBold.ttf",
+            "node_modules/@expo-google-fonts/inter/Inter_700Bold.ttf",
+            "node_modules/@expo-google-fonts/inter/Inter_800ExtraBold.ttf",
+            "node_modules/@expo-google-fonts/inter/Inter_900Black.ttf",
+            "node_modules/@expo-google-fonts/dancing-script/DancingScript_400Regular.ttf",
+            "node_modules/@expo-google-fonts/dancing-script/DancingScript_500Medium.ttf",
+            "node_modules/@expo-google-fonts/dancing-script/DancingScript_600SemiBold.ttf",
+            "node_modules/@expo-google-fonts/dancing-script/DancingScript_700Bold.ttf",
+            "node_modules/@expo-google-fonts/great-vibes/GreatVibes_400Regular.ttf",
+            "node_modules/@expo-google-fonts/birthstone/Birthstone_400Regular.ttf",
+            "node_modules/@expo-google-fonts/cookie/Cookie_400Regular.ttf",
+            "node_modules/@expo-google-fonts/pacifico/Pacifico_400Regular.ttf",
+            "node_modules/@expo-google-fonts/squada-one/SquadaOne_400Regular.ttf",
+            "node_modules/@expo-google-fonts/whisper/Whisper_400Regular.ttf"
+          ]
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "32e94c30-6103-4979-b579-7ca59f023abc"
+      }
+    },
+    "owner": "shivamkansal",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/32e94c30-6103-4979-b579-7ca59f023abc"
+    }
+  }
+}
