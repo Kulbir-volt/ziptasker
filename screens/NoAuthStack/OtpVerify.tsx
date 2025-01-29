@@ -57,7 +57,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ route, navigation }) => {
         );
         const response = await auth().signInWithCredential(credential);
         const data = {
-          name: "Shivam Kansal",
+          name: "User",
           details: response,
         };
         // console.log("^^^ RESPONSE: ", JSON.stringify(data, null, 4));

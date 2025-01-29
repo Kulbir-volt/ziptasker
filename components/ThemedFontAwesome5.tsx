@@ -1,6 +1,6 @@
 import React from "react";
 import { TextStyle } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 import { useThemeColor } from "../hooks/useThemeColor";
 import { Colors } from "../constants/Colors";
@@ -14,13 +14,12 @@ type ThemeProps = {
 };
 
 export interface ThemedIconProps extends ThemeProps {
-  name: React.ComponentProps<typeof Feather>["name"];
-  color?: string;
+  name: React.ComponentProps<typeof FontAwesome5>["name"];
   style?: TextStyle;
   size?: number;
 }
 
-export const ThemedFeather: React.FC<ThemedIconProps> = ({
+export const ThemedFontAwesome5: React.FC<ThemedIconProps> = ({
   name,
   size,
   style,
@@ -34,5 +33,7 @@ export const ThemedFeather: React.FC<ThemedIconProps> = ({
     colorType
   );
 
-  return <Feather name={name} size={size} color={iconColor} {...otherProps} />;
+  return (
+    <FontAwesome5 name={name} size={size} color={iconColor} {...otherProps} />
+  );
 };

@@ -8,6 +8,10 @@ const tintColorLight = "#0a7ea4";
 const tintColorDark = "#fff";
 const darkPrimary = "#151718";
 const darkYellow = "#E7B10A";
+const error = "#E72929";
+const warning = "#FF9A00";
+const success = "#5FD068";
+const lightSuccess = "#eefff0";
 
 export const Colors = {
   light: {
@@ -40,6 +44,12 @@ export const Colors = {
     transparent: "transparent",
     ratingStar: "#ff7f00",
     red: "#C40C0C",
+    warning: warning,
+    lightWarning: `${warning}2F`,
+    error: error,
+    lightError: `${error}2F`,
+    success: success,
+    lightSuccess: lightSuccess,
   },
   dark: {
     text: "#ECEDEE",
@@ -71,5 +81,11 @@ export const Colors = {
     transparent: "transparent",
     ratingStar: "#ff7f00",
     red: "#C40C0C",
+    warning: warning,
+    lightWarning: `${warning}2F`,
+    error: error,
+    lightError: `${error}2F`,
+    success: success,
+    lightSuccess: lightSuccess,
   },
 };

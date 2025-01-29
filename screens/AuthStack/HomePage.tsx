@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -13,13 +13,10 @@ import {
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import auth from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
 import NetInfo from "@react-native-community/netinfo";
 
 import { ThemedView } from "../../components/ThemedView";
 import { ThemedText } from "../../components/ThemedText";
-import { ThemedSafe } from "../../components/ThemedSafe";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import {
@@ -41,15 +38,58 @@ import { ThemedButton } from "../../components/Buttons/RoundButton";
 import { useNavigation } from "@react-navigation/native";
 import { BrowseStackNavigationProps, DrawerNavProp } from ".";
 import { MessageComponent } from "../../components/MessageComponent";
+import { getTaskTypesList } from "../../firebase/read/taskTypesList";
+import { UserDetails } from "../../redux/slice/auth";
+import { saveUserData } from "../../firebase/create/saveTask";
+import {
+  AntDesignNames,
+  EntypoNames,
+  EvilIconsNames,
+  FeatherNames,
+  FontAwesome5Names,
+  FontAwesome6Names,
+  FontAwesomeNames,
+  FontistoNames,
+  FoundationNames,
+  IconType,
+  IoniconsNames,
+  MaterialCommunityIconsNames,
+  MaterialIconsNames,
+  OctIconsNames,
+  SimpleLineIconsNames,
+  vectorIcons,
+  VectorIconsProps,
+  ZocialNames,
+} from "../../constants/VectorIcons";
 
 function HomePage() {
-  const { details }: { details: string } = useSelector(
+  const { details, taskTypesList } = useSelector(
     (state: RootState) => state.auth
   );
   const theme = useColorScheme() ?? "light";
   const [hourHand, setHourHand] = useState<number | null>(null);
   const [greetings, setGreetings] = useState<string>("Good morning");
   const [task, setTask] = useState<string | null>("");
+  const [todayTasks, setTodaysTasks] = useState<
+    VectorIconsProps<
+      | FontAwesomeNames
+      | FontAwesome5Names
+      | FontAwesome6Names
+      | FontistoNames
+      | FoundationNames
+      | MaterialIconsNames
+      | IoniconsNames
+      | AntDesignNames
+      | EntypoNames
+      | EvilIconsNames
+      | FeatherNames
+      | MaterialCommunityIconsNames
+      | OctIconsNames
+      | ZocialNames
+      | SimpleLineIconsNames
+    >[]
+  >([]);
+
   const navigation = useNavigation<BrowseStackNavigationProps>();
 
   const chores = [
@@ -88,41 +128,41 @@ function HomePage() {
     },
   ];
 
-  const todayTasks = [
-    {
-      id: "todayTasks1",
-      icon: (
-        <MaterialCommunityIcons
-          name={"table-furniture"}
-          size={getWidthnHeight(6)?.width}
-          color={Colors[theme]["iconColor"]}
-        />
-      ),
-      title: "Furniture Assembly",
-    },
-    {
-      id: "todayTasks2",
-      icon: (
-        <MaterialCommunityIcons
-          name={"brush-variant"}
-          size={getWidthnHeight(6)?.width}
-          color={Colors[theme]["iconColor"]}
-        />
-      ),
-      title: "Handyman",
-    },
-    {
-      id: "todayTasks3",
-      icon: (
-        <FontAwesome
-          name="tasks"
-          size={getWidthnHeight(6)?.width}
-          color={Colors[theme]["iconColor"]}
-        />
-      ),
-      title: "Anything",
-    },
-  ];
+  // const todayTasks = [
+  //   {
+  //     id: "todayTasks1",
+  //     icon: (
+  //       <MaterialCommunityIcons
+  //         name={"table-furniture"}
+  //         size={getWidthnHeight(6)?.width}
+  //         color={Colors[theme]["iconColor"]}
+  //       />
+  //     ),
+  //     title: "Furniture Assembly",
+  //   },
+  //   {
+  //     id: "todayTasks2",
+  //     icon: (
+  //       <MaterialCommunityIcons
+  //         name={"brush-variant"}
+  //         size={getWidthnHeight(6)?.width}
+  //         color={Colors[theme]["iconColor"]}
+  //       />
+  //     ),
+  //     title: "Handyman",
+  //   },
+  //   {
+  //     id: "todayTasks3",
+  //     icon: (
+  //       <FontAwesome
+  //         name="tasks"
+  //         size={getWidthnHeight(6)?.width}
+  //         color={Colors[theme]["iconColor"]}
+  //       />
+  //     ),
+  //     title: "Anything",
+  //   },
+  // ];
 
   useEffect(() => {
     NetInfo.fetch().then((state) => {
@@ -132,37 +172,32 @@ function HomePage() {
         );
       } else {
         saveUserData();
+        if (taskTypesList.length === 0) {
+          getTaskTypesList();
+        }
       }
     });
   }, []);
 
-  const saveUserData = async () => {
-    const user = auth().currentUser;
-    try {
-      if (user) {
-        const userRef = firestore().collection("users").doc(user.uid);
-        console.log("### user: ", user.phoneNumber);
-        // Check if the user document already exists
-        const userExists = (await userRef.get()).exists;
-        console.log("### userExists: ", userExists);
-
-        if (!userExists) {
-          // Create a new user document
-          await userRef.set({
-            phoneNumber: user.phoneNumber,
-            createdAt: firestore.FieldValue.serverTimestamp(),
+  useEffect(() => {
+    if (taskTypesList.length > 0 && vectorIcons.length > 0) {
+      const updateTaskTypesList = taskTypesList
+        .map((item) => {
+          const findItem = vectorIcons.find((subItem) => {
+            return subItem.type === item.type;
           });
-          console.log("User data saved to Firestore");
-        } else {
-          console.log("User document already exists");
-        }
-      } else {
-        console.log("No user is logged in");
+          if (findItem) {
+            const update = Object.assign({}, findItem, item);
+            return update;
+          }
+          return null;
+        })
+        .filter((item) => item !== null);
+      if (Array.isArray(updateTaskTypesList) && updateTaskTypesList !== null) {
+        setTodaysTasks(updateTaskTypesList);
       }
-    } catch (error) {
-      console.log("!!! USER SAVE ERROR: ", error);
     }
-  };
+  }, [taskTypesList]);
 
   useEffect(() => {
     const hour = moment().hour();
@@ -175,7 +210,8 @@ function HomePage() {
     }
   }, []);
   // "#FF9D3D"
-  const fullName = details ? JSON.parse(details) : { name: "Shivam Kansal" };
+  const userDetails: UserDetails = JSON.parse(details as string);
+
   let color1 = Colors[theme]["primary"];
   let color2 = Colors[theme]["orange"];
   if (theme == "dark") {
@@ -224,7 +260,7 @@ function HomePage() {
             darkColor={Colors[theme]["white"]}
             style={{ fontWeight: "400" }}
           >
-            {`${greetings}, ${fullName?.name?.split(" ")[0] || "--"}`}
+            {`${greetings}, ${userDetails?.name || "--"}`}
           </ThemedText>
           <ThemedText
             style={[
@@ -423,7 +459,7 @@ function HomePage() {
             </ThemedText>
             <ThemedText style={[{}, fontSizeH4(), getMarginTop(0.5)]}>
               To-do list never getting shorter ? Take the burden off and find
-              the help you need on Airtasker.
+              the help you need on Ziptasker.
             </ThemedText>
           </View>
           <View
@@ -434,50 +470,56 @@ function HomePage() {
               },
             ]}
           >
-            <FlatList
-              data={todayTasks}
-              numColumns={2}
-              nestedScrollEnabled
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => {
-                return (
-                  <Pressable
-                    style={({ pressed }) => ({
-                      opacity: pressed ? 0.8 : 1,
-                    })}
-                    onPress={() => {
-                      navigation.navigate("createTask", {
-                        title: item.title,
-                      });
-                    }}
-                  >
-                    <ThemedView
-                      style={{
-                        width: getWidthnHeight(42)?.width,
-                        height: getWidthnHeight(30)?.width,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: getWidthnHeight(3)?.width,
-                        shadowColor: Colors[theme]["iconColor"],
-                        shadowOpacity: 0.4,
-                        shadowRadius: 6,
-                        elevation: 4,
-                        margin: getWidthnHeight(3)?.width,
-                        borderWidth: 1,
-                        borderColor:
-                          theme === "dark"
-                            ? Colors[theme]["white"]
-                            : "transparent",
-                        backgroundColor: Colors[theme]["screenBG"],
+            {todayTasks.length > 0 && (
+              <FlatList
+                data={todayTasks}
+                numColumns={2}
+                nestedScrollEnabled
+                keyExtractor={(item) => `${item.id}`}
+                renderItem={({ item }) => {
+                  console.log("### ICON: ", item.icon);
+                  return (
+                    <Pressable
+                      style={({ pressed }) => ({
+                        opacity: pressed ? 0.8 : 1,
+                      })}
+                      onPress={() => {
+                        navigation.navigate("createTask", {
+                          title: item.title,
+                        });
                       }}
                     >
-                      {item.icon}
-                      <ThemedText>{item.title}</ThemedText>
-                    </ThemedView>
-                  </Pressable>
-                );
-              }}
-            />
+                      <ThemedView
+                        style={{
+                          width: getWidthnHeight(42)?.width,
+                          height: getWidthnHeight(30)?.width,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderRadius: getWidthnHeight(3)?.width,
+                          shadowColor: Colors[theme]["iconColor"],
+                          shadowOpacity: 0.4,
+                          shadowRadius: 6,
+                          elevation: 4,
+                          margin: getWidthnHeight(3)?.width,
+                          borderWidth: 1,
+                          borderColor:
+                            theme === "dark"
+                              ? Colors[theme]["white"]
+                              : "transparent",
+                          backgroundColor: Colors[theme]["screenBG"],
+                        }}
+                      >
+                        {item?.icon!({
+                          name: item.name,
+                          iconSize: item.iconSize!,
+                        })}
+                        <ThemedText>{item.title}</ThemedText>
+                      </ThemedView>
+                    </Pressable>
+                  );
+                }}
+              />
+            )}
           </View>
           {/* <View style={{ flex: 1, height: "100%" }}>
             <ThemedView

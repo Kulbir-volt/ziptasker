@@ -1,9 +1,57 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
-const initialState = {
+import {
+  AntDesignNames,
+  EntypoNames,
+  EvilIconsNames,
+  FeatherNames,
+  FontAwesome5Names,
+  FontAwesome6Names,
+  FontAwesomeNames,
+  FontistoNames,
+  FoundationNames,
+  IoniconsNames,
+  MaterialCommunityIconsNames,
+  MaterialIconsNames,
+  OctIconsNames,
+  SimpleLineIconsNames,
+  VectorIconsProps,
+  ZocialNames,
+} from "../../constants/VectorIcons";
+
+export type UserDetails = FirebaseAuthTypes.UserCredential & {
+  name?: string;
+};
+
+type InitialStateProps = {
+  isLoggedIn: boolean | null;
+  details: UserDetails | null | string;
+  showMap: boolean;
+  taskTypesList: VectorIconsProps<
+    | FontAwesomeNames
+    | FontAwesome5Names
+    | FontAwesome6Names
+    | FontistoNames
+    | FoundationNames
+    | MaterialIconsNames
+    | IoniconsNames
+    | AntDesignNames
+    | EntypoNames
+    | EvilIconsNames
+    | FeatherNames
+    | MaterialCommunityIconsNames
+    | OctIconsNames
+    | ZocialNames
+    | SimpleLineIconsNames
+  >[];
+};
+
+const initialState: InitialStateProps = {
   isLoggedIn: null,
-  details: "",
+  details: null,
   showMap: false,
+  taskTypesList: [],
 };
 
 const authSlice = createSlice({
@@ -29,6 +77,12 @@ const authSlice = createSlice({
       return {
         ...state,
         showMap: action.payload,
+      };
+    },
+    setTaskTypesList: (state, action) => {
+      return {
+        ...state,
+        taskTypesList: action.payload,
       };
     },
   },

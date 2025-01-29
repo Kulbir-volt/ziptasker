@@ -1,6 +1,6 @@
 import React from "react";
 import { TextStyle } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
+import Zocial from "@expo/vector-icons/Zocial";
 
 import { useThemeColor } from "../hooks/useThemeColor";
 import { Colors } from "../constants/Colors";
@@ -14,13 +14,13 @@ type ThemeProps = {
 };
 
 export interface ThemedIconProps extends ThemeProps {
-  name: React.ComponentProps<typeof Feather>["name"];
+  name: React.ComponentProps<typeof Zocial>["name"];
   color?: string;
   style?: TextStyle;
   size?: number;
 }
 
-export const ThemedFeather: React.FC<ThemedIconProps> = ({
+export const ThemedZocial: React.FC<ThemedIconProps> = ({
   name,
   size,
   style,
@@ -34,5 +34,5 @@ export const ThemedFeather: React.FC<ThemedIconProps> = ({
     colorType
   );
 
-  return <Feather name={name} size={size} color={iconColor} {...otherProps} />;
+  return <Zocial name={name} size={size} color={iconColor} {...otherProps} />;
 };

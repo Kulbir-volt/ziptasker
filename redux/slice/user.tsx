@@ -1,7 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  details: "",
+  details: null,
+  taskTypesList: [],
 };
 
 const userSlice = createSlice({

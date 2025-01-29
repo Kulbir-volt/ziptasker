@@ -1,6 +1,6 @@
 import React from "react";
 import { TextStyle } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
+import Fontisto from "@expo/vector-icons/Fontisto";
 
 import { useThemeColor } from "../hooks/useThemeColor";
 import { Colors } from "../constants/Colors";
@@ -14,13 +14,12 @@ type ThemeProps = {
 };
 
 export interface ThemedIconProps extends ThemeProps {
-  name: React.ComponentProps<typeof Feather>["name"];
-  color?: string;
+  name: React.ComponentProps<typeof Fontisto>["name"];
   style?: TextStyle;
   size?: number;
 }
 
-export const ThemedFeather: React.FC<ThemedIconProps> = ({
+export const ThemedFontisto: React.FC<ThemedIconProps> = ({
   name,
   size,
   style,
@@ -34,5 +33,5 @@ export const ThemedFeather: React.FC<ThemedIconProps> = ({
     colorType
   );
 
-  return <Feather name={name} size={size} color={iconColor} {...otherProps} />;
+  return <Fontisto name={name} size={size} color={iconColor} {...otherProps} />;
 };

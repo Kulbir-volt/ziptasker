@@ -18,6 +18,7 @@ import LoadingStack from "./screens/LoadingStack";
 import NoAuthStackNavigator from "./screens/NoAuthStack";
 import AuthStackNavigator from "./screens/AuthStack";
 import { StatusBar } from "expo-status-bar";
+import { SlidingAlert } from "./components/Alert/SlidingAlert";
 
 export default function App() {
   const colorScheme = useColorScheme();
@@ -37,6 +38,7 @@ export default function App() {
             {isLoggedIn == false && <NoAuthStackNavigator />}
             {isLoggedIn && <AuthStackNavigator />}
           </BottomSheetModalProvider>
+          <SlidingAlert />
         </NavigationContainer>
       </SafeAreaProvider>
     );
