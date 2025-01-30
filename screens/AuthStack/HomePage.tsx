@@ -10,15 +10,15 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
+import moment from "moment";
+import { useDispatch, useSelector } from "react-redux";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import NetInfo from "@react-native-community/netinfo";
 
 import { ThemedView } from "../../components/ThemedView";
 import { ThemedText } from "../../components/ThemedText";
 import { RootState } from "../../redux/store";
-import { useSelector } from "react-redux";
 import {
   fontSizeH2,
   fontSizeH3,
@@ -30,7 +30,6 @@ import {
   getWidthnHeight,
 } from "../../components/width";
 import { Colors } from "../../constants/Colors";
-import moment from "moment";
 import { PrimaryInput } from "../../components/PrimaryInput";
 import { ThemedAntDesign } from "../../components/ThemedAntDesign";
 import { FontAwesome } from "@expo/vector-icons";
@@ -40,7 +39,7 @@ import { BrowseStackNavigationProps, DrawerNavProp } from ".";
 import { MessageComponent } from "../../components/MessageComponent";
 import { getTaskTypesList } from "../../firebase/read/taskTypesList";
 import { UserDetails } from "../../redux/slice/auth";
-import { saveUserData } from "../../firebase/create/saveTask";
+import { saveUserToFirebase } from "../../firebase/create/saveUser";
 import {
   AntDesignNames,
   EntypoNames,
@@ -61,10 +60,15 @@ import {
   VectorIconsProps,
   ZocialNames,
 } from "../../constants/VectorIcons";
+import { alertActions } from "../../redux/slice/slidingAlert";
+import { checkInternetConnectivity } from "../../netInfo";
+import { getChoresList } from "../../firebase/read/choresList";
 
 function HomePage() {
-  const { details, taskTypesList } = useSelector(
-    (state: RootState) => state.auth
+  const dispatch = useDispatch();
+  const { details } = useSelector((state: RootState) => state.auth);
+  const { taskTypesList, chores } = useSelector(
+    (state: RootState) => state.tasks
   );
   const theme = useColorScheme() ?? "light";
   const [hourHand, setHourHand] = useState<number | null>(null);
@@ -89,94 +93,43 @@ function HomePage() {
       | SimpleLineIconsNames
     >[]
   >([]);
+  const [choresList, setChoresList] = useState<
+    VectorIconsProps<
+      | FontAwesomeNames
+      | FontAwesome5Names
+      | FontAwesome6Names
+      | FontistoNames
+      | FoundationNames
+      | MaterialIconsNames
+      | IoniconsNames
+      | AntDesignNames
+      | EntypoNames
+      | EvilIconsNames
+      | FeatherNames
+      | MaterialCommunityIconsNames
+      | OctIconsNames
+      | ZocialNames
+      | SimpleLineIconsNames
+    >[]
+  >([]);
 
   const navigation = useNavigation<BrowseStackNavigationProps>();
 
-  const chores = [
-    {
-      id: "1",
-      icon: (
-        <FontAwesome5
-          name={"truck"}
-          size={getWidthnHeight(4)?.width}
-          color={Colors[theme]["iconColor"]}
-        />
-      ),
-      title: "Help me move home",
-    },
-    {
-      id: "2",
-      icon: (
-        <FontAwesome5
-          name={"recycle"}
-          size={getWidthnHeight(4)?.width}
-          color={Colors[theme]["iconColor"]}
-        />
-      ),
-      title: "End of lease cleaning",
-    },
-    {
-      id: "3",
-      icon: (
-        <Ionicons
-          name="fast-food"
-          size={getWidthnHeight(4)?.width}
-          color={Colors[theme]["iconColor"]}
-        />
-      ),
-      title: "Cook, for family gathering",
-    },
-  ];
-
-  // const todayTasks = [
-  //   {
-  //     id: "todayTasks1",
-  //     icon: (
-  //       <MaterialCommunityIcons
-  //         name={"table-furniture"}
-  //         size={getWidthnHeight(6)?.width}
-  //         color={Colors[theme]["iconColor"]}
-  //       />
-  //     ),
-  //     title: "Furniture Assembly",
-  //   },
-  //   {
-  //     id: "todayTasks2",
-  //     icon: (
-  //       <MaterialCommunityIcons
-  //         name={"brush-variant"}
-  //         size={getWidthnHeight(6)?.width}
-  //         color={Colors[theme]["iconColor"]}
-  //       />
-  //     ),
-  //     title: "Handyman",
-  //   },
-  //   {
-  //     id: "todayTasks3",
-  //     icon: (
-  //       <FontAwesome
-  //         name="tasks"
-  //         size={getWidthnHeight(6)?.width}
-  //         color={Colors[theme]["iconColor"]}
-  //       />
-  //     ),
-  //     title: "Anything",
-  //   },
-  // ];
-
   useEffect(() => {
-    NetInfo.fetch().then((state) => {
-      if (!state.isConnected) {
-        console.error(
-          "No internet connection. Firestore requires an active network."
-        );
-      } else {
-        saveUserData();
+    async function init() {
+      const isConnected = await checkInternetConnectivity();
+      if (isConnected) {
+        await saveUserToFirebase();
         if (taskTypesList.length === 0) {
-          getTaskTypesList();
+          await getTaskTypesList();
+        }
+        if (chores.length === 0) {
+          getChoresList();
         }
       }
-    });
+    }
+
+    init();
   }, []);
 
   useEffect(() => {
@@ -188,7 +141,10 @@ function HomePage() {
           });
           if (findItem) {
             const update = Object.assign({}, findItem, item);
-            return update;
+            return {
+              ...update,
+              id: `taskType#${findItem.id}-${item.uid}`,
+            };
           }
           return null;
         })
@@ -198,6 +154,30 @@ function HomePage() {
       }
     }
   }, [taskTypesList]);
+
+  useEffect(() => {
+    if (chores.length > 0 && vectorIcons.length > 0) {
+      const updateChoresList = chores
+        .map((item) => {
+          const findItem = vectorIcons.find((subItem) => {
+            return subItem.type === item.type;
+          });
+          if (findItem) {
+            const update = Object.assign({}, findItem, item);
+            return {
+              ...update,
+              id: `chores#${findItem.id}-${item.uid}`,
+            };
+          }
+          return null;
+        })
+        .filter((item) => item !== null);
+      if (Array.isArray(updateChoresList)) {
+        // console.log("^^^ CHORES LIST: ", updateChoresList);
+        setChoresList(updateChoresList);
+      }
+    }
+  }, [chores]);
 
   useEffect(() => {
     const hour = moment().hour();
@@ -352,10 +332,10 @@ function HomePage() {
           ]}
         >
           <FlatList
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => `${item.id}`}
             horizontal
             showsHorizontalScrollIndicator={false}
-            data={chores}
+            data={choresList}
             renderItem={({ item }) => {
               return (
                 <TouchableOpacity
@@ -384,7 +364,11 @@ function HomePage() {
                     <View
                       style={{ paddingHorizontal: getWidthnHeight(2)?.width }}
                     >
-                      {item.icon}
+                      {item.icon &&
+                        item.icon({
+                          name: item.name,
+                          iconSize: getWidthnHeight(4)?.width!,
+                        })}
                     </View>
                     <ThemedText
                       style={[
@@ -393,7 +377,9 @@ function HomePage() {
                         },
                       ]}
                     >
-                      {item.title}
+                      {`${item.title?.slice(0, 17)}${
+                        item.title && item.title?.length > 17 ? "..." : ""
+                      }`}
                     </ThemedText>
                   </ThemedView>
                 </TouchableOpacity>
@@ -477,7 +463,7 @@ function HomePage() {
                 nestedScrollEnabled
                 keyExtractor={(item) => `${item.id}`}
                 renderItem={({ item }) => {
-                  console.log("### ICON: ", item.icon);
+                  // console.log("### ICON: ", item.icon);
                   return (
                     <Pressable
                       style={({ pressed }) => ({
@@ -509,10 +495,11 @@ function HomePage() {
                           backgroundColor: Colors[theme]["screenBG"],
                         }}
                       >
-                        {item?.icon!({
-                          name: item.name,
-                          iconSize: item.iconSize!,
-                        })}
+                        {item.icon &&
+                          item?.icon({
+                            name: item.name,
+                            iconSize: item.iconSize!,
+                          })}
                         <ThemedText>{item.title}</ThemedText>
                       </ThemedView>
                     </Pressable>

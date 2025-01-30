@@ -1,4 +1,4 @@
-import { View, type ViewProps } from "react-native";
+import { View, type ViewProps, Animated } from "react-native";
 
 import { useThemeColor } from "../hooks/useThemeColor";
 import { Colors } from "../constants/Colors";
@@ -24,5 +24,5 @@ export function ThemedView({
     colorType
   );
 
-  return <View style={[{ backgroundColor }, style]} {...otherProps} />;
+  return <Animated.View style={[{ backgroundColor }, style]} {...otherProps} />;
 }

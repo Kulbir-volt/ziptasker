@@ -23,21 +23,19 @@ import {
 } from "../../components/width";
 import { ThemedFontAwesome } from "../../components/ThemedFontAwesome";
 import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
+import { logoutUser, RootState } from "../../redux/store";
 import { ThemedEvilIcons } from "../../components/ThemedEvilicons";
 import { ThemedMaterialIcons } from "../../components/ThemedMaterialIcon";
 import { ArrowComponent } from "../../components/ArrowComponent";
 import { ThemedAntDesign } from "../../components/ThemedAntDesign";
 import { ThemedIonicons } from "../../components/ThemedIonicons";
-import { authActions } from "../../redux/slice/auth";
+import { authActions, UserDetails } from "../../redux/slice/auth";
 
 const Account = () => {
   const theme = useColorScheme() ?? "light";
   const dispatch = useDispatch();
-  const { details }: { details: string } = useSelector(
-    (state: RootState) => state.auth
-  );
-  const fullName = details ? JSON.parse(details) : { name: "Shivam Kansal" };
+  const { details } = useSelector((state: RootState) => state.auth);
+  const userDetails: UserDetails = JSON.parse(details as string);
   return (
     <ThemedView style={{ flex: 1 }}>
       <ThemedView
@@ -66,7 +64,7 @@ const Account = () => {
                 },
               ]}
             >
-              {fullName.name}
+              {userDetails?.name}
             </ThemedText>
             <ThemedText
               style={[
@@ -271,11 +269,7 @@ const Account = () => {
                   }}
                 />
                 <ArrowComponent
-                  onPress={async () => {
-                    AsyncStorage.clear();
-                    dispatch(authActions.setIsLoggedIn(null));
-                    await auth().signOut();
-                  }}
+                  onPress={() => logoutUser()}
                   icon={
                     <ThemedIonicons
                       name={"exit-outline"}

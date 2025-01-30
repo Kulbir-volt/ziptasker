@@ -6,6 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import Checkbox from "expo-checkbox";
+import { useDispatch } from "react-redux";
 import {
   useColorScheme,
   View,
@@ -25,10 +26,9 @@ import axios from "axios";
 import * as Location from "expo-location";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { BottomSheetFlatList, BottomSheetModal } from "@gorhom/bottom-sheet";
-import firestore from "@react-native-firebase/firestore";
-import { utils } from "@react-native-firebase/app";
-import auth from "@react-native-firebase/auth";
-import storage from "@react-native-firebase/storage";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 
 import { ThemedView } from "../../../components/ThemedView";
 import { ThemedText } from "../../../components/ThemedText";
@@ -61,18 +61,19 @@ import { Step4 } from "./Step4";
 import { DateTimePicker } from "../../../components/DateTimePicker";
 import { ThemedSafe } from "../../../components/ThemedSafe";
 import { CustomBS } from "../../../components/BottomSheet/CustomBS";
-import { ThemedBSView } from "../../../components/ThemedBSView";
-import { ThemedAntDesign } from "../../../components/ThemedAntDesign";
 import { IconTextInput } from "../../../components/IconTextInput";
-import { ThemedEvilIcons } from "../../../components/ThemedEvilicons";
 import { LocationTile } from "../../../components/LocationTile";
 import { ThemedMaterialIcons } from "../../../components/ThemedMaterialIcon";
 import { CloseButtonBS } from "../../../components/CloseButtonBS";
 import { TaskDetailsTile } from "../../../components/TaskDetailsTile";
 import { ThemedFontAwesome } from "../../../components/ThemedFontAwesome";
-import { ThemedFoundation } from "../../../components/ThemedFoundation";
 import { ThemedFontAwesome6 } from "../../../components/ThemedFontAwesome6";
 import { Loader } from "../../../components/Loader";
+import { verifyAuth } from "../../../firebase/authCheck/verifyAuth";
+import { saveTask } from "../../../firebase/create/saveTask";
+import { saveImagesToFirebase } from "../../../firebase/create/saveImages";
+import { alertActions } from "../../../redux/slice/slidingAlert";
+import { checkInternetConnectivity } from "../../../netInfo";
 
 type CreateTaskRouteProp = RouteProp<PrimaryStackParamList, "createTask">;
 
@@ -101,7 +102,7 @@ type TimeOfDayProps = {
   icon?: ReactNode;
 };
 
-type SaveDetailsProps = {
+export type SaveDetailsProps = {
   title: string | undefined;
   on_date: string | null;
   before_date: string | null;
@@ -113,6 +114,8 @@ type SaveDetailsProps = {
   images: string[];
   budget: string | undefined;
   status: string;
+  createdAt: FirebaseFirestoreTypes.FieldValue;
+  createdBy?: string;
 };
 
 const GOOGLE = "google";
@@ -120,6 +123,7 @@ const PHOTO = "photo";
 const CAMERA = "camera";
 
 const CreateTask: React.FC = () => {
+  const dispatch = useDispatch();
   const currentTimeStamp = moment().valueOf();
   const route = useRoute<CreateTaskRouteProp>();
   const navigation = useNavigation<CustomPrimaryStackNavProp>();
@@ -415,31 +419,21 @@ const CreateTask: React.FC = () => {
   };
 
   async function uploadImages() {
+    setLoader(true);
     for (let i = 0; i < images.length; i++) {
       const image = images[i];
       try {
-        setLoader(true);
         const fileUri = String(image);
         const fileName = `${moment().valueOf()}-${fileUri.split("/").pop()}`;
-        const storageRef = storage().ref(`images/${fileName}`);
-        const task = storageRef.putFile(image);
         setPercent("0%");
 
-        // Monitor the upload
-        task.on("state_changed", (taskSnapshot) => {
-          console.log(
-            `${taskSnapshot.bytesTransferred} transferred out of ${taskSnapshot.totalBytes}`
-          );
-          const percentValue =
-            Math.round(
-              taskSnapshot.bytesTransferred / taskSnapshot.totalBytes
-            ) * 100;
-          setPercent(`${percentValue}%`);
-        });
-
-        await task;
-
-        const url = await storageRef.getDownloadURL();
+        const url = await saveImagesToFirebase(
+          `images/${fileName}`,
+          image,
+          (value: string) => {
+            setPercent(value);
+          }
+        );
         setDownloadUrl((prevUrls) => [...prevUrls, url]);
         console.log("### DOWNLOAD URL: ", url);
       } catch (error) {
@@ -477,6 +471,7 @@ const CreateTask: React.FC = () => {
         images: downloadUrl,
         budget: budget,
         status: "open",
+        createdAt: firestore.FieldValue.serverTimestamp(),
       };
       addTask(saveDetails);
     } catch (error) {
@@ -486,29 +481,30 @@ const CreateTask: React.FC = () => {
   }
 
   const addTask = async (details: SaveDetailsProps) => {
-    const userId = auth().currentUser?.uid;
-
-    if (!userId) {
-      console.error("No user is signed in");
-      setLoader(false);
-      return;
-    }
-
     try {
-      const tasksRef = firestore()
-        .collection("users")
-        .doc(userId)
-        .collection("tasks");
-      const newTask = {
-        ...details,
-        createdAt: firestore.FieldValue.serverTimestamp(),
-      };
-
-      const taskDoc = await tasksRef.add(newTask);
-      console.log("Task added with ID:", taskDoc.id);
+      const taskRef = await saveTask(details);
+      dispatch(
+        alertActions.setAlert({
+          visible: true,
+          title: "Task saved to firestore database",
+          subtitle: `#Task ID: ${taskRef.id}`,
+          type: "success",
+          timeout: 4000,
+        })
+      );
+      console.log("Task added with ID: ", taskRef.id);
       navigation.goBack();
     } catch (error) {
       console.error("Error adding task:", error);
+      dispatch(
+        alertActions.setAlert({
+          visible: true,
+          title: "",
+          subtitle: JSON.stringify(error, null, 4),
+          type: "error",
+          marginTop: 5,
+        })
+      );
     } finally {
       () => {
         setLoader(false);
@@ -1142,12 +1138,19 @@ const CreateTask: React.FC = () => {
               lightColor={Colors[theme]["yellow"]}
               darkColor={Colors[theme]["yellow"]}
               title="Post task"
-              onPress={() => {
-                if (images.length > 0) {
-                  uploadImages();
-                } else {
-                  setLoader(true);
-                  compileDataObject();
+              onPress={async () => {
+                const isConnected = await checkInternetConnectivity();
+                if (!isConnected) {
+                  return;
+                }
+                const loggedIn = verifyAuth();
+                if (loggedIn) {
+                  if (images.length > 0) {
+                    uploadImages();
+                  } else {
+                    setLoader(true);
+                    compileDataObject();
+                  }
                 }
               }}
               style={{ borderWidth: 0, width: "100%" }}

@@ -1,30 +1,34 @@
 import auth from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
+import { logoutUser } from "../../redux/store";
+import { verifyAuth } from "../authCheck/verifyAuth";
+import { SaveDetailsProps } from "../../screens/AuthStack/CreateTask/CreateTask";
 
-export const saveUserData = async () => {
-  const user = auth().currentUser;
+export const saveTask = async (
+  details: SaveDetailsProps
+): Promise<FirebaseFirestoreTypes.DocumentReference> => {
   try {
-    if (user) {
-      const userRef = firestore().collection("users").doc(user.uid);
-      console.log("### user: ", user.phoneNumber);
-      // Check if the user document already exists
-      const userExists = (await userRef.get()).exists;
-      console.log("### userExists: ", userExists);
-
-      if (!userExists) {
-        // Create a new user document
-        await userRef.set({
-          phoneNumber: user.phoneNumber,
-          createdAt: firestore.FieldValue.serverTimestamp(),
-        });
-        console.log("User data saved to Firestore");
-      } else {
-        console.log("User document already exists");
-      }
-    } else {
-      console.log("No user is logged in");
+    const isAuthenticated = verifyAuth();
+    const userId = auth().currentUser?.uid;
+    if (!isAuthenticated || !userId) {
+      return Promise.reject(
+        new Error("User not authenticated or userId is missing.")
+      );
     }
+    const tasksRef = firestore()
+      .collection("users")
+      .doc(userId)
+      .collection("tasks");
+    const newTask: SaveDetailsProps = {
+      ...details,
+      createdBy: userId,
+    };
+
+    const docRef = await tasksRef.add(newTask);
+    return docRef;
   } catch (error) {
-    console.log("!!! USER SAVE ERROR: ", error);
+    return Promise.reject(new Error(`Save task failed: ${error}`));
   }
 };

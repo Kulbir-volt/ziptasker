@@ -23,14 +23,14 @@ import {
 import { tasksActions } from "../../redux/slice/tasks";
 import { verifyAuth } from "../authCheck/verifyAuth";
 
-export const getTaskTypesList = async () => {
+export const getChoresList = async () => {
   const isAuthenticated = verifyAuth();
   if (isAuthenticated) {
     try {
-      const taskTypesListRef = firestore()
-        .collection("task_types")
-        .doc("3Zu7yDVxPF5rWRqyJC89");
-      const data = (await taskTypesListRef.get()).data();
+      const choresListRef = firestore()
+        .collection("chores")
+        .doc("MfT7YvcdO3ZuLZcEquNO");
+      const data = (await choresListRef.get()).data();
       const list: VectorIconsProps<
         | FontAwesomeNames
         | FontAwesome5Names
@@ -48,10 +48,9 @@ export const getTaskTypesList = async () => {
         | ZocialNames
         | SimpleLineIconsNames
       >[] = data?.list;
-      // console.log("$$$ taskTypesListRef: ", list);
+      // console.log("$$$ choresListRef: ", list);
       if (Array.isArray(list)) {
-        store.dispatch(tasksActions.setTaskTypesList(list));
-        // setTaskTypesList(list);
+        store.dispatch(tasksActions.setChores(list));
       }
     } catch (error) {
       console.error("Error fetching tasks:", error);

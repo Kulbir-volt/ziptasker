@@ -8,6 +8,7 @@ import {
   useColorScheme,
   View,
 } from "react-native";
+import auth from "@react-native-firebase/auth";
 import { useNavigation } from "@react-navigation/native";
 import {
   BottomSheetFlatList,
@@ -47,6 +48,7 @@ import { ThemedIonicons } from "../../components/ThemedIonicons";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { authActions } from "../../redux/slice/auth";
+import { getSavedTasksList } from "../../firebase/read/savedTasks";
 
 const SORT = "sort";
 const FILTER = "filter";
@@ -134,6 +136,7 @@ const BrowseTasks: React.FC = () => {
   ];
 
   useEffect(() => {
+    getSavedTasksList();
     const selectedItem = categoriesList?.find((item) => item?.selected);
     const totalCount: number =
       categoriesList?.filter((item) => item.selected).length ?? 0;

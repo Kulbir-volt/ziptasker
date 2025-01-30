@@ -28,30 +28,12 @@ type InitialStateProps = {
   isLoggedIn: boolean | null;
   details: UserDetails | null | string;
   showMap: boolean;
-  taskTypesList: VectorIconsProps<
-    | FontAwesomeNames
-    | FontAwesome5Names
-    | FontAwesome6Names
-    | FontistoNames
-    | FoundationNames
-    | MaterialIconsNames
-    | IoniconsNames
-    | AntDesignNames
-    | EntypoNames
-    | EvilIconsNames
-    | FeatherNames
-    | MaterialCommunityIconsNames
-    | OctIconsNames
-    | ZocialNames
-    | SimpleLineIconsNames
-  >[];
 };
 
 const initialState: InitialStateProps = {
   isLoggedIn: null,
   details: null,
   showMap: false,
-  taskTypesList: [],
 };
 
 const authSlice = createSlice({
@@ -64,7 +46,7 @@ const authSlice = createSlice({
         isLoggedIn: action.payload,
       };
     },
-    resetUserDetails: () => {
+    resetAuthSlice: () => {
       return initialState;
     },
     setUserDetails: (state, action) => {
@@ -77,12 +59,6 @@ const authSlice = createSlice({
       return {
         ...state,
         showMap: action.payload,
-      };
-    },
-    setTaskTypesList: (state, action) => {
-      return {
-        ...state,
-        taskTypesList: action.payload,
       };
     },
   },

@@ -26,8 +26,6 @@ import { ThemedText } from "../ThemedText";
 import { Colors } from "../../constants/Colors";
 import { RootState } from "../../redux/store";
 
-const AnimatedThemedView = Animated.createAnimatedComponent(ThemedView);
-
 function SlidingAlert() {
   const alertSlice = useSelector((state: RootState) => state.alertSlice);
   const theme = useColorScheme() ?? "light";
@@ -35,14 +33,19 @@ function SlidingAlert() {
     new Animated.Value(0)
   );
   const dispatch = useDispatch();
-  // console.log("@@ ALERT SLICE: ", alertSlice)
   useEffect(() => {
+    console.log("@@ ALERT SLICE: ", alertSlice);
     if (alertSlice?.visible) {
       animateMessage();
     }
   }, [alertSlice]);
 
   function animateMessage(value = 1) {
+    if (value == 1) {
+      console.log("@@@ ANIMATE START: ", value);
+    } else {
+      console.log("@@@ ANIMATE STOP: ", value);
+    }
     Animated.timing(animateY, {
       toValue: value,
       duration: 500,
@@ -55,15 +58,25 @@ function SlidingAlert() {
       if (finished && type === "start") {
         setTimeout(() => {
           animateMessage(0);
-        }, 3000);
+        }, alertSlice.timeout || 3000);
       } else if (finished && type === "end") {
         animateY.setValue(0);
-        // dispatch(
-        //   alertActions.setAlert({ visible: false, message: "", type: "" })
-        // );
+        dispatch(
+          alertActions.setAlert({
+            visible: false,
+            title: "",
+            subtitle: "",
+            type: "",
+            timeout: 3000,
+            marginTop: 0,
+          })
+        );
       }
     });
   }
+
+  const maxRange =
+    alertSlice.marginTop === undefined ? 0 : alertSlice.marginTop;
 
   const animatedStyles: StyleProp<ViewStyle> = {
     transform: [
@@ -72,7 +85,7 @@ function SlidingAlert() {
           inputRange: [0, 1],
           outputRange: [
             -getWidthnHeight(50)?.width!,
-            getWidthnHeight(5)?.width!,
+            getWidthnHeight(maxRange)?.width!,
           ],
         }),
       },
@@ -80,7 +93,7 @@ function SlidingAlert() {
   };
 
   return (
-    <AnimatedThemedView
+    <ThemedView
       colorType={"transparent"}
       style={[styles.container, animatedStyles]}
       pointerEvents={"none"}
@@ -104,6 +117,7 @@ function SlidingAlert() {
           </View>
           <View>
             <ThemedText
+              numberOfLines={2}
               colorType={"black"}
               style={[
                 {
@@ -120,6 +134,7 @@ function SlidingAlert() {
             </ThemedText>
             {alertSlice?.subtitle && (
               <ThemedText
+                numberOfLines={3}
                 colorType={"black"}
                 style={[
                   {
@@ -240,7 +255,7 @@ function SlidingAlert() {
           </ThemedView>
         </ThemedView>
       )}
-    </AnimatedThemedView>
+    </ThemedView>
   );
 }
 
@@ -251,6 +266,7 @@ const styles = StyleSheet.create({
     height: getWidthnHeight(50)?.width,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 0,
   },
   subContainer: {
     width: "95%",
