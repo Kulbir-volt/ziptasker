@@ -20,12 +20,12 @@ import { Cookie_400Regular } from "@expo-google-fonts/cookie";
 import { Pacifico_400Regular } from "@expo-google-fonts/pacifico";
 import { SquadaOne_400Regular } from "@expo-google-fonts/squada-one";
 import { Whisper_400Regular } from "@expo-google-fonts/whisper";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator, Platform } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import { useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import firestore from "@react-native-firebase/firestore";
-// import firebase from "@react-native-firebase/app";
+import firebase from "@react-native-firebase/app";
+import auth from "@react-native-firebase/auth";
 
 import { ThemedSafe } from "../../components/ThemedSafe";
 import { authActions } from "../../redux/slice/auth";
@@ -37,22 +37,24 @@ import { authActions } from "../../redux/slice/auth";
 //   cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED, // Optional: Set unlimited cache size
 // });
 
-// export const firebaseConfig = {
-//   apiKey: "AIzaSyArPtE4wvv9jhhWjzwHpSb3Y1GpEiCZBoc",
-//   authDomain: "taskermanager.firebaseapp.com",
-//   databaseURL: "https://taskermanager.firebaseio.com",
-//   projectId: "taskermanager",
-//   storageBucket: "taskermanager.appspot.com",
-//   messagingSenderId: "1041321032917",
-//   appId: "1:1041321032917:android:d83f90fbf2b7acc803f65c",
-//   // measurementId: 'G-measurement-id'
-// };
+export const firebaseConfig = {
+  apiKey: "AIzaSyArPtE4wvv9jhhWjzwHpSb3Y1GpEiCZBoc",
+  authDomain: "taskermanager.firebaseapp.com",
+  databaseURL: "https://taskermanager.firebaseio.com",
+  projectId: "taskermanager",
+  storageBucket: "taskermanager.appspot.com",
+  messagingSenderId: "1041321032917",
+  appId: "1:1041321032917:android:d83f90fbf2b7acc803f65c",
+  // measurementId: 'G-measurement-id'
+};
 
-// if (!firebase.apps.length) {
+// if (!firebase.apps.length && Platform.OS === "ios") {
 //   firebase.initializeApp(firebaseConfig);
 // }
 
 SplashScreen.preventAutoHideAsync();
+
+// auth().settings.appVerificationDisabledForTesting = false;
 
 function LoadingStack() {
   const dispatch = useDispatch();

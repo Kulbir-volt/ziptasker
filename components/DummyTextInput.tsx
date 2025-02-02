@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import {
+  Platform,
   StyleProp,
   TextInput,
   TextInputProps,
@@ -53,7 +54,14 @@ const DummyTextInput: React.FC<DummyTextInputProps> = ({
             paddingVertical: getWidthnHeight(4)?.width,
             borderRadius: getWidthnHeight(3)?.width,
             elevation: 4,
-            shadowColor: Colors[theme]["iconColor"],
+            shadowOffset: {
+              width: 0,
+              height: getWidthnHeight(0.5)?.width!,
+            },
+            shadowColor:
+              Platform.OS === "ios"
+                ? `${Colors[theme]["iconColor"]}8F`
+                : Colors[theme]["iconColor"],
             shadowOpacity: 0.6,
             shadowRadius: 6,
           },

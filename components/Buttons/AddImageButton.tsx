@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { ThemedView } from "../ThemedView";
 import { ThemedIonicons } from "../ThemedIonicons";
-import { getMarginBottom, getWidthnHeight } from "../width";
+import { getMarginBottom, getMarginTop, getWidthnHeight } from "../width";
 import { Colors } from "../../constants/Colors";
 
 type AddImageButtonProps = TouchableOpacityProps & {
@@ -35,9 +35,10 @@ const AddImageButton: React.FC<AddImageButtonProps> = ({
           shadowColor: Colors[theme]["iconColor"],
           shadowOpacity: 0.6,
           shadowRadius: 6,
+          margin: getWidthnHeight(2)?.width,
+          // overflow: "hidden",
           borderRadius: getWidthnHeight(2)?.width,
         },
-        // getMarginBottom(1.5),
       ]}
     >
       <TouchableOpacity

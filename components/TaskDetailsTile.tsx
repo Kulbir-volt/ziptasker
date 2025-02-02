@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import {
+  Platform,
   StyleProp,
   StyleSheet,
   TouchableOpacity,
@@ -36,7 +37,7 @@ const TaskDetailsTile: React.FC<TaskDetailsTileProps> = ({
   onPress,
 }) => {
   return (
-    <ThemedView style={[styles.container, styles.container, style]}>
+    <ThemedView style={[styles.container, style]}>
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.5}
@@ -66,8 +67,16 @@ const TaskDetailsTile: React.FC<TaskDetailsTileProps> = ({
 const styles = StyleSheet.create({
   container: {
     elevation: 4,
-    shadowOpacity: 0.5,
+    shadowColor:
+      Platform.OS === "ios"
+        ? `${Colors.light["iconColor"]}8F`
+        : Colors.light["iconColor"],
+    shadowOpacity: 0.6,
     shadowRadius: 6,
+    shadowOffset: {
+      width: 0,
+      height: getWidthnHeight(0.3)?.width!,
+    },
     borderRadius: getWidthnHeight(3)?.width,
   },
 });

@@ -115,7 +115,7 @@ export const vectorIcons: VectorIconsProps<
 >[] = [
   {
     id: "1",
-    type: fontAwesome,
+    type: "FontAwesome",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -128,7 +128,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "2",
-    type: fontAwesome5,
+    type: "FontAwesome5",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -141,7 +141,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "3",
-    type: fontAwesome6,
+    type: "FontAwesome6",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -154,7 +154,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "4",
-    type: fontisto,
+    type: "Fontisto",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -167,7 +167,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "5",
-    type: foundation,
+    type: "Foundation",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -180,7 +180,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "6",
-    type: materialIcons,
+    type: "MaterialIcons",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -193,7 +193,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "7",
-    type: ionIcons,
+    type: "Ionicons",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -206,7 +206,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "8",
-    type: antDesign,
+    type: "AntDesign",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -219,7 +219,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "9",
-    type: entypo,
+    type: "Entypo",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -232,7 +232,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "10",
-    type: evilIcons,
+    type: "EvilIcons",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -245,7 +245,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "11",
-    type: feather,
+    type: "Feather",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -258,7 +258,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "12",
-    type: materialCommunityIcons,
+    type: "MaterialCommunityIcons",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -271,7 +271,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "13",
-    type: octIcons,
+    type: "Octicons",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -284,7 +284,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "14",
-    type: zocial,
+    type: "Zocial",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (
@@ -297,7 +297,7 @@ export const vectorIcons: VectorIconsProps<
   },
   {
     id: "15",
-    type: simpleLineIcons,
+    type: "SimpleLineIcons",
     name: "cab",
     iconSize: Math.round(getWidthnHeight(6)?.width!),
     icon: ({ name, iconSize }) => (

@@ -23,6 +23,7 @@ import {
   fontSizeH2,
   fontSizeH3,
   fontSizeH4,
+  getMarginBottom,
   getMarginHorizontal,
   getMarginRight,
   getMarginTop,
@@ -212,18 +213,21 @@ function HomePage() {
         ]}
       >
         {theme === "light" && (
-          <Image
-            source={require("../../assets/planner.jpg")}
-            resizeMode="cover"
-            style={[
-              {
-                // opacity: 0.25,
-                width: getWidthnHeight(100)?.width,
-                height: getWidthnHeight(75)?.width,
-              },
-              StyleSheet.absoluteFillObject,
-            ]}
-          />
+          <>
+            <Image
+              source={require("../../assets/planner.jpg")}
+              resizeMode="cover"
+              // blurRadius={7}
+              style={[
+                {
+                  // opacity: 0.25,
+                  width: getWidthnHeight(100)?.width,
+                  height: getWidthnHeight(75)?.width,
+                },
+                StyleSheet.absoluteFillObject,
+              ]}
+            />
+          </>
         )}
         <ThemedView
           lightColor={`${Colors["light"]["buttonBG"]}D0`}
@@ -259,9 +263,12 @@ function HomePage() {
         <View
           style={[
             {
-              padding: getWidthnHeight(3)?.width,
+              flex: 1,
+              // alignItems: "center",
+              justifyContent: "space-evenly",
+              paddingHorizontal: getWidthnHeight(2)?.width,
             },
-            getMarginTop(2.5),
+            getMarginVertical(2),
           ]}
         >
           <View
@@ -280,7 +287,7 @@ function HomePage() {
               }}
               style={{
                 fontSize: fontSizeH4().fontSize + 4,
-                margin: getWidthnHeight(2)?.width,
+                padding: getWidthnHeight(4)?.width,
               }}
               placeholder="In a few words, what do you need done?"
               placeholderTextColor={"darkGray"}
@@ -324,11 +331,10 @@ function HomePage() {
         <View
           style={[
             {
+              flex: 0.5,
               flexDirection: "row",
-              alignItems: "center",
               justifyContent: "center",
             },
-            getMarginTop(0.5),
           ]}
         >
           <FlatList
@@ -396,7 +402,8 @@ function HomePage() {
           <View
             style={[
               {
-                padding: getWidthnHeight(3)?.width,
+                paddingTop: getWidthnHeight(2)?.width,
+                paddingHorizontal: getWidthnHeight(4)?.width,
               },
             ]}
           >
@@ -420,6 +427,10 @@ function HomePage() {
                   shadowOpacity: 0.4,
                   shadowRadius: 6,
                   elevation: 4,
+                  shadowOffset: {
+                    width: 0,
+                    height: getWidthnHeight(0.5)?.width!,
+                  },
                 },
                 getMarginVertical(2),
               ]}
@@ -435,77 +446,95 @@ function HomePage() {
                 />
               </TouchableOpacity>
             </ThemedView>
-            <ThemedText
-              style={[
-                { fontSize: fontSizeH4().fontSize + 6, fontWeight: "500" },
-                getMarginTop(1),
-              ]}
-            >
-              Get it done today
-            </ThemedText>
-            <ThemedText style={[{}, fontSizeH4(), getMarginTop(0.5)]}>
-              To-do list never getting shorter ? Take the burden off and find
-              the help you need on Ziptasker.
-            </ThemedText>
           </View>
           <View
             style={[
               {
                 flex: 1,
-                alignItems: "center",
+                paddingHorizontal: getWidthnHeight(2)?.width,
+                // paddingTop: getMarginTop(1).marginTop,
               },
             ]}
           >
+            <ThemedText
+              style={[
+                {
+                  fontSize: fontSizeH4().fontSize + 6,
+                  fontWeight: "500",
+                },
+                getMarginHorizontal(2),
+              ]}
+            >
+              Need something done ?
+            </ThemedText>
+            <ThemedText
+              style={[getMarginHorizontal(2), fontSizeH4(), getMarginTop(0.5)]}
+            >
+              To-do list never getting shorter ? Take the burden off and find
+              the help you need on Ziptasker.
+            </ThemedText>
             {todayTasks.length > 0 && (
-              <FlatList
-                data={todayTasks}
-                numColumns={2}
-                nestedScrollEnabled
-                keyExtractor={(item) => `${item.id}`}
-                renderItem={({ item }) => {
-                  // console.log("### ICON: ", item.icon);
-                  return (
-                    <Pressable
-                      style={({ pressed }) => ({
-                        opacity: pressed ? 0.8 : 1,
-                      })}
-                      onPress={() => {
-                        navigation.navigate("createTask", {
-                          title: item.title,
-                        });
-                      }}
-                    >
-                      <ThemedView
-                        style={{
-                          width: getWidthnHeight(42)?.width,
-                          height: getWidthnHeight(30)?.width,
-                          alignItems: "center",
-                          justifyContent: "center",
-                          borderRadius: getWidthnHeight(3)?.width,
-                          shadowColor: Colors[theme]["iconColor"],
-                          shadowOpacity: 0.4,
-                          shadowRadius: 6,
-                          elevation: 4,
-                          margin: getWidthnHeight(3)?.width,
-                          borderWidth: 1,
-                          borderColor:
-                            theme === "dark"
-                              ? Colors[theme]["white"]
-                              : "transparent",
-                          backgroundColor: Colors[theme]["screenBG"],
+              <View
+                style={{
+                  alignItems: "center",
+                }}
+              >
+                <FlatList
+                  data={todayTasks}
+                  numColumns={2}
+                  nestedScrollEnabled
+                  keyExtractor={(item) => `${item.id}`}
+                  renderItem={({ item }) => {
+                    // console.log("### ICON: ", item.icon);
+                    return (
+                      <Pressable
+                        style={({ pressed }) => ({
+                          opacity: pressed ? 0.9 : 1,
+                        })}
+                        onPress={() => {
+                          navigation.navigate("createTask", {
+                            title: item.title,
+                          });
                         }}
                       >
-                        {item.icon &&
-                          item?.icon({
-                            name: item.name,
-                            iconSize: item.iconSize!,
-                          })}
-                        <ThemedText>{item.title}</ThemedText>
-                      </ThemedView>
-                    </Pressable>
-                  );
-                }}
-              />
+                        <ThemedView
+                          style={{
+                            width: getWidthnHeight(42)?.width!,
+                            height: getWidthnHeight(28)?.width!,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: getWidthnHeight(3)?.width!,
+                            shadowColor: Colors[theme]["iconColor"],
+                            shadowOpacity: 0.4,
+                            shadowRadius: 6,
+                            elevation: 4,
+                            shadowOffset: {
+                              width: 0,
+                              height: getWidthnHeight(0.5)?.width!,
+                            },
+                            margin: getWidthnHeight(2.5)?.width!,
+                            borderWidth: 1,
+                            borderColor:
+                              theme === "dark"
+                                ? Colors[theme]["white"]
+                                : "transparent",
+                            backgroundColor: Colors[theme]["white"],
+                          }}
+                        >
+                          {item.icon &&
+                            item?.icon({
+                              name: item.name,
+                              iconSize: item.iconSize!,
+                            })}
+                          <ThemedText numberOfLines={1}>
+                            {item.title}
+                          </ThemedText>
+                        </ThemedView>
+                      </Pressable>
+                    );
+                  }}
+                />
+              </View>
             )}
           </View>
           {/* <View style={{ flex: 1, height: "100%" }}>

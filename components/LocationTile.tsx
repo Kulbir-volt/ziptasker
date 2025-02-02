@@ -36,7 +36,14 @@ const LocationTile: React.FC<LocationTileProps> = ({
       >
         {icon}
         <ThemedText
-          style={[{ fontSize: fontSizeH4().fontSize + 4 }, getMarginLeft(1)]}
+          style={[
+            {
+              fontSize: fontSizeH4().fontSize + 4,
+              borderWidth: 0,
+              width: "90%",
+            },
+            getMarginLeft(1),
+          ]}
           numberOfLines={1}
         >
           {item.description}

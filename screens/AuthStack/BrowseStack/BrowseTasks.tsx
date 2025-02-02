@@ -19,10 +19,10 @@ import Slider from "@react-native-community/slider";
 import { Switch } from "react-native-paper";
 import MapView, { PROVIDER_GOOGLE, Marker, Callout } from "react-native-maps";
 
-import { ThemedView } from "../../components/ThemedView";
-import { ThemedSafe } from "../../components/ThemedSafe";
-import { TaskCard } from "../../components/TaskCard";
-import MapStyle from "../../MapStyle.json";
+import { ThemedView } from "../../../components/ThemedView";
+import { ThemedSafe } from "../../../components/ThemedSafe";
+import { TaskCard } from "../../../components/TaskCard";
+import MapStyle from "../../../MapStyle.json";
 import {
   fontSizeH3,
   fontSizeH4,
@@ -30,25 +30,24 @@ import {
   getMarginRight,
   getMarginTop,
   getWidthnHeight,
-} from "../../components/width";
-import { BrowseStackNavigationProps } from ".";
-import { Colors } from "../../constants/Colors";
-import { ThemedAntDesign } from "../../components/ThemedAntDesign";
-import { ThemedSimpleLineIcons } from "../../components/ThemedSimpleIcons";
-import { ThemedText } from "../../components/ThemedText";
-import { ThemedMaterialIcons } from "../../components/ThemedMaterialIcon";
-import { CustomBS } from "../../components/BottomSheet/CustomBS";
-import { ThemedBSView } from "../../components/ThemedBSView";
-import { ThemedOcticons } from "../../components/ThemedOctions";
-import { DropdownField } from "../../components/DropdownField";
-import { FlatButton } from "../../components/Buttons/FlatButton";
-import { PrimaryInput } from "../../components/PrimaryInput";
-import { Categories } from "../../components/Modal/Categories";
-import { ThemedIonicons } from "../../components/ThemedIonicons";
+} from "../../../components/width";
+import { BrowseStackNavigationProps } from "..";
+import { Colors } from "../../../constants/Colors";
+import { ThemedAntDesign } from "../../../components/ThemedAntDesign";
+import { ThemedSimpleLineIcons } from "../../../components/ThemedSimpleIcons";
+import { ThemedText } from "../../../components/ThemedText";
+import { ThemedMaterialIcons } from "../../../components/ThemedMaterialIcon";
+import { CustomBS } from "../../../components/BottomSheet/CustomBS";
+import { ThemedBSView } from "../../../components/ThemedBSView";
+import { ThemedOcticons } from "../../../components/ThemedOctions";
+import { DropdownField } from "../../../components/DropdownField";
+import { FlatButton } from "../../../components/Buttons/FlatButton";
+import { PrimaryInput } from "../../../components/PrimaryInput";
+import { Categories } from "../../../components/Modal/Categories";
+import { ThemedIonicons } from "../../../components/ThemedIonicons";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
-import { authActions } from "../../redux/slice/auth";
-import { getSavedTasksList } from "../../firebase/read/savedTasks";
+import { RootState } from "../../../redux/store";
+import { authActions } from "../../../redux/slice/auth";
 
 const SORT = "sort";
 const FILTER = "filter";
@@ -113,6 +112,7 @@ const BrowseTasks: React.FC = () => {
   const [countSelection, setCountSelection] = useState<number>(0);
 
   const { showMap } = useSelector((state: RootState) => state.auth);
+  const { savedTasks } = useSelector((state: RootState) => state.tasks);
 
   const mapRef = useRef(null);
   const markerRef = useRef(null);
@@ -136,7 +136,6 @@ const BrowseTasks: React.FC = () => {
   ];
 
   useEffect(() => {
-    getSavedTasksList();
     const selectedItem = categoriesList?.find((item) => item?.selected);
     const totalCount: number =
       categoriesList?.filter((item) => item.selected).length ?? 0;
@@ -326,8 +325,8 @@ const BrowseTasks: React.FC = () => {
               style={{ flex: 1, borderWidth: 0 }}
             >
               <FlatList
-                data={data}
-                keyExtractor={(item) => item.id}
+                data={savedTasks}
+                keyExtractor={(item) => item.id!}
                 renderItem={({ item }) => {
                   return (
                     <View
@@ -341,6 +340,7 @@ const BrowseTasks: React.FC = () => {
                       ]}
                     >
                       <TaskCard
+                        task={item}
                         onPress={() =>
                           navigation.navigate("taskDetails", {
                             details: item,

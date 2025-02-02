@@ -1,4 +1,4 @@
-import { StyleSheet, Text, useColorScheme } from "react-native";
+import { SafeAreaView, StyleSheet, Text, useColorScheme } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -30,17 +30,15 @@ export default function App() {
       (state: RootState) => state.auth
     );
     return (
-      <SafeAreaProvider>
+      <NavigationContainer>
         <StatusBar style="dark" />
-        <NavigationContainer>
-          <BottomSheetModalProvider>
-            {isLoggedIn == null && <LoadingStack />}
-            {isLoggedIn == false && <NoAuthStackNavigator />}
-            {isLoggedIn && <AuthStackNavigator />}
-          </BottomSheetModalProvider>
-          <SlidingAlert />
-        </NavigationContainer>
-      </SafeAreaProvider>
+        <BottomSheetModalProvider>
+          {isLoggedIn == null && <LoadingStack />}
+          {isLoggedIn == false && <NoAuthStackNavigator />}
+          {isLoggedIn && <AuthStackNavigator />}
+        </BottomSheetModalProvider>
+        <SlidingAlert />
+      </NavigationContainer>
     );
   }
   return (

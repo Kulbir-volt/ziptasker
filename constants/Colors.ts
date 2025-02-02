@@ -50,6 +50,9 @@ export const Colors = {
     lightError: `${error}2F`,
     success: success,
     lightSuccess: lightSuccess,
+    blackShade: "#3f4243",
+    lightBlack: "#646666",
+    iosBlue: "#007AFF",
   },
   dark: {
     text: "#ECEDEE",
@@ -87,5 +90,8 @@ export const Colors = {
     lightError: `${error}2F`,
     success: success,
     lightSuccess: lightSuccess,
+    blackShade: "#3f4243",
+    lightBlack: "#646666",
+    iosBlue: "#007AFF",
   },
 };

@@ -1,21 +1,30 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useLayoutEffect } from "react";
 import { FlatList, View } from "react-native";
 import { Menu } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 
-import { ThemedSafe } from "../../components/ThemedSafe";
-import { ThemedView } from "../../components/ThemedView";
-import { ThemedText } from "../../components/ThemedText";
-import { getMarginTop, getWidthnHeight } from "../../components/width";
-import { RoundedDropdown } from "../../components/RoundedDropdown";
+import { ThemedSafe } from "../../../components/ThemedSafe";
+import { ThemedView } from "../../../components/ThemedView";
+import { ThemedText } from "../../../components/ThemedText";
+import {
+  fontSizeH3,
+  getMarginTop,
+  getWidthnHeight,
+} from "../../../components/width";
+import { RoundedDropdown } from "../../../components/RoundedDropdown";
 import { useColorScheme } from "react-native";
-import { Colors } from "../../constants/Colors";
-import { TaskCard } from "../../components/TaskCard";
-import { BrowseStackNavigationProps } from ".";
+import { Colors } from "../../../constants/Colors";
+import { TaskCard } from "../../../components/TaskCard";
+import { BrowseStackNavigationProps, MyStackNavigationProps } from "..";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
+import { getSavedTasksList } from "../../../firebase/read/savedTasks";
+import { ThemedAntDesign } from "../../../components/ThemedAntDesign";
 
 const MyTasks: React.FC = () => {
   const theme = useColorScheme() ?? "light";
-  const navigation = useNavigation<BrowseStackNavigationProps>();
+  const { savedTasks } = useSelector((state: RootState) => state.tasks);
+  const navigation = useNavigation<MyStackNavigationProps>();
   const [visible, setVisible] = React.useState(false);
   const [selectedItem, setSelectedItem] = useState<string>("All tasks");
 
@@ -62,6 +71,39 @@ const MyTasks: React.FC = () => {
       status: "Unpaid",
     },
   ];
+
+  useEffect(() => {
+    if (savedTasks.length > 0) {
+      // console.log("### SAVED TASKS: ", savedTasks);
+    }
+  }, [savedTasks]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: true,
+      headerShadowVisible: false,
+      headerTitle: "My Tasks",
+      headerTitleStyle: {
+        fontFamily: "DancingScript_700Bold",
+        fontSize: fontSizeH3().fontSize + 4,
+        color: Colors[theme]["iconColor"],
+      },
+      headerTitleAlign: "left",
+      headerLeft: () => null,
+      headerRight: () => (
+        <ThemedAntDesign
+          onPress={() => navigation?.navigate("notifications")}
+          name={"bells"}
+          size={getWidthnHeight(6)?.width}
+          colorType={"iconColor"}
+        />
+      ),
+    });
+  }, []);
+
+  useEffect(() => {
+    getSavedTasksList();
+  }, []);
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -111,10 +153,10 @@ const MyTasks: React.FC = () => {
         darkColor={Colors[theme]["background"]}
       >
         <FlatList
-          data={data}
-          keyExtractor={(item) => item.id}
+          data={savedTasks}
+          keyExtractor={(item) => item.id!}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             return (
               <View
                 style={[
@@ -124,9 +166,17 @@ const MyTasks: React.FC = () => {
                     borderWidth: 1,
                     borderColor: "transparent",
                   },
+                  getMarginTop(index === 0 ? 1 : 0),
                 ]}
               >
-                <TaskCard title={item.title} status={item.status} />
+                <TaskCard
+                  task={item}
+                  onPress={() =>
+                    navigation.navigate("myTaskDetails", {
+                      details: item,
+                    })
+                  }
+                />
               </View>
             );
           }}

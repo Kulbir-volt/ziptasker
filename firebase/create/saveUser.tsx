@@ -7,10 +7,10 @@ export const saveUserToFirebase = async () => {
   try {
     if (user) {
       const userRef = firestore().collection("users").doc(user.uid);
-      console.log("### user: ", user.phoneNumber);
+      // console.log("### user: ", user.phoneNumber);
       // Check if the user document already exists
       const userExists = (await userRef.get()).exists;
-      console.log("### userExists: ", userExists);
+      // console.log("### userExists: ", userExists);
 
       if (!userExists) {
         // Create a new user document

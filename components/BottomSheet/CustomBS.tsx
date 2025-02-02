@@ -1,15 +1,19 @@
 import React, { useMemo, useCallback, forwardRef, useEffect } from "react";
 import { View, StyleSheet, StyleProp, ViewStyle } from "react-native";
-import {
+import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetModalProps,
   BottomSheetBackdropProps,
   BottomSheetView,
+  BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
 import { fontSizeH4, getMarginTop, getWidthnHeight } from "../width";
 import { ThemedText } from "../ThemedText";
 import { ThemedBSView } from "../ThemedBSView";
+import { ThemedView } from "../ThemedView";
+import { ThemedSafe } from "../ThemedSafe";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface BottomSheetProps extends Partial<BottomSheetModalProps> {
   snapPoints?: string[]; // Snap points for the BottomSheet
@@ -33,12 +37,13 @@ const CustomBS = forwardRef<BottomSheetModal, BottomSheetProps>(
     },
     ref
   ) => {
-    const memoizedSnapPoints = useMemo(() => snapPoints, [snapPoints]);
+    const memoizedSnapPoints = useMemo(() => snapPoints, []);
 
     const handleSheetChanges = useCallback((index: number) => {
       if (index < 0) {
         console.log("Additional Bottom Sheet", index);
       } else {
+        console.log("Open Bottom Sheet", index);
         onOpen();
       }
     }, []);
@@ -57,6 +62,7 @@ const CustomBS = forwardRef<BottomSheetModal, BottomSheetProps>(
     return (
       <BottomSheetModal
         ref={ref}
+        index={0}
         snapPoints={memoizedSnapPoints}
         backdropComponent={renderBackdrop}
         enablePanDownToClose={true}

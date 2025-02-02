@@ -1,4 +1,10 @@
-import { View, type ViewProps, Animated } from "react-native";
+import {
+  View,
+  type ViewProps,
+  Animated,
+  StyleProp,
+  ViewStyle,
+} from "react-native";
 
 import { useThemeColor } from "../hooks/useThemeColor";
 import { Colors } from "../constants/Colors";
@@ -6,6 +12,7 @@ import { Colors } from "../constants/Colors";
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
   darkColor?: string;
+  style?: StyleProp<ViewStyle>;
 };
 
 interface ColorTypeProps extends ThemedViewProps {

@@ -15,7 +15,9 @@ type PostComponentProps = {
   subtitle?: string;
   time?: string | null;
   titleStyle?: TextStyle;
+  titleLines?: number;
   subtitleStyle?: TextStyle;
+  subtitleLines?: number;
   showDropdownIcon?: boolean;
 };
 
@@ -34,7 +36,9 @@ const PostComponent: React.FC<PostComponentProps> = ({
   subtitle,
   time = "about 1 hour ago",
   titleStyle,
+  titleLines = 1,
   subtitleStyle,
+  subtitleLines = 1,
   showDropdownIcon = false,
   ...otherProps
 }) => {
@@ -55,12 +59,14 @@ const PostComponent: React.FC<PostComponentProps> = ({
           }}
         >
           <ThemedText
+            numberOfLines={titleLines}
             style={[{ fontSize: fontSizeH4().fontSize - 2 }, titleStyle]}
           >
             {title}
           </ThemedText>
           {subtitle && (
             <ThemedText
+              numberOfLines={subtitleLines}
               style={[{ fontSize: fontSizeH4().fontSize + 4 }, subtitleStyle]}
             >
               {subtitle}

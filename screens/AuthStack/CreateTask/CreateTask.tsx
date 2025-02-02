@@ -4,9 +4,10 @@ import React, {
   useState,
   useRef,
   ReactNode,
+  useMemo,
 } from "react";
 import Checkbox from "expo-checkbox";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   useColorScheme,
   View,
@@ -18,6 +19,9 @@ import {
   Keyboard,
   TextInput,
   Text,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  ScrollView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as _ from "lodash";
@@ -25,7 +29,11 @@ import moment from "moment";
 import axios from "axios";
 import * as Location from "expo-location";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
-import { BottomSheetFlatList, BottomSheetModal } from "@gorhom/bottom-sheet";
+import {
+  BottomSheetFlatList,
+  BottomSheetModal,
+  BottomSheetScrollView,
+} from "@gorhom/bottom-sheet";
 import firestore, {
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
@@ -74,10 +82,16 @@ import { saveTask } from "../../../firebase/create/saveTask";
 import { saveImagesToFirebase } from "../../../firebase/create/saveImages";
 import { alertActions } from "../../../redux/slice/slidingAlert";
 import { checkInternetConnectivity } from "../../../netInfo";
+import { updateTaskToFirestore } from "../../../firebase/update/updateTask";
+import { UserDetails } from "../../../redux/slice/auth";
+import { RootState } from "../../../redux/store";
 
 type CreateTaskRouteProp = RouteProp<PrimaryStackParamList, "createTask">;
 
-const totalSteps = 4;
+type ReusableScrollProps = {
+  headerTitle: ReactNode | null;
+  children: ReactNode;
+};
 
 const apiKey = "AIzaSyDVRsp7LueqZB-lS1fP5RaKeUwGLB6U8rY";
 interface Location {
@@ -102,7 +116,16 @@ type TimeOfDayProps = {
   icon?: ReactNode;
 };
 
+type StatusTypes =
+  | "open"
+  | "completed"
+  | "cancelled"
+  | "assigned"
+  | "unpaid"
+  | "paid";
+
 export type SaveDetailsProps = {
+  id?: string;
   title: string | undefined;
   on_date: string | null;
   before_date: string | null;
@@ -111,22 +134,40 @@ export type SaveDetailsProps = {
   online_job: boolean;
   location: Place | null;
   task_details: string | undefined;
-  images: string[];
+  images?: string[];
   budget: string | undefined;
-  status: string;
-  createdAt: FirebaseFirestoreTypes.FieldValue;
+  status: StatusTypes;
+  createdAt?: FirebaseFirestoreTypes.FieldValue;
+  updatedAt?: FirebaseFirestoreTypes.FieldValue;
   createdBy?: string;
+  postedBy?: string | null;
 };
 
 const GOOGLE = "google";
 const PHOTO = "photo";
 const CAMERA = "camera";
 
-const CreateTask: React.FC = () => {
+type CreateTaskProps = {
+  edit?: boolean;
+  editDetails?: SaveDetailsProps | null;
+  onFinish?: () => void;
+};
+
+const CreateTask: React.FC<CreateTaskProps> = ({
+  edit = false,
+  editDetails = null,
+  onFinish = () => {},
+}) => {
   const dispatch = useDispatch();
   const currentTimeStamp = moment().valueOf();
-  const route = useRoute<CreateTaskRouteProp>();
+  let route = null;
+  if (!edit) {
+    route = useRoute<CreateTaskRouteProp>();
+  }
   const navigation = useNavigation<CustomPrimaryStackNavProp>();
+  const { details: authDetails } = useSelector(
+    (state: RootState) => state.auth
+  );
   const theme = useColorScheme() ?? "light";
   const [step, setStep] = useState<number>(1);
 
@@ -138,7 +179,7 @@ const CreateTask: React.FC = () => {
   const [flexibleTimings, setFlexibleTimings] = useState<boolean>(false);
   const [fromTimeStamp, setFromTimeStamp] = useState(currentTimeStamp);
   const [toTimeStamp, setToTimeStamp] = useState(currentTimeStamp);
-  const [taskTitle, setTaskTitle] = useState<string | undefined>(undefined);
+  const [taskTitle, setTaskTitle] = useState<string | undefined>("");
   const [certainTime, setCertainTime] = useState<string | null>(null);
 
   // STEP 1 STATE
@@ -226,6 +267,32 @@ const CreateTask: React.FC = () => {
     { id: "2", title: "Choose photo(s)" },
     { id: "3", title: "Cancel" },
   ];
+
+  useEffect(() => {
+    if (edit) {
+      console.log("@@@ EDIT");
+      setTaskTitle(editDetails?.title);
+      setOnDate(
+        editDetails?.on_date
+          ? moment(editDetails?.on_date, "DD/MM/YYYY").format("ddd DD,MMM")
+          : null
+      );
+      setOnDate(
+        editDetails?.before_date
+          ? moment(editDetails?.before_date, "DD/MM/YYYY").format("ddd DD,MMM")
+          : null
+      );
+      setFlexibleTimings(editDetails?.flexible_date!);
+      setChecked(!!editDetails?.certain_time);
+      setCertainTime(
+        editDetails?.certain_time ? editDetails?.certain_time?.id : null
+      );
+      setSelected(editDetails?.online_job ? 2 : 1);
+      setSelectedLocation(editDetails?.location ?? null);
+      setDetails(editDetails?.task_details);
+      setBudget(editDetails?.budget);
+    }
+  }, [edit]);
 
   async function getCurrentLocation() {
     Keyboard.dismiss();
@@ -345,8 +412,8 @@ const CreateTask: React.FC = () => {
   }
 
   useEffect(() => {
-    if (route.params?.title) {
-      setTaskTitle(route.params.title);
+    if (route && route?.params?.title) {
+      setTaskTitle(route?.params.title);
     }
   }, []);
 
@@ -453,6 +520,7 @@ const CreateTask: React.FC = () => {
 
   function compileDataObject() {
     try {
+      const userDetails: UserDetails = JSON.parse(authDetails as string);
       const findCertainTime = timeOfDay.find((item) => item.id === certainTime);
       delete findCertainTime?.icon;
       const saveDetails: SaveDetailsProps = {
@@ -472,8 +540,23 @@ const CreateTask: React.FC = () => {
         budget: budget,
         status: "open",
         createdAt: firestore.FieldValue.serverTimestamp(),
+        postedBy: userDetails?.user?.displayName || userDetails?.name || null,
       };
-      addTask(saveDetails);
+      if (edit) {
+        delete saveDetails.createdAt;
+        delete saveDetails.postedBy;
+        if (
+          Array.isArray(saveDetails?.images) &&
+          saveDetails?.images.length === 0
+        ) {
+          delete saveDetails?.images;
+        }
+        saveDetails.id = editDetails?.id;
+        updateTask(saveDetails);
+        // console.log("@@@ UPDATE TASK: ", JSON.stringify(saveDetails, null, 4));
+      } else {
+        addTask(saveDetails);
+      }
     } catch (error) {
       setLoader(false);
       console.error("!!! compileDataObject ERROR: ", error);
@@ -495,12 +578,13 @@ const CreateTask: React.FC = () => {
       console.log("Task added with ID: ", taskRef.id);
       navigation.goBack();
     } catch (error) {
+      setLoader(false);
       console.error("Error adding task:", error);
       dispatch(
         alertActions.setAlert({
           visible: true,
-          title: "",
-          subtitle: JSON.stringify(error, null, 4),
+          title: "Error!",
+          subtitle: `${error}`,
           type: "error",
           marginTop: 5,
         })
@@ -512,33 +596,41 @@ const CreateTask: React.FC = () => {
     }
   };
 
-  return (
-    <ThemedSafe style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-        {theme === "light" && (
-          <View
-            style={[
-              StyleSheet.absoluteFillObject,
-              {
-                alignItems: "center",
-                justifyContent: "flex-end",
-              },
-            ]}
-          >
-            <Image
-              source={require("../../../assets/query.jpg")}
-              resizeMode="cover"
-              style={[
-                {
-                  // opacity: 0.1,
-                  width: getWidthnHeight(100)?.width,
-                  height: getWidthnHeight(75)?.width,
-                },
-                getMarginBottom(10),
-              ]}
-            />
-          </View>
-        )}
+  async function updateTask(details: SaveDetailsProps) {
+    try {
+      const taskRef = await updateTaskToFirestore(details);
+      dispatch(
+        alertActions.setAlert({
+          visible: true,
+          title: taskRef.title,
+          subtitle: taskRef.subtitle,
+          type: "success",
+          timeout: 4000,
+        })
+      );
+      onFinish();
+    } catch (error) {
+      setLoader(false);
+      console.error("!!!Error updating task:", error);
+      dispatch(
+        alertActions.setAlert({
+          visible: true,
+          title: "Error!",
+          subtitle: `${error}`,
+          type: "error",
+          marginTop: 5,
+        })
+      );
+    } finally {
+      () => {
+        setLoader(false);
+      };
+    }
+  }
+
+  const Header: React.FC = () => {
+    return (
+      <View>
         {step < 5 && (
           <ThemedText
             style={[
@@ -550,786 +642,979 @@ const CreateTask: React.FC = () => {
           </ThemedText>
         )}
         <View
-          style={{
-            borderWidth: 0,
-            flex: 1,
-            paddingHorizontal: getWidthnHeight(4)?.width,
-          }}
+          style={[
+            {
+              paddingHorizontal: getWidthnHeight(4)?.width,
+            },
+          ]}
         >
           {step === 1 && (
-            <View style={[{ flex: 1 }]}>
-              <ThemedText
-                style={[
-                  {
-                    // lineHeight: -1,
-                    fontFamily: "SquadaOne_400Regular",
-                    color: Colors[theme]["iconColor"],
-                    fontSize: fontSizeH2().fontSize + 4,
-                  },
-                  // fontSizeH2(),
-                ]}
-              >
-                Let's start with the basics
-              </ThemedText>
-              <View style={[getMarginTop(4)]}>
-                <ThemedText
-                  style={[
-                    { fontSize: fontSizeH4().fontSize + 4, fontWeight: "500" },
-                  ]}
-                >
-                  In a few words, what do you need done?
-                </ThemedText>
-                <View
-                  style={[
-                    {
-                      backgroundColor: Colors[theme]["screenBG"],
-                      borderRadius: getWidthnHeight(3)?.width,
-                      borderWidth:
-                        theme === "light"
-                          ? submitStep1 && !taskTitle
-                            ? 1
-                            : 0
-                          : 1,
-                      borderColor:
-                        submitStep1 && !taskTitle
-                          ? Colors[theme]["red"]
-                          : Colors[theme]["iconColor"],
-                    },
-                    getMarginTop(1.5),
-                  ]}
-                >
-                  <PrimaryInput
-                    containerStyle={{
-                      backgroundColor: "transparent",
-                    }}
-                    numberOfLines={1}
-                    value={taskTitle}
-                    style={{
-                      fontSize: fontSizeH4().fontSize + 4,
-                      marginVertical: getWidthnHeight(4)?.width,
-                      marginHorizontal: getWidthnHeight(4)?.width,
-                    }}
-                    placeholder="eg. Help me move sofa"
-                    placeholderTextColor={"darkGray"}
-                    onChangeText={(text) => setTaskTitle(text)}
-                  />
-                  {submitStep1 && !taskTitle && (
-                    <View>
-                      <ThemedText
-                        style={{
-                          position: "absolute",
-                          color: Colors[theme]["red"],
-                          fontSize: fontSizeH4().fontSize - 1,
-                        }}
-                      >
-                        *Task title is required
-                      </ThemedText>
-                    </View>
-                  )}
-                </View>
-              </View>
-              <View style={[getMarginTop(3)]}>
-                <ThemedText
-                  style={[
-                    { fontSize: fontSizeH4().fontSize + 4, fontWeight: "500" },
-                  ]}
-                >
-                  When do you need this done?
-                </ThemedText>
-                <View
-                  style={[
-                    {
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      // borderWidth: 1,
-                      // borderColor: "transparent",
-                    },
-                    getMarginTop(2),
-                  ]}
-                >
-                  <View>
-                    <RoundedDropdown
-                      title={onDate ? `On ${onDate}` : "On date"}
-                      onPress={() => setShowOnDate(true)}
-                      titleStyle={{
-                        fontSize: fontSizeH4().fontSize + (onDate ? 1 : 3),
-                      }}
-                      style={{
-                        borderWidth: 2,
-                        borderColor: Colors[theme]["iconColor"],
-                        paddingHorizontal: getWidthnHeight(2)?.width,
-                        paddingVertical: getWidthnHeight(1)?.width,
-                        borderRadius: getWidthnHeight(10)?.width,
-                        backgroundColor: onDate
-                          ? Colors[theme]["yellow"]
-                          : "transparent",
-                      }}
-                    />
-                    {showOnDate && (
-                      <View>
-                        <DateTimePicker
-                          value={moment(fromTimeStamp).utc().toDate()}
-                          display="default"
-                          minimumDate={moment(currentTimeStamp).utc().toDate()}
-                          onChange={(event, date) => {
-                            if (event.type === "dismissed") {
-                              setShowOnDate(!showOnDate);
-                              return;
-                            }
-                            setFlexibleTimings(false);
-                            setBeforeDate(null);
-                            const timeStamp = event.nativeEvent.timestamp;
-                            setFromTimeStamp(timeStamp);
-                            if (Platform.OS === "android") {
-                              setShowOnDate(!showOnDate);
-                              setOnDate(moment(date).format("ddd DD,MMM"));
-                              if (fromTimeStamp > toTimeStamp) {
-                                setBeforeDate(null);
-                              }
-                            }
-                            Keyboard.dismiss();
-                          }}
-                        />
-                      </View>
-                    )}
-                  </View>
-                  <View>
-                    <RoundedDropdown
-                      title={
-                        beforeDate ? `Before ${beforeDate}` : "Before date"
-                      }
-                      onPress={() => setShowBeforeDate(true)}
-                      titleStyle={{
-                        fontSize: fontSizeH4().fontSize + (beforeDate ? 1 : 3),
-                      }}
-                      style={{
-                        borderWidth: 2,
-                        borderColor: Colors[theme]["iconColor"],
-                        paddingHorizontal: getWidthnHeight(2)?.width,
-                        paddingVertical: getWidthnHeight(1)?.width,
-                        borderRadius: getWidthnHeight(10)?.width,
-                        backgroundColor: beforeDate
-                          ? Colors[theme]["yellow"]
-                          : "transparent",
-                      }}
-                    />
-                    {showBeforeDate && (
-                      <View>
-                        <DateTimePicker
-                          value={moment(toTimeStamp).utc().toDate()}
-                          display="default"
-                          minimumDate={moment(currentTimeStamp)
-                            .add(1, "day")
-                            .utc()
-                            .toDate()}
-                          onChange={(event, date) => {
-                            if (event.type === "dismissed") {
-                              setShowBeforeDate(!showBeforeDate);
-                              return;
-                            }
-                            setFlexibleTimings(false);
-                            setOnDate(null);
-                            const timeStamp = event.nativeEvent.timestamp;
-                            setToTimeStamp(timeStamp);
-                            if (Platform.OS === "android") {
-                              setShowBeforeDate(!showBeforeDate);
-                              setBeforeDate(moment(date).format("ddd DD,MMM"));
-                            }
-                            Keyboard.dismiss();
-                          }}
-                        />
-                      </View>
-                    )}
-                  </View>
-                  <RoundedDropdown
-                    title={"I'm flexible"}
-                    onPress={() => {
-                      setOnDate(null);
-                      setBeforeDate(null);
-                      setFlexibleTimings(true);
-                    }}
-                    iconSize={null}
-                    titleStyle={{
-                      fontSize: fontSizeH4().fontSize + 3,
-                    }}
-                    style={{
-                      borderWidth: 2,
-                      borderColor: Colors[theme]["iconColor"],
-                      backgroundColor: flexibleTimings
-                        ? Colors[theme]["yellow"]
-                        : "transparent",
-                      paddingHorizontal: getWidthnHeight(2)?.width,
-                      paddingVertical: getWidthnHeight(1.5)?.width,
-                      borderRadius: getWidthnHeight(10)?.width,
-                    }}
-                  />
-                </View>
-                {submitStep1 && step1DateError && (
-                  <View>
-                    <ThemedText
-                      style={{
-                        position: "absolute",
-                        color: Colors[theme]["red"],
-                        fontSize: fontSizeH4().fontSize - 1,
-                      }}
-                    >
-                      *Date is required
-                    </ThemedText>
-                  </View>
-                )}
-                <View
-                  style={[
-                    { flexDirection: "row", alignItems: "center" },
-                    getMarginTop(3),
-                  ]}
-                >
-                  <Checkbox
-                    value={checked}
-                    onValueChange={() => {
-                      if (checked) {
-                        setCertainTime(null);
-                      }
-                      setChecked(!checked);
-                    }}
-                  />
-                  <ThemedText style={getMarginLeft(3)}>
-                    I need certain time of day
-                  </ThemedText>
-                </View>
-              </View>
-              {checked && submitStep1 && !certainTime && (
-                <View>
-                  <ThemedText
-                    style={{
-                      position: "absolute",
-                      color: Colors[theme]["red"],
-                      fontSize: fontSizeH4().fontSize - 1,
-                    }}
-                  >
-                    *Please select certain time
-                  </ThemedText>
-                </View>
-              )}
-              {checked && (
-                <View
-                  style={[
-                    {
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    },
-                    getMarginTop(3),
-                  ]}
-                >
-                  <FlatList
-                    data={timeOfDay}
-                    numColumns={2}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => {
-                      let backgroundColor = `${Colors[theme]["gradeOut"]}E0`;
-                      if (item.id === certainTime) {
-                        backgroundColor = `${Colors[theme]["yellow"]}E0`;
-                      }
-                      return (
-                        <ThemedView
-                          style={[
-                            {
-                              flex: 1,
-                              alignItems: "center",
-                              marginHorizontal: getWidthnHeight(2)?.width,
-                              borderRadius: getWidthnHeight(3)?.width,
-                              backgroundColor,
-                            },
-                            getMarginTop(2),
-                          ]}
-                        >
-                          <TouchableOpacity
-                            activeOpacity={0.7}
-                            style={{
-                              flex: 1,
-                              alignItems: "center",
-                              width: "100%",
-                              height: "100%",
-                              paddingVertical: getWidthnHeight(4)?.width,
-                            }}
-                            onPress={() => setCertainTime(item.id)}
-                          >
-                            <>
-                              {item.icon}
-                              <ThemedText
-                                style={{
-                                  fontSize: fontSizeH4().fontSize + 5,
-                                  fontWeight: "500",
-                                }}
-                              >
-                                {item.title}
-                              </ThemedText>
-                              <ThemedText style={[fontSizeH4()]}>
-                                {item.subtitle}
-                              </ThemedText>
-                            </>
-                          </TouchableOpacity>
-                        </ThemedView>
-                      );
-                    }}
-                  />
-                </View>
-              )}
-            </View>
+            <ThemedText
+              style={[
+                {
+                  // lineHeight: -1,
+                  fontFamily: "SquadaOne_400Regular",
+                  color: Colors[theme]["iconColor"],
+                  fontSize: fontSizeH2().fontSize + 4,
+                },
+                // fontSizeH2(),
+              ]}
+            >
+              Let's start with the basics
+            </ThemedText>
           )}
           {step === 2 && (
-            <Step2
-              selected={selected}
-              setSelected={setSelected}
-              selectedLocation={selectedLocation}
-              setSelectedLocation={setSelectedLocation}
-              submitStep2={submitStep2}
-              openBottomSheet={() => openBottomSheet()}
-            />
+            <ThemedText
+              style={[
+                {
+                  // lineHeight: -1,
+                  fontFamily: "SquadaOne_400Regular",
+                  color: Colors[theme]["iconColor"],
+                  fontSize: fontSizeH2().fontSize + 4,
+                },
+                // fontSizeH2(),
+              ]}
+            >
+              Tell us where
+            </ThemedText>
           )}
           {step === 3 && (
-            <Step3
-              details={details}
-              images={images}
-              setDetails={setDetails}
-              setImages={setImages}
-              submitStep3={submitStep3}
-              onPress={() => openBottomSheet(PHOTO)}
-            />
+            <ThemedText
+              style={[
+                {
+                  fontFamily: "SquadaOne_400Regular",
+                  color: Colors[theme]["iconColor"],
+                  fontSize: fontSizeH2().fontSize + 4,
+                },
+                // fontSizeH2(),
+              ]}
+            >
+              Provide more details
+            </ThemedText>
           )}
           {step === 4 && (
-            <Step4
-              budget={budget}
-              setBudget={setBudget}
-              submitStep4={submitStep4}
-            />
-          )}
-          {step === 5 && (
-            <View style={[{ flex: 1 }]}>
-              <ThemedText
-                style={[
-                  {
-                    // lineHeight: -1,
-                    fontFamily: "SquadaOne_400Regular",
-                    color: Colors[theme]["iconColor"],
-                    fontSize: fontSizeH2().fontSize + 4,
-                  },
-                  // fontSizeH2(),
-                ]}
-              >
-                Alright, ready to get offers?
-              </ThemedText>
-              <View style={[getMarginTop(1)]}>
-                <ThemedText
-                  style={[
-                    { fontSize: fontSizeH4().fontSize + 4, fontWeight: "500" },
-                  ]}
-                >
-                  Post the task when you're ready
-                </ThemedText>
-              </View>
-              <TaskDetailsTile
-                title={taskTitle}
-                onPress={() => setStep(1)}
-                leftIcon={
-                  <ThemedMaterialCommunityIcons
-                    name="clipboard-text-outline"
-                    size={getWidthnHeight(6)?.width}
-                    lightColor={Colors.light.iconColor}
-                    darkColor={Colors.dark.white}
-                  />
-                }
-                style={[
-                  {
-                    shadowColor: Colors[theme]["black"],
-                    backgroundColor:
-                      theme === "light"
-                        ? Colors.light.yellow
-                        : Colors.dark.primary,
-                  },
-                  getMarginTop(2),
-                ]}
-              />
-              <TaskDetailsTile
-                title={
-                  onDate
-                    ? `On ${onDate}`
-                    : beforeDate
-                    ? `Before ${beforeDate}`
-                    : flexibleTimings
-                    ? "I'm flexible"
-                    : ""
-                }
-                onPress={() => setStep(1)}
-                leftIcon={
-                  <ThemedMaterialCommunityIcons
-                    name={"calendar-text"}
-                    size={getWidthnHeight(6)?.width}
-                    lightColor={Colors.light.iconColor}
-                    darkColor={Colors.dark.white}
-                  />
-                }
-                style={[
-                  {
-                    shadowColor: Colors[theme]["black"],
-                    backgroundColor:
-                      theme === "light"
-                        ? Colors.light.yellow
-                        : Colors.dark.primary,
-                  },
-                  getMarginTop(2),
-                ]}
-              />
-              <TaskDetailsTile
-                title={
-                  selected === 1 ? selectedLocation?.description : "Online"
-                }
-                onPress={() => setStep(2)}
-                leftIcon={
-                  <ThemedIonicons
-                    name={"location-outline"}
-                    size={getWidthnHeight(6)?.width}
-                    lightColor={Colors.light.iconColor}
-                    darkColor={Colors.dark.white}
-                  />
-                }
-                style={[
-                  {
-                    shadowColor: Colors[theme]["black"],
-                    backgroundColor:
-                      theme === "light"
-                        ? Colors.light.yellow
-                        : Colors.dark.primary,
-                  },
-                  getMarginTop(2),
-                ]}
-              />
-              <TaskDetailsTile
-                title={details}
-                onPress={() => setStep(3)}
-                leftIcon={
-                  <ThemedFontAwesome
-                    name={"tasks"}
-                    size={getWidthnHeight(6)?.width}
-                    lightColor={Colors.light.iconColor}
-                    darkColor={Colors.dark.white}
-                  />
-                }
-                style={[
-                  {
-                    shadowColor: Colors[theme]["black"],
-                    backgroundColor:
-                      theme === "light"
-                        ? Colors.light.yellow
-                        : Colors.dark.primary,
-                  },
-                  getMarginTop(2),
-                ]}
-              />
-              <TaskDetailsTile
-                title={budget}
-                onPress={() => setStep(4)}
-                leftIcon={
-                  <ThemedFontAwesome6
-                    name={"dollar"}
-                    size={getWidthnHeight(6)?.width}
-                    lightColor={Colors.light.iconColor}
-                    darkColor={Colors.dark.white}
-                  />
-                }
-                style={[
-                  {
-                    shadowColor: Colors[theme]["black"],
-                    backgroundColor:
-                      theme === "light"
-                        ? Colors.light.yellow
-                        : Colors.dark.primary,
-                  },
-                  getMarginTop(2),
-                ]}
-              />
-            </View>
+            <ThemedText
+              style={[
+                {
+                  fontFamily: "SquadaOne_400Regular",
+                  color: Colors[theme]["iconColor"],
+                  fontSize: fontSizeH2().fontSize + 4,
+                },
+                // fontSizeH2(),
+              ]}
+            >
+              Suggest your budget?
+            </ThemedText>
           )}
         </View>
-        <View>
-          {step === 1 && (
-            <FlatButton
-              lightColor={Colors[theme]["yellow"]}
-              darkColor={Colors[theme]["yellow"]}
-              title="Next"
-              onPress={() => {
-                setSubmitStep1(true);
-                if (!step1Error) {
-                  setStep(step + 1);
-                }
-                // if (taskTitle && (onDate || beforeDate || flexibleTimings)) {
-                //   if (checked) {
-                //     if (certainTime) {
-                //       setStep(step + 1);
-                //     }
-                //   } else {
-                //     setStep(step + 1);
-                //   }
-                // }
-              }}
-              style={{ borderWidth: 0 }}
-            />
-          )}
-          {step > 1 && step < 5 && (
-            <View style={[]}>
-              <View
-                style={[
-                  {
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    borderWidth: 0,
-                    borderColor: "red",
-                  },
-                ]}
-              >
+      </View>
+    );
+  };
+
+  const Footer: React.FC = () => {
+    return (
+      <View style={{ borderWidth: 0 }}>
+        {step === 1 && (
+          <FlatButton
+            lightColor={Colors[theme]["yellow"]}
+            darkColor={Colors[theme]["yellow"]}
+            title="Next"
+            onPress={() => {
+              setSubmitStep1(true);
+              if (!step1Error) {
+                setStep(step + 1);
+              }
+            }}
+            style={{ borderWidth: 0 }}
+          />
+        )}
+        {step > 1 && step < 5 && (
+          <View style={[]}>
+            <View
+              style={[
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  borderWidth: 0,
+                  borderColor: "red",
+                },
+              ]}
+            >
+              <FlatButton
+                lightColor={Colors[theme]["yellow"]}
+                darkColor={Colors[theme]["yellow"]}
+                title="Back"
+                onPress={() => setStep(step - 1)}
+                style={{ borderWidth: 0, width: "50%" }}
+              />
+              {step <= 5 && (
                 <FlatButton
                   lightColor={Colors[theme]["yellow"]}
                   darkColor={Colors[theme]["yellow"]}
-                  title="Back"
-                  onPress={() => setStep(step - 1)}
-                  style={{ borderWidth: 0, width: "50%" }}
-                />
-                {step <= 5 && (
-                  <FlatButton
-                    lightColor={Colors[theme]["yellow"]}
-                    darkColor={Colors[theme]["yellow"]}
-                    title={"Next"}
-                    onPress={() => {
-                      if (step === 2) {
-                        setSubmitStep2(true);
-                        if (
-                          (selected === 1 && selectedLocation) ||
-                          selected === 2
-                        ) {
-                          setStep(step + 1);
-                        }
-                      } else if (step === 3) {
-                        setSubmitStep3(true);
-                        if (details) {
-                          setStep(step + 1);
-                        }
-                      } else if (step === 4) {
-                        setSubmitStep4(true);
-                        if (budget) {
-                          setStep(step + 1);
-                        }
+                  title={"Next"}
+                  onPress={() => {
+                    if (step === 2) {
+                      setSubmitStep2(true);
+                      if (
+                        (selected === 1 && selectedLocation) ||
+                        selected === 2
+                      ) {
+                        setStep(step + 1);
                       }
-                    }}
-                    style={{
-                      borderWidth: 0,
-                      width: "50%",
-                      borderLeftWidth: 1,
-                      borderLeftColor: Colors[theme]["iconColor"],
-                    }}
-                  />
-                )}
-              </View>
-            </View>
-          )}
-          {step === 5 && (
-            <FlatButton
-              lightColor={Colors[theme]["yellow"]}
-              darkColor={Colors[theme]["yellow"]}
-              title="Post task"
-              onPress={async () => {
-                const isConnected = await checkInternetConnectivity();
-                if (!isConnected) {
-                  return;
-                }
-                const loggedIn = verifyAuth();
-                if (loggedIn) {
-                  if (images.length > 0) {
-                    uploadImages();
-                  } else {
-                    setLoader(true);
-                    compileDataObject();
-                  }
-                }
-              }}
-              style={{ borderWidth: 0, width: "100%" }}
-            />
-          )}
-          {/* Google Places Bottom Sheet */}
-          <CustomBS
-            ref={googleSearchRef}
-            onOpen={focusLocationInput}
-            snapPoints={["85%"]}
-            bsStyle={{
-              borderTopLeftRadius: getWidthnHeight(5)?.width,
-              borderTopRightRadius: getWidthnHeight(5)?.width,
-              // borderWidth: 4,
-            }}
-            handleComponent={() => (
-              <View style={[{ alignItems: "center" }, getMarginTop(-7)]}>
-                <CloseButtonBS onPress={() => closeBottomSheet()} />
-              </View>
-            )}
-          >
-            <View
-              style={[
-                { flex: 1, alignItems: "center", borderWidth: 0 },
-                getWidthnHeight(100),
-              ]}
-            >
-              <IconTextInput
-                ref={locationInputRef}
-                value={searchText}
-                onChangeText={(text) => {
-                  const value = text.trimStart();
-                  setSearchText(value);
-                  debouncedFetchResults(value);
-                }}
-                onClear={() => {
-                  setSearchText("");
-                  setLocations([]);
-                }}
-                containerStyle={[
-                  { width: "90%", borderWidth: 0 },
-                  getMarginVertical(2),
-                ]}
-                icon={
-                  <ThemedIonicons
-                    name="location"
-                    colorType={"iconColor"}
-                    size={getWidthnHeight(7)?.width}
-                  />
-                }
-                placeholder="Enter your postcode"
-                placeholderTextColor={"darkGray"}
-                style={{
-                  flex: 1,
-                  paddingHorizontal: getWidthnHeight(3)?.width,
-                  marginVertical: getWidthnHeight(2)?.width,
-                  marginHorizontal: getWidthnHeight(1)?.width,
-                  fontSize: fontSizeH4().fontSize + 5,
-                  height: "100%",
-                }}
-              />
-              <View
-                style={[
-                  { alignItems: "center", borderWidth: 0, width: "100%" },
-                ]}
-              >
-                <BottomSheetFlatList
-                  keyboardShouldPersistTaps="always"
-                  data={locations}
-                  style={[{ width: "90%" }]}
-                  keyExtractor={(item) => item.place_id!}
-                  ListFooterComponent={() => (
-                    <LocationTile
-                      icon={
-                        <ThemedMaterialIcons
-                          name="my-location"
-                          colorType={"iconColor"}
-                          size={getWidthnHeight(7)?.width}
-                        />
+                    } else if (step === 3) {
+                      setSubmitStep3(true);
+                      if (details) {
+                        setStep(step + 1);
                       }
-                      item={{
-                        description: "Use current location",
-                        place_id: "none",
-                      }}
-                      onPress={getCurrentLocation}
-                    />
-                  )}
-                  renderItem={({ item }) => {
-                    return (
-                      <LocationTile
-                        item={item}
-                        onPress={() => fetchLocationCoords(item)}
-                      />
-                    );
+                    } else if (step === 4) {
+                      setSubmitStep4(true);
+                      if (budget) {
+                        setStep(step + 1);
+                      }
+                    }
+                  }}
+                  style={{
+                    borderWidth: 0,
+                    width: "50%",
+                    borderLeftWidth: 1,
+                    borderLeftColor: Colors[theme]["iconColor"],
                   }}
                 />
-                <View
-                  style={[
-                    {
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    },
-                    getMarginTop(1),
-                  ]}
-                >
-                  <ThemedText
-                    lightColor={Colors.light.black}
-                    darkColor={Colors.dark.white}
-                  >
-                    Powered by
-                  </ThemedText>
-                  <Image
-                    source={require("../../../assets/google2.png")}
-                    resizeMode="contain"
+              )}
+            </View>
+          </View>
+        )}
+        {step === 5 && (
+          <FlatButton
+            lightColor={Colors[theme]["yellow"]}
+            darkColor={Colors[theme]["yellow"]}
+            title={edit ? "Update task" : "Post task"}
+            onPress={async () => {
+              const isConnected = await checkInternetConnectivity();
+              if (!isConnected) {
+                return;
+              }
+              const loggedIn = verifyAuth();
+              if (loggedIn) {
+                if (images.length > 0) {
+                  uploadImages();
+                } else {
+                  setLoader(true);
+                  compileDataObject();
+                }
+              }
+            }}
+            style={{ borderWidth: 0, width: "100%" }}
+          />
+        )}
+      </View>
+    );
+  };
+
+  return (
+    <ThemedSafe colorType={edit ? "transparent" : "white"} style={{ flex: 1 }}>
+      {!edit && theme === "light" && (
+        <View
+          style={[
+            StyleSheet.absoluteFillObject,
+            {
+              alignItems: "center",
+              justifyContent: "flex-end",
+            },
+          ]}
+        >
+          <Image
+            source={require("../../../assets/query.jpg")}
+            resizeMode="cover"
+            style={[
+              {
+                width: getWidthnHeight(100)?.width,
+                height: getWidthnHeight(75)?.width,
+              },
+              getMarginBottom(13),
+            ]}
+          />
+        </View>
+      )}
+      <View style={{ flex: 1, borderWidth: 0 }}>
+        <KeyboardAvoidingView
+          style={{
+            flex: 1,
+            borderWidth: 0,
+          }}
+          {...Platform.select({
+            ios: {
+              behavior: "padding",
+              keyboardVerticalOffset: getWidthnHeight(undefined, 15.5)?.height,
+            },
+          })}
+        >
+          <TouchableWithoutFeedback
+            onPress={() => Keyboard.dismiss()}
+            style={{ flex: 1 }}
+          >
+            <View style={{ flex: 1 }}>
+              <Header />
+              <View style={{ flex: 1, borderWidth: 0 }}>
+                {step === 1 && (
+                  <View
                     style={[
                       {
-                        width: getWidthnHeight(15)?.width,
-                        height: "100%",
+                        flex: 1,
+                        paddingHorizontal: getWidthnHeight(4)?.width,
                       },
-                      getMarginTop(0.4),
                     ]}
+                  >
+                    <View
+                      style={[
+                        {
+                          flex: 1,
+                        },
+                      ]}
+                    >
+                      <FlatList
+                        data={checked ? timeOfDay : []}
+                        keyboardShouldPersistTaps={"always"}
+                        numColumns={2}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => {
+                          let backgroundColor = `${Colors[theme]["gradeOut"]}E0`;
+                          if (item.id === certainTime) {
+                            backgroundColor = `${Colors[theme]["yellow"]}E0`;
+                          }
+                          return (
+                            <ThemedView
+                              style={[
+                                {
+                                  flex: 1,
+                                  alignItems: "center",
+                                  marginHorizontal: getWidthnHeight(2)?.width,
+                                  borderRadius: getWidthnHeight(3)?.width,
+                                  backgroundColor,
+                                },
+                                getMarginTop(2),
+                              ]}
+                            >
+                              <TouchableOpacity
+                                activeOpacity={0.7}
+                                style={{
+                                  flex: 1,
+                                  alignItems: "center",
+                                  width: "100%",
+                                  height: "100%",
+                                  paddingVertical: getWidthnHeight(4)?.width,
+                                }}
+                                onPress={() => setCertainTime(item.id)}
+                              >
+                                <>
+                                  {item.icon}
+                                  <ThemedText
+                                    style={{
+                                      fontSize: fontSizeH4().fontSize + 5,
+                                      fontWeight: "500",
+                                    }}
+                                  >
+                                    {item.title}
+                                  </ThemedText>
+                                  <ThemedText style={[fontSizeH4()]}>
+                                    {item.subtitle}
+                                  </ThemedText>
+                                </>
+                              </TouchableOpacity>
+                            </ThemedView>
+                          );
+                        }}
+                        ListHeaderComponent={useMemo(() => {
+                          return (
+                            <>
+                              <View style={[getMarginTop(!edit ? 4 : 3)]}>
+                                <ThemedText
+                                  style={[
+                                    {
+                                      fontSize: fontSizeH4().fontSize + 4,
+                                      fontWeight: "500",
+                                    },
+                                  ]}
+                                >
+                                  In a few words, what do you need done?
+                                </ThemedText>
+                                <View
+                                  style={[
+                                    {
+                                      backgroundColor:
+                                        Colors[theme]["screenBG"],
+                                      borderRadius: getWidthnHeight(3)?.width,
+                                      borderWidth:
+                                        theme === "light"
+                                          ? submitStep1 && !taskTitle
+                                            ? 1
+                                            : 0
+                                          : 1,
+                                      borderColor:
+                                        submitStep1 && !taskTitle
+                                          ? Colors[theme]["red"]
+                                          : Colors[theme]["iconColor"],
+                                    },
+                                    getMarginTop(1.5),
+                                  ]}
+                                >
+                                  <PrimaryInput
+                                    containerStyle={{
+                                      backgroundColor: "transparent",
+                                    }}
+                                    numberOfLines={1}
+                                    value={taskTitle}
+                                    style={{
+                                      fontSize: fontSizeH4().fontSize + 4,
+                                      marginVertical: getWidthnHeight(4)?.width,
+                                      marginHorizontal:
+                                        getWidthnHeight(4)?.width,
+                                    }}
+                                    placeholder="eg. Help me move sofa"
+                                    placeholderTextColor={"darkGray"}
+                                    onChangeText={(text) =>
+                                      setTaskTitle(text.trimStart())
+                                    }
+                                  />
+                                  {submitStep1 && !taskTitle && (
+                                    <View>
+                                      <ThemedText
+                                        style={{
+                                          position: "absolute",
+                                          color: Colors[theme]["red"],
+                                          fontSize: fontSizeH4().fontSize - 1,
+                                        }}
+                                      >
+                                        *Task title is required
+                                      </ThemedText>
+                                    </View>
+                                  )}
+                                </View>
+                              </View>
+                              <View style={[getMarginTop(3)]}>
+                                <ThemedText
+                                  style={[
+                                    {
+                                      fontSize: fontSizeH4().fontSize + 4,
+                                      fontWeight: "500",
+                                    },
+                                  ]}
+                                >
+                                  When do you need this done?
+                                </ThemedText>
+                                <View
+                                  style={[
+                                    {
+                                      flexDirection: "row",
+                                      alignItems: "center",
+                                      justifyContent: "space-between",
+                                      // borderWidth: 1,
+                                      // borderColor: "transparent",
+                                    },
+                                    getMarginTop(2),
+                                  ]}
+                                >
+                                  <View>
+                                    <RoundedDropdown
+                                      title={
+                                        onDate ? `On ${onDate}` : "On date"
+                                      }
+                                      onPress={() => setShowOnDate(true)}
+                                      titleStyle={{
+                                        fontSize:
+                                          fontSizeH4().fontSize +
+                                          (onDate ? 1 : 3),
+                                      }}
+                                      style={{
+                                        borderWidth: 2,
+                                        borderColor: Colors[theme]["iconColor"],
+                                        paddingHorizontal:
+                                          getWidthnHeight(2)?.width,
+                                        paddingVertical:
+                                          getWidthnHeight(1)?.width,
+                                        borderRadius:
+                                          getWidthnHeight(10)?.width,
+                                        backgroundColor: onDate
+                                          ? Colors[theme]["yellow"]
+                                          : "transparent",
+                                      }}
+                                    />
+                                    {showOnDate && (
+                                      <View>
+                                        <DateTimePicker
+                                          value={moment(fromTimeStamp)
+                                            .utc()
+                                            .toDate()}
+                                          display="default"
+                                          minimumDate={moment(currentTimeStamp)
+                                            .utc()
+                                            .toDate()}
+                                          onChange={(event, date) => {
+                                            if (event.type === "dismissed") {
+                                              setShowOnDate(!showOnDate);
+                                              return;
+                                            }
+                                            setFlexibleTimings(false);
+                                            setBeforeDate(null);
+                                            const timeStamp =
+                                              event.nativeEvent.timestamp;
+                                            setFromTimeStamp(timeStamp);
+                                            if (Platform.OS === "android") {
+                                              setShowOnDate(!showOnDate);
+                                              setOnDate(
+                                                moment(date).format(
+                                                  "ddd DD,MMM"
+                                                )
+                                              );
+                                              if (fromTimeStamp > toTimeStamp) {
+                                                setBeforeDate(null);
+                                              }
+                                            }
+                                            Keyboard.dismiss();
+                                          }}
+                                        />
+                                      </View>
+                                    )}
+                                  </View>
+                                  <View>
+                                    <RoundedDropdown
+                                      title={
+                                        beforeDate
+                                          ? `Before ${beforeDate}`
+                                          : "Before date"
+                                      }
+                                      onPress={() => setShowBeforeDate(true)}
+                                      titleStyle={{
+                                        fontSize:
+                                          fontSizeH4().fontSize +
+                                          (beforeDate ? 1 : 3),
+                                      }}
+                                      style={{
+                                        borderWidth: 2,
+                                        borderColor: Colors[theme]["iconColor"],
+                                        paddingHorizontal:
+                                          getWidthnHeight(2)?.width,
+                                        paddingVertical:
+                                          getWidthnHeight(1)?.width,
+                                        borderRadius:
+                                          getWidthnHeight(10)?.width,
+                                        backgroundColor: beforeDate
+                                          ? Colors[theme]["yellow"]
+                                          : "transparent",
+                                      }}
+                                    />
+                                    {showBeforeDate && (
+                                      <View>
+                                        <DateTimePicker
+                                          value={moment(toTimeStamp)
+                                            .utc()
+                                            .toDate()}
+                                          display="default"
+                                          minimumDate={moment(currentTimeStamp)
+                                            .add(1, "day")
+                                            .utc()
+                                            .toDate()}
+                                          onChange={(event, date) => {
+                                            if (event.type === "dismissed") {
+                                              setShowBeforeDate(
+                                                !showBeforeDate
+                                              );
+                                              return;
+                                            }
+                                            setFlexibleTimings(false);
+                                            setOnDate(null);
+                                            const timeStamp =
+                                              event.nativeEvent.timestamp;
+                                            setToTimeStamp(timeStamp);
+                                            if (Platform.OS === "android") {
+                                              setShowBeforeDate(
+                                                !showBeforeDate
+                                              );
+                                              setBeforeDate(
+                                                moment(date).format(
+                                                  "ddd DD,MMM"
+                                                )
+                                              );
+                                            }
+                                            Keyboard.dismiss();
+                                          }}
+                                        />
+                                      </View>
+                                    )}
+                                  </View>
+                                  <RoundedDropdown
+                                    title={"I'm flexible"}
+                                    onPress={() => {
+                                      setOnDate(null);
+                                      setBeforeDate(null);
+                                      setFlexibleTimings(true);
+                                    }}
+                                    iconSize={null}
+                                    titleStyle={{
+                                      fontSize: fontSizeH4().fontSize + 3,
+                                    }}
+                                    style={{
+                                      borderWidth: 2,
+                                      borderColor: Colors[theme]["iconColor"],
+                                      backgroundColor: flexibleTimings
+                                        ? Colors[theme]["yellow"]
+                                        : "transparent",
+                                      paddingHorizontal:
+                                        getWidthnHeight(2)?.width,
+                                      paddingVertical:
+                                        getWidthnHeight(1.5)?.width,
+                                      borderRadius: getWidthnHeight(10)?.width,
+                                    }}
+                                  />
+                                </View>
+                                {submitStep1 && step1DateError && (
+                                  <View>
+                                    <ThemedText
+                                      style={{
+                                        position: "absolute",
+                                        color: Colors[theme]["red"],
+                                        fontSize: fontSizeH4().fontSize - 1,
+                                      }}
+                                    >
+                                      *Date is required
+                                    </ThemedText>
+                                  </View>
+                                )}
+                                <View
+                                  style={[
+                                    {
+                                      flexDirection: "row",
+                                      alignItems: "center",
+                                    },
+                                    getMarginTop(3),
+                                  ]}
+                                >
+                                  <Checkbox
+                                    value={checked}
+                                    onValueChange={() => {
+                                      if (checked) {
+                                        setCertainTime(null);
+                                      }
+                                      setChecked(!checked);
+                                    }}
+                                  />
+                                  <ThemedText style={getMarginLeft(3)}>
+                                    I need certain time of day
+                                  </ThemedText>
+                                </View>
+                              </View>
+                              {checked && submitStep1 && !certainTime && (
+                                <View>
+                                  <ThemedText
+                                    style={{
+                                      position: "absolute",
+                                      color: Colors[theme]["red"],
+                                      fontSize: fontSizeH4().fontSize - 1,
+                                    }}
+                                  >
+                                    *Please select certain time
+                                  </ThemedText>
+                                </View>
+                              )}
+                            </>
+                          );
+                        }, [
+                          taskTitle,
+                          theme,
+                          submitStep1,
+                          edit,
+                          flexibleTimings,
+                          onDate,
+                          beforeDate,
+                          showOnDate,
+                          showBeforeDate,
+                          fromTimeStamp,
+                          toTimeStamp,
+                          currentTimeStamp,
+                          checked,
+                          certainTime,
+                        ])}
+                      />
+                    </View>
+                  </View>
+                )}
+                {step === 2 && (
+                  <Step2
+                    selected={selected}
+                    setSelected={setSelected}
+                    selectedLocation={selectedLocation}
+                    setSelectedLocation={setSelectedLocation}
+                    submitStep2={submitStep2}
+                    openBottomSheet={() => openBottomSheet()}
                   />
-                </View>
-              </View>
-            </View>
-          </CustomBS>
-
-          {/* Attachment Bottom Sheet */}
-          <CustomBS
-            ref={photoRef}
-            snapPoints={["25%"]}
-            bsStyle={{
-              borderTopLeftRadius: getWidthnHeight(5)?.width,
-              borderTopRightRadius: getWidthnHeight(5)?.width,
-            }}
-            handleComponent={() => (
-              <View style={[{ alignItems: "center" }, getMarginTop(-7)]}>
-                <CloseButtonBS onPress={() => closeBottomSheet()} />
-              </View>
-            )}
-          >
-            <View>
-              {listing.map((item, index) => {
-                return (
-                  <TouchableOpacity
-                    key={`list${item.id}`}
-                    style={{ borderColor: "red", borderWidth: 0 }}
-                    onPress={() => {
-                      if (item.id === "1") {
-                        pickImage(CAMERA);
-                      } else if (item.id === "2") {
-                        pickImage(PHOTO);
-                      }
-                      closeBottomSheet(PHOTO);
-                    }}
+                )}
+                {step === 3 && (
+                  <Step3
+                    details={details}
+                    images={images}
+                    setDetails={setDetails}
+                    setImages={setImages}
+                    submitStep3={submitStep3}
+                    onPress={() => openBottomSheet(PHOTO)}
+                  />
+                )}
+                {step === 4 && (
+                  <Step4
+                    budget={budget}
+                    setBudget={setBudget}
+                    submitStep4={submitStep4}
+                  />
+                )}
+                {step === 5 && (
+                  <View
+                    style={[
+                      {
+                        flex: 1,
+                        paddingHorizontal: getWidthnHeight(4)?.width,
+                      },
+                    ]}
                   >
                     <ThemedText
-                      style={{
-                        color: Colors[theme]["buttonBorder"],
-                        fontSize: fontSizeH4().fontSize + 3,
-                        padding: getWidthnHeight(5)?.width,
-                      }}
+                      style={[
+                        {
+                          // lineHeight: -1,
+                          fontFamily: "SquadaOne_400Regular",
+                          color: Colors[theme]["iconColor"],
+                          fontSize: fontSizeH2().fontSize + 4,
+                        },
+                        // fontSizeH2(),
+                      ]}
                     >
-                      {item.title}
+                      {!edit
+                        ? "Alright, ready to get offers?"
+                        : "Ok! Making some tweaks?"}
                     </ThemedText>
-                  </TouchableOpacity>
-                );
-              })}
+                    <View style={[getMarginTop(1)]}>
+                      <ThemedText
+                        style={[
+                          {
+                            fontSize: fontSizeH4().fontSize + 4,
+                            fontWeight: "500",
+                          },
+                        ]}
+                      >
+                        {`${
+                          edit ? "Update" : "Post"
+                        } the task when you're ready`}
+                      </ThemedText>
+                    </View>
+                    <TaskDetailsTile
+                      title={taskTitle}
+                      onPress={() => setStep(1)}
+                      leftIcon={
+                        <ThemedMaterialCommunityIcons
+                          name="clipboard-text-outline"
+                          size={getWidthnHeight(6)?.width}
+                          lightColor={Colors.light.iconColor}
+                          darkColor={Colors.dark.white}
+                        />
+                      }
+                      style={[
+                        {
+                          shadowColor: Colors[theme]["black"],
+                          backgroundColor:
+                            theme === "light"
+                              ? Colors.light.yellow
+                              : Colors.dark.primary,
+                        },
+                        getMarginTop(2),
+                      ]}
+                    />
+                    <TaskDetailsTile
+                      title={
+                        onDate
+                          ? `On ${onDate}`
+                          : beforeDate
+                          ? `Before ${beforeDate}`
+                          : flexibleTimings
+                          ? "I'm flexible"
+                          : ""
+                      }
+                      onPress={() => setStep(1)}
+                      leftIcon={
+                        <ThemedMaterialCommunityIcons
+                          name={"calendar-text"}
+                          size={getWidthnHeight(6)?.width}
+                          lightColor={Colors.light.iconColor}
+                          darkColor={Colors.dark.white}
+                        />
+                      }
+                      style={[
+                        {
+                          shadowColor: Colors[theme]["black"],
+                          backgroundColor:
+                            theme === "light"
+                              ? Colors.light.yellow
+                              : Colors.dark.primary,
+                        },
+                        getMarginTop(2),
+                      ]}
+                    />
+                    <TaskDetailsTile
+                      title={
+                        selected === 1
+                          ? selectedLocation?.description
+                          : "Online"
+                      }
+                      onPress={() => setStep(2)}
+                      leftIcon={
+                        <ThemedIonicons
+                          name={"location-outline"}
+                          size={getWidthnHeight(6)?.width}
+                          lightColor={Colors.light.iconColor}
+                          darkColor={Colors.dark.white}
+                        />
+                      }
+                      style={[
+                        {
+                          shadowColor: Colors[theme]["black"],
+                          backgroundColor:
+                            theme === "light"
+                              ? Colors.light.yellow
+                              : Colors.dark.primary,
+                        },
+                        getMarginTop(2),
+                      ]}
+                    />
+                    <TaskDetailsTile
+                      title={details}
+                      onPress={() => setStep(3)}
+                      leftIcon={
+                        <ThemedFontAwesome
+                          name={"tasks"}
+                          size={getWidthnHeight(6)?.width}
+                          lightColor={Colors.light.iconColor}
+                          darkColor={Colors.dark.white}
+                        />
+                      }
+                      style={[
+                        {
+                          shadowColor: Colors[theme]["black"],
+                          backgroundColor:
+                            theme === "light"
+                              ? Colors.light.yellow
+                              : Colors.dark.primary,
+                        },
+                        getMarginTop(2),
+                      ]}
+                    />
+                    <TaskDetailsTile
+                      title={budget}
+                      onPress={() => setStep(4)}
+                      leftIcon={
+                        <ThemedFontAwesome6
+                          name={"dollar"}
+                          size={getWidthnHeight(6)?.width}
+                          lightColor={Colors.light.iconColor}
+                          darkColor={Colors.dark.white}
+                        />
+                      }
+                      style={[
+                        {
+                          shadowColor: Colors[theme]["black"],
+                          backgroundColor:
+                            theme === "light"
+                              ? Colors.light.yellow
+                              : Colors.dark.primary,
+                        },
+                        getMarginTop(2),
+                      ]}
+                    />
+                  </View>
+                )}
+              </View>
+              <Footer />
             </View>
-          </CustomBS>
-        </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </View>
+
+      {/* Google Places Bottom Sheet */}
+      <CustomBS
+        ref={googleSearchRef}
+        onOpen={focusLocationInput}
+        stackBehavior={"push"}
+        snapPoints={["85%"]}
+        bsStyle={{
+          borderTopLeftRadius: getWidthnHeight(5)?.width,
+          borderTopRightRadius: getWidthnHeight(5)?.width,
+          // borderWidth: 4,
+        }}
+        handleComponent={() => (
+          <View style={[{ alignItems: "center" }, getMarginTop(-7)]}>
+            <CloseButtonBS onPress={() => closeBottomSheet()} />
+          </View>
+        )}
+        {...Platform.select({
+          ios: {
+            index: 1,
+          },
+        })}
+      >
+        <View
+          style={[
+            { flex: 1, alignItems: "center", borderWidth: 0 },
+            getWidthnHeight(100),
+          ]}
+        >
+          <IconTextInput
+            ref={locationInputRef}
+            value={searchText}
+            onChangeText={(text) => {
+              const value = text.trimStart();
+              setSearchText(value);
+              debouncedFetchResults(value);
+            }}
+            onClear={() => {
+              setSearchText("");
+              setLocations([]);
+            }}
+            containerStyle={[
+              { width: "90%", borderWidth: 0 },
+              getMarginVertical(2),
+            ]}
+            icon={
+              <ThemedIonicons
+                name="location"
+                colorType={"iconColor"}
+                size={getWidthnHeight(7)?.width}
+              />
+            }
+            placeholder="Enter your postcode"
+            placeholderTextColor={"darkGray"}
+            style={{
+              flex: 1,
+              paddingHorizontal: getWidthnHeight(3)?.width,
+              marginVertical: getWidthnHeight(2)?.width,
+              marginHorizontal: getWidthnHeight(1)?.width,
+              fontSize: fontSizeH4().fontSize + 5,
+              height: "100%",
+            }}
+          />
+          <View
+            style={[{ alignItems: "center", borderWidth: 0, width: "100%" }]}
+          >
+            <BottomSheetFlatList
+              keyboardShouldPersistTaps="always"
+              data={locations}
+              style={[{ width: "90%" }]}
+              keyExtractor={(item) => item.place_id!}
+              ListFooterComponent={() => (
+                <LocationTile
+                  icon={
+                    <ThemedMaterialIcons
+                      name="my-location"
+                      colorType={"iconColor"}
+                      size={getWidthnHeight(7)?.width}
+                    />
+                  }
+                  item={{
+                    description: "Use current location",
+                    place_id: "none",
+                  }}
+                  onPress={getCurrentLocation}
+                />
+              )}
+              renderItem={({ item }) => {
+                return (
+                  <LocationTile
+                    item={item}
+                    onPress={() => fetchLocationCoords(item)}
+                  />
+                );
+              }}
+            />
+            <View
+              style={[
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                },
+                getMarginTop(1),
+              ]}
+            >
+              <ThemedText
+                lightColor={Colors.light.black}
+                darkColor={Colors.dark.white}
+              >
+                Powered by
+              </ThemedText>
+              <Image
+                source={require("../../../assets/google2.png")}
+                resizeMode="contain"
+                style={[
+                  {
+                    width: getWidthnHeight(15)?.width,
+                    height: "100%",
+                  },
+                  getMarginTop(0.4),
+                ]}
+              />
+            </View>
+          </View>
+        </View>
+      </CustomBS>
+
+      {/* Attachment Bottom Sheet */}
+      <CustomBS
+        ref={photoRef}
+        stackBehavior="push"
+        snapPoints={["25%"]}
+        bsStyle={{
+          borderTopLeftRadius: getWidthnHeight(5)?.width,
+          borderTopRightRadius: getWidthnHeight(5)?.width,
+        }}
+        handleComponent={null}
+        {...Platform.select({
+          ios: {
+            index: 1,
+          },
+        })}
+      >
+        <View>
+          {listing.map((item, index) => {
+            return (
+              <TouchableOpacity
+                key={`list${item.id}`}
+                style={{ borderColor: "red", borderWidth: 0 }}
+                onPress={() => {
+                  if (item.id === "1") {
+                    pickImage(CAMERA);
+                  } else if (item.id === "2") {
+                    pickImage(PHOTO);
+                  }
+                  closeBottomSheet(PHOTO);
+                }}
+              >
+                <ThemedText
+                  style={{
+                    color: Colors[theme]["buttonBorder"],
+                    fontSize: fontSizeH4().fontSize + 3,
+                    padding: getWidthnHeight(5)?.width,
+                  }}
+                >
+                  {item.title}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </CustomBS>
       <Loader
         visible={loader}
         transparent
         title={
           downloadUrl.length < images.length + 1 && images.length > 0
             ? "Uploading Images"
+            : edit
+            ? "Updating task"
             : "Saving task"
         }
         details={
@@ -1375,5 +1660,21 @@ const CreateTask: React.FC = () => {
     </ThemedSafe>
   );
 };
+
+const styles = StyleSheet.create({
+  shadow: {
+    elevation: 4,
+    shadowColor:
+      Platform.OS === "ios"
+        ? `${Colors.light["iconColor"]}8F`
+        : Colors.light["iconColor"],
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    shadowOffset: {
+      width: 0,
+      height: getWidthnHeight(0.3)?.width!,
+    },
+  },
+});
 
 export { CreateTask };

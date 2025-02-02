@@ -3,6 +3,7 @@ import firestore from "@react-native-firebase/firestore";
 
 import { logoutUser, store } from "../../redux/store";
 import { authActions } from "../../redux/slice/auth";
+import { tasksActions } from "../../redux/slice/tasks";
 
 export const getSavedTasksList = async () => {
   const user = auth().currentUser;
@@ -17,7 +18,7 @@ export const getSavedTasksList = async () => {
         id: doc.id, // The document ID (taskId)
         ...doc.data(),
       }));
-      // console.log("$$$ SAVED TASKS: ", tasks);
+      store.dispatch(tasksActions.setSavedTasks(tasks));
     } else {
       logoutUser();
       console.log("No user is logged in");

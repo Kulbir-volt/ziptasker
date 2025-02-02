@@ -17,6 +17,7 @@ import {
   VectorIconsProps,
   ZocialNames,
 } from "../../constants/VectorIcons";
+import { SaveDetailsProps } from "../../screens/AuthStack/CreateTask/CreateTask";
 
 type InitialStateProps = {
   taskTypesList: VectorIconsProps<
@@ -53,11 +54,13 @@ type InitialStateProps = {
     | ZocialNames
     | SimpleLineIconsNames
   >[];
+  savedTasks: SaveDetailsProps[];
 };
 
 const initialState: InitialStateProps = {
   taskTypesList: [],
   chores: [],
+  savedTasks: [],
 };
 
 const tasksSlice = createSlice({
@@ -74,6 +77,12 @@ const tasksSlice = createSlice({
       return {
         ...state,
         chores: action.payload,
+      };
+    },
+    setSavedTasks: (state, action) => {
+      return {
+        ...state,
+        savedTasks: action.payload,
       };
     },
     resetTasksSlice: () => {

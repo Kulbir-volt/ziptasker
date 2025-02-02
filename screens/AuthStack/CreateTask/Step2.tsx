@@ -46,36 +46,25 @@ const Step2: React.FC<Step2Props> = ({
 
   return (
     <KeyboardAvoidingView style={[{ flex: 1 }]}>
-      <ScrollView
-        keyboardShouldPersistTaps="always"
-        style={{ flex: 1, width: "100%" }}
-      >
+      <ScrollView keyboardShouldPersistTaps="always" style={{ flex: 1 }}>
         <TouchableWithoutFeedback
           onPress={() => {
             Keyboard.dismiss(); // Close the keyboard if open
           }}
         >
-          <View style={{ flex: 1 }}>
-            <ThemedText
-              style={[
-                {
-                  // lineHeight: -1,
-                  fontFamily: "SquadaOne_400Regular",
-                  color: Colors[theme]["iconColor"],
-                  fontSize: fontSizeH2().fontSize + 4,
-                },
-                // fontSizeH2(),
-              ]}
-            >
-              Tell us where
-            </ThemedText>
+          <View
+            style={{
+              flex: 1,
+              paddingHorizontal: getWidthnHeight(4)?.width,
+            }}
+          >
             <View
               style={[
                 {
                   flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  borderWidth: 0,
+                  width: "100%",
                 },
                 getMarginTop(4),
               ]}
@@ -105,6 +94,10 @@ const Step2: React.FC<Step2Props> = ({
                   justifyContent: "center",
                   borderRadius: getWidthnHeight(3)?.width,
                   elevation: 4,
+                  shadowOffset: {
+                    width: 0,
+                    height: getWidthnHeight(0.5)?.width!,
+                  },
                   shadowColor: Colors[theme]["iconColor"],
                   shadowOpacity: 0.4,
                   shadowRadius: 6,
@@ -136,6 +129,10 @@ const Step2: React.FC<Step2Props> = ({
                   justifyContent: "center",
                   borderRadius: getWidthnHeight(3)?.width,
                   elevation: 4,
+                  shadowOffset: {
+                    width: 0,
+                    height: getWidthnHeight(0.5)?.width!,
+                  },
                   shadowColor: Colors[theme]["iconColor"],
                   shadowOpacity: 0.4,
                   shadowRadius: 6,
@@ -152,7 +149,7 @@ const Step2: React.FC<Step2Props> = ({
                 >
                   Where do you need this done?
                 </ThemedText>
-                <View style={[getMarginTop(1.5)]}>
+                <View style={[{ borderWidth: 0 }, getMarginTop(1.5)]}>
                   <DummyTextInput
                     icon={
                       <ThemedIonicons

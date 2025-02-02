@@ -1,6 +1,15 @@
 import React from "react";
-import { TouchableOpacity, useColorScheme, View } from "react-native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {
+  ColorSchemeName,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationOptions,
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 import {
   createDrawerNavigator,
   DrawerNavigationProp,
@@ -26,18 +35,20 @@ import {
   getMarginRight,
   getWidthnHeight,
 } from "../../components/width";
-import { CreateTask } from "./CreateTask/CreateTask";
+import { CreateTask, SaveDetailsProps } from "./CreateTask/CreateTask";
 import { ThemedAntDesign } from "../../components/ThemedAntDesign";
-import { BrowseTasks } from "./BrowseTasks";
-import { TaskDetails } from "./TaskDetails";
+import { BrowseTasks } from "./BrowseStack/BrowseTasks";
+import { TaskDetails } from "./BrowseStack/TaskDetails";
 import { ThemedMaterialIcons } from "../../components/ThemedMaterialIcon";
 import { ThemedMaterialCommunityIcons } from "../../components/ThemedMaterialCommunityIcon";
 import { Account } from "./Account";
 import { ThemedFontAwesome } from "../../components/ThemedFontAwesome";
-import { MyTasks } from "./MyTasks";
+import { MyTasks } from "./MyTasksStack/MyTasks";
 import { Notifications } from "./Notifications";
 import { Messages } from "./Messages";
 import { PvtMessage } from "./PvtMessage";
+import { MyTaskDetails } from "./MyTasksStack/MyTaskDetails";
+import { ThemedSafe } from "../../components/ThemedSafe";
 
 export type PrimaryStackParamList = {
   tabs: NavigatorScreenParams<BottomTabsParamsList>;
@@ -50,13 +61,24 @@ export type PrimaryStackParamList = {
 
 export type BrowseTasksNavigatorParamsList = {
   browseTasks: undefined;
-  taskDetails: { details: TaskDetails };
+  taskDetails: { details: SaveDetailsProps };
+};
+
+export type MyTasksNavigatorParamsList = {
+  myTasks: undefined;
+  myTaskDetails: { details: SaveDetailsProps };
 };
 
 type CustomBrowseStackNavProp = StackNavigationProp<
   BrowseTasksNavigatorParamsList,
   "taskDetails"
 >;
+
+type CustomMyTaskStackNavProp = StackNavigationProp<
+  MyTasksNavigatorParamsList,
+  "myTaskDetails"
+>;
+
 export type CustomPrimaryStackNavProp = StackNavigationProp<
   PrimaryStackParamList,
   "pvtMessage"
@@ -67,7 +89,12 @@ export type BrowseStackNavigationProps = CompositeNavigationProp<
   BottomTabNavigationProp<BottomTabsParamsList>
 >;
 
-interface TaskDetails {
+export type MyStackNavigationProps = CompositeNavigationProp<
+  CompositeNavigationProp<CustomMyTaskStackNavProp, CustomPrimaryStackNavProp>,
+  BottomTabNavigationProp<BottomTabsParamsList>
+>;
+
+interface TaskDetailsProps {
   id: string;
   title: string;
 }
@@ -86,7 +113,11 @@ export type DrawerStackParamList = {
 };
 
 export type TaskDetailsStackParamList = {
-  taskDetails: { details: TaskDetails };
+  taskDetails: { details: SaveDetailsProps };
+};
+
+export type MyTaskDetailsStackParamList = {
+  myTaskDetails: { details: SaveDetailsProps };
 };
 
 export type DrawerNavProp = DrawerNavigationProp<
@@ -97,7 +128,7 @@ export type DrawerNavProp = DrawerNavigationProp<
 export type BottomTabsParamsList = {
   home: undefined;
   browseTasksNavigator: NavigatorScreenParams<BrowseTasksNavigatorParamsList>;
-  myTasks: undefined;
+  myTasksNavigator: NavigatorScreenParams<MyTasksNavigatorParamsList>;
   myTaskerDashboard: undefined;
   notifications: undefined;
   messages: undefined;
@@ -134,6 +165,7 @@ const screenOptions = (
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Stack = createNativeStackNavigator<BrowseTasksNavigatorParamsList>();
+const MyStack = createNativeStackNavigator<MyTasksNavigatorParamsList>();
 const PrimaryStack = createNativeStackNavigator<PrimaryStackParamList>();
 const Tabs = createBottomTabNavigator<BottomTabsParamsList>();
 
@@ -315,17 +347,16 @@ function TabsNavigator() {
         component={BrowseTasksNavigator}
       />
       <Tabs.Screen
-        name={"myTasks"}
-        component={MyTasks}
+        name={"myTasksNavigator"}
+        component={MyTasksNavigator}
         options={({ navigation }) => ({
-          headerTitle: "My Tasks",
-          title: "My tasks",
-          headerShown: true,
+          title: "My Tasks",
           tabBarLabelStyle: {
             color: navigation.isFocused()
               ? Colors[theme]["iconColor"]
               : Colors[theme]["gradeOut"],
           },
+          headerShown: false,
           tabBarIcon: ({ focused }) => (
             <ThemedMaterialCommunityIcons
               name={"clipboard-text-outline"}
@@ -397,39 +428,79 @@ function BrowseTasksNavigator() {
       <Stack.Screen
         name="browseTasks"
         component={BrowseTasks}
-        options={({}) => ({
-          headerLeft: () => null,
-        })}
+        // options={({}) => ({
+        //   headerLeft: () => null,
+        // })}
       />
       <Stack.Screen
         name="taskDetails"
         component={TaskDetails}
-        options={({ navigation }) => ({
-          headerShown: true,
-          headerShadowVisible: false,
-          headerTitle: "",
-          headerStyle: {
-            backgroundColor: Colors[theme]["screenBG"],
-          },
-          headerTitleStyle: {
-            fontFamily: "DancingScript_700Bold",
-            fontSize: fontSizeH3().fontSize + 4,
-            color: Colors[theme]["iconColor"],
-          },
-          headerTitleAlign: "left",
-          headerLeft: () => {
-            return (
-              <ThemedMaterialIcons
-                name="keyboard-backspace"
-                size={getWidthnHeight(6)?.width}
-                colorType={"iconColor"}
-                onPress={() => navigation?.goBack()}
-              />
-            );
-          },
-          headerRight: () => null,
-        })}
+        options={({ navigation }) =>
+          mutualTaskDetailsHeaderStyle(theme, () => {
+            navigation.goBack();
+          })
+        }
       />
     </Stack.Navigator>
   );
+}
+
+function MyTasksNavigator() {
+  const theme = useColorScheme() ?? "light";
+  return (
+    <MyStack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <MyStack.Screen
+        name="myTasks"
+        component={MyTasks}
+        options={({}) => ({
+          headerLeft: () => null,
+        })}
+      />
+      <MyStack.Screen
+        name="myTaskDetails"
+        component={MyTaskDetails}
+        options={({ navigation }) =>
+          mutualTaskDetailsHeaderStyle(theme, () => {
+            navigation.goBack();
+          })
+        }
+      />
+    </MyStack.Navigator>
+  );
+}
+
+function mutualTaskDetailsHeaderStyle(
+  theme: ColorSchemeName = "light",
+  callback: () => void
+): NativeStackNavigationOptions {
+  const options: NativeStackNavigationOptions = {
+    headerShown: true,
+    headerShadowVisible: false,
+    headerTitle: "",
+    headerStyle: {
+      backgroundColor: Colors[theme!]["screenBG"],
+    },
+    headerTitleStyle: {
+      fontFamily: "DancingScript_700Bold",
+      fontSize: fontSizeH3().fontSize + 4,
+      color: Colors[theme!]["iconColor"],
+    },
+    headerTitleAlign: "left",
+    headerLeft: () => {
+      return (
+        <ThemedMaterialIcons
+          name="keyboard-backspace"
+          size={getWidthnHeight(6)?.width}
+          colorType={"iconColor"}
+          onPress={callback}
+        />
+      );
+    },
+    headerRight: () => null,
+  };
+  return options;
 }

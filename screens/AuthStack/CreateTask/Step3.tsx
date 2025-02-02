@@ -8,6 +8,7 @@ import {
   StyleProp,
   ViewStyle,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 
 import { JobTypeBox } from "../../../components/JobTypeBox";
@@ -62,13 +63,22 @@ const Step3: React.FC<Step3Props> = ({
       };
     }
     return (
-      <View style={[{ alignItems: "flex-end" }, containerStyle]}>
+      <View
+        style={[
+          {
+            margin: getWidthnHeight(2)?.width,
+          },
+          containerStyle,
+        ]}
+      >
         <ThemedView
           style={[
             {
               width: getWidthnHeight(20)?.width,
               height: getWidthnHeight(20)?.width,
+              borderRadius: getWidthnHeight(2)?.width,
             },
+            styles.shadow,
             getMarginBottom(1),
           ]}
         >
@@ -76,8 +86,8 @@ const Step3: React.FC<Step3Props> = ({
             source={{ uri }}
             resizeMode="cover"
             style={{
-              borderRadius: getWidthnHeight(2)?.width,
               flex: 1,
+              borderRadius: getWidthnHeight(2)?.width,
             }}
           />
         </ThemedView>
@@ -116,22 +126,10 @@ const Step3: React.FC<Step3Props> = ({
 
   return (
     <View style={{ flex: 1 }}>
-      <ThemedText
-        style={[
-          {
-            fontFamily: "SquadaOne_400Regular",
-            color: Colors[theme]["iconColor"],
-            fontSize: fontSizeH2().fontSize + 4,
-          },
-          // fontSizeH2(),
-        ]}
-      >
-        Provide more details
-      </ThemedText>
       <View
         style={[
           {
-            borderWidth: 0,
+            paddingHorizontal: getWidthnHeight(4)?.width,
           },
         ]}
       >
@@ -165,39 +163,72 @@ const Step3: React.FC<Step3Props> = ({
           />
         </View>
       </View>
-      <View
-        style={[
-          { flexDirection: "row", alignItems: "center", width: "100%" },
-          getMarginTop(4),
-        ]}
-      >
-        <ThemedText
-          style={[{ fontSize: fontSizeH4().fontSize + 4, fontWeight: "500" }]}
+      <View style={{ flex: 1 }}>
+        <View
+          style={[
+            {
+              flexDirection: "row",
+              alignItems: "center",
+              width: "100%",
+              paddingHorizontal: getWidthnHeight(4)?.width,
+            },
+            getMarginTop(4),
+          ]}
         >
-          Add images
-        </ThemedText>
-        <ThemedText
-          style={[{ fontSize: fontSizeH4().fontSize + 4 }, getMarginLeft(1)]}
+          <ThemedText
+            style={[{ fontSize: fontSizeH4().fontSize + 4, fontWeight: "500" }]}
+          >
+            Add images
+          </ThemedText>
+          <ThemedText
+            style={[{ fontSize: fontSizeH4().fontSize + 4 }, getMarginLeft(1)]}
+          >
+            (optional)
+          </ThemedText>
+        </View>
+        <View
+          style={[
+            {
+              borderWidth: 0,
+              width: "100%",
+              paddingHorizontal: getWidthnHeight(2)?.width,
+            },
+            getMarginTop(1),
+          ]}
         >
-          (optional)
-        </ThemedText>
-      </View>
-      <View style={[{ borderWidth: 0, width: "100%" }, getMarginTop(3)]}>
-        <FlatList
-          data={images}
-          keyExtractor={(item) => item}
-          numColumns={4}
-          ListFooterComponent={() =>
-            images.length < 8 && <AddImageButton onPress={onPress} />
-          }
-          renderItem={({ item, index }) => {
-            // console.log("@@@ ITEM: ", item);
-            return <ImageContainer index={index + 1} uri={item} />;
-          }}
-        />
+          <FlatList
+            data={images}
+            keyExtractor={(item) => item}
+            numColumns={4}
+            ListFooterComponent={() =>
+              images.length < 8 && <AddImageButton onPress={onPress} />
+            }
+            renderItem={({ item, index }) => {
+              // console.log("@@@ ITEM: ", item);
+              return <ImageContainer index={index + 1} uri={item} />;
+            }}
+          />
+        </View>
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  shadow: {
+    elevation: 4,
+    shadowColor:
+      Platform.OS === "ios"
+        ? `${Colors.light.iconColor}8F`
+        : Colors.light.iconColor,
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    borderRadius: getWidthnHeight(3)?.width,
+    shadowOffset: {
+      width: 0,
+      height: getWidthnHeight(0.5)?.width!,
+    },
+  },
+});
 
 export { Step3 };

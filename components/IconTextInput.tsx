@@ -1,5 +1,6 @@
 import React, { ReactNode, forwardRef } from "react";
 import {
+  Platform,
   StyleProp,
   TextInput,
   TextInputProps,
@@ -55,9 +56,16 @@ const IconTextInput = forwardRef<TextInput, IconTextInputProps>(
             paddingVertical: getWidthnHeight(2)?.width,
             borderRadius: getWidthnHeight(3)?.width,
             elevation: 4,
-            shadowColor: Colors[theme]["iconColor"],
+            shadowColor:
+              Platform.OS === "ios"
+                ? `${Colors[theme]["iconColor"]}8F`
+                : Colors[theme]["iconColor"],
             shadowOpacity: 0.6,
             shadowRadius: 6,
+            shadowOffset: {
+              width: 0,
+              height: getWidthnHeight(0.3)?.width!,
+            },
           },
           containerStyle,
         ]}

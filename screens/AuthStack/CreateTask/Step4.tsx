@@ -36,19 +36,7 @@ const Step4: React.FC<Step4Props> = ({ budget, submitStep4, setBudget }) => {
   const theme = useColorScheme() ?? "light";
 
   return (
-    <View style={{ flex: 1 }}>
-      <ThemedText
-        style={[
-          {
-            fontFamily: "SquadaOne_400Regular",
-            color: Colors[theme]["iconColor"],
-            fontSize: fontSizeH2().fontSize + 4,
-          },
-          // fontSizeH2(),
-        ]}
-      >
-        Suggest your budget?
-      </ThemedText>
+    <View style={{ flex: 1, paddingHorizontal: getWidthnHeight(4)?.width }}>
       <View
         style={[
           {

@@ -9,6 +9,7 @@ import {
 import { ThemedView } from "./ThemedView";
 import { ThemedText } from "./ThemedText";
 import {
+  fontSizeH3,
   fontSizeH4,
   getMarginBottom,
   getMarginLeft,
@@ -18,23 +19,29 @@ import {
 import { ThemedFontAwesome } from "./ThemedFontAwesome";
 import { Colors } from "../constants/Colors";
 import { ThemedMaterialIcons } from "./ThemedMaterialIcon";
+import { SaveDetailsProps } from "../screens/AuthStack/CreateTask/CreateTask";
+import moment from "moment";
+import { ThemedFeather } from "./ThemedFeather";
+import { ThemedFontAwesome5 } from "./ThemedFontAwesome5";
+import { ThemedMaterialCommunityIcons } from "./ThemedMaterialCommunityIcon";
 
 type TaskCardProps = TouchableOpacityProps & {
   lightColor?: string;
   darkColor?: string;
   status?: string;
   title?: string;
+  task: SaveDetailsProps;
 };
 
 const TaskCard: React.FC<TaskCardProps> = ({
   onPress,
-  title,
-  status = "Open",
+  task,
   ...otherProps
 }) => {
   const theme = useColorScheme() ?? "light";
   return (
     <ThemedView
+      // colorType={"blackShade"}
       {...otherProps}
       style={[
         {
@@ -45,50 +52,141 @@ const TaskCard: React.FC<TaskCardProps> = ({
       ]}
     >
       <View style={{ flex: 1 }}>
-        <View style={[{ flexDirection: "row" }, getMarginBottom(1)]}>
-          <View style={{ borderWidth: 0, flex: 1 }}>
-            <ThemedText style={{ fontWeight: "500" }}>{title}</ThemedText>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <ThemedMaterialIcons name={"computer"} colorType={"darkGray"} />
+        <View style={[getMarginBottom(1)]}>
+          <View style={[{ flexDirection: "row", borderWidth: 0 }]}>
+            <View style={{ borderWidth: 0, flex: 1 }}>
               <ThemedText
-                style={[fontSizeH4(), getMarginLeft(2)]}
-                colorType={"darkGray"}
+                colorType={"buttonBorder"}
+                numberOfLines={1}
+                style={{
+                  fontWeight: "500",
+                  fontSize: fontSizeH4().fontSize + 5,
+                }}
               >
-                Remote
+                {task.title}
               </ThemedText>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <ThemedMaterialIcons
-                name={"calendar-today"}
-                colorType={"darkGray"}
-              />
-              <ThemedText
-                style={[fontSizeH4(), getMarginLeft(2)]}
-                colorType={"darkGray"}
+              <View
+                style={[
+                  {
+                    flexDirection: "row",
+                    alignItems: "center",
+                  },
+                  getMarginTop(0.5),
+                ]}
               >
-                Flexible
+                <ThemedMaterialIcons
+                  size={getWidthnHeight(4)?.width}
+                  name={"computer"}
+                  colorType={"buttonBorder"}
+                />
+                <ThemedText
+                  numberOfLines={1}
+                  style={[
+                    { fontSize: fontSizeH4().fontSize + 2 },
+                    getMarginLeft(2),
+                  ]}
+                  colorType={"buttonBorder"}
+                >
+                  {task.online_job ? "Remote" : task.location?.description}
+                </ThemedText>
+              </View>
+            </View>
+            <View
+              style={{
+                borderWidth: 0,
+                alignItems: "center",
+              }}
+            >
+              <ThemedText
+                colorType={"black"}
+                style={[
+                  {
+                    fontWeight: "600",
+                    fontSize: fontSizeH4().fontSize + 6,
+                    backgroundColor: Colors[theme]["yellow"],
+                    paddingHorizontal: getWidthnHeight(3)?.width,
+                    borderRadius: getWidthnHeight(5)?.width,
+                  },
+                ]}
+              >
+                ${task.budget}
               </ThemedText>
             </View>
           </View>
-          <View
-            style={{
-              borderWidth: 0,
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-            }}
+          <ThemedView
+            colorType={"lightBlack"}
+            style={[
+              {
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                marginHorizontal: getWidthnHeight(1)?.width,
+                paddingHorizontal: getWidthnHeight(3)?.width,
+                paddingVertical: getWidthnHeight(1.5)?.width,
+                borderRadius: getWidthnHeight(2)?.width,
+              },
+              getMarginTop(1),
+            ]}
           >
-            <ThemedText
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <ThemedFontAwesome5
+                size={getWidthnHeight(5)?.width}
+                name={"calendar-week"}
+                colorType={"yellow"}
+              />
+              <ThemedText
+                style={[
+                  { fontSize: fontSizeH4().fontSize + 1 },
+                  getMarginLeft(2),
+                ]}
+                colorType={"white"}
+              >
+                {task.flexible_date
+                  ? "Flexible"
+                  : task.on_date
+                  ? `On ${moment(task.on_date, "DD/MM/YYYY").format(
+                      "ddd, DD MMM"
+                    )}`
+                  : task.before_date &&
+                    `Before ${moment(task.before_date, "DD/MM/YYYY").format(
+                      "ddd, DD MMM"
+                    )}`}
+              </ThemedText>
+            </View>
+            <View
               style={[
                 {
-                  paddingLeft: getWidthnHeight(5)?.width,
-                  fontWeight: "500",
-                  fontSize: fontSizeH4().fontSize + 4,
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 0,
                 },
               ]}
             >
-              $700
-            </ThemedText>
-          </View>
+              <ThemedMaterialCommunityIcons
+                size={getWidthnHeight(5)?.width}
+                name={"clock"}
+                colorType={"yellow"}
+              />
+              <ThemedText
+                numberOfLines={1}
+                style={[
+                  { fontSize: fontSizeH4().fontSize + 1 },
+                  getMarginLeft(2),
+                ]}
+                colorType={"white"}
+              >
+                {task?.certain_time?.title ?? "Anytime"}
+              </ThemedText>
+            </View>
+          </ThemedView>
         </View>
         <Pressable onPress={onPress}>
           <View
@@ -109,7 +207,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 },
               ]}
             >
-              {status}
+              {task.status.replace(/^\w/, (c) => c.toUpperCase())}
             </ThemedText>
             <ThemedFontAwesome
               name={"user-circle"}
@@ -128,6 +226,10 @@ const styles = StyleSheet.create({
     elevation: 4,
     shadowOpacity: 0.6,
     shadowRadius: 6,
+    shadowOffset: {
+      width: 0,
+      height: getWidthnHeight(0.5)?.width!,
+    },
   },
 });
 

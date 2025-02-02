@@ -13,8 +13,20 @@ install! 'cocoapods',
 
 prepare_react_native_project!
 
+use_modular_headers!
+
 target 'ZipTasker' do
   use_expo_modules!
+
+  pod 'Firebase/Auth', :modular_headers => true
+  pod 'Firebase/Firestore', :modular_headers => true
+  pod 'Firebase/Core', :modular_headers => true
+  pod 'Firebase/Storage', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'FirebaseAppCheckInterop', :modular_headers => true
+  pod 'FirebaseCoreInternal', :modular_headers => true
+  
+  pod 'gRPC', :modular_headers => true
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
     config_command = ['node', '-e', "process.argv=['', '', 'config'];require('@react-native-community/cli').run()"];
@@ -35,6 +47,9 @@ target 'ZipTasker' do
 
   use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
   use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
+  use_frameworks! :linkage => :static
+  
+  $RNFirebaseAsStaticFramework = true
 
   use_react_native!(
     :path => config[:reactNativePath],
@@ -59,6 +74,7 @@ target 'ZipTasker' do
       target_installation_result.resource_bundle_targets.each do |resource_bundle_target|
         resource_bundle_target.build_configurations.each do |config|
           config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+          config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
         end
       end
     end
