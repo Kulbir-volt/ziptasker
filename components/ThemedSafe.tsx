@@ -7,6 +7,7 @@ import { Colors } from "../constants/Colors";
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
   darkColor?: string;
+  edit?: boolean;
 };
 
 interface ColorTypeProps extends ThemedViewProps {
@@ -18,12 +19,17 @@ export function ThemedSafe({
   lightColor,
   darkColor,
   colorType = "background",
+  edit = false,
   ...otherProps
 }: ColorTypeProps) {
   const backgroundColor = useThemeColor(
     { light: lightColor, dark: darkColor },
     colorType
   );
+
+  if (edit) {
+    return <View style={[{ backgroundColor }, style]} {...otherProps} />;
+  }
 
   return <SafeAreaView style={[{ backgroundColor }, style]} {...otherProps} />;
 }

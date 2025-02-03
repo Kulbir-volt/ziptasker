@@ -29,7 +29,7 @@ const CustomBS = forwardRef<BottomSheetModal, BottomSheetProps>(
     {
       snapPoints = ["70%"],
       children,
-      onClose,
+      onClose = () => {},
       backgroundStyle,
       bsStyle,
       onOpen = () => {},
@@ -42,6 +42,7 @@ const CustomBS = forwardRef<BottomSheetModal, BottomSheetProps>(
     const handleSheetChanges = useCallback((index: number) => {
       if (index < 0) {
         console.log("Additional Bottom Sheet", index);
+        onClose();
       } else {
         console.log("Open Bottom Sheet", index);
         onOpen();

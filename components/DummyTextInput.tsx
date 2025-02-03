@@ -75,6 +75,7 @@ const DummyTextInput: React.FC<DummyTextInputProps> = ({
             style={{
               fontSize: fontSizeH4().fontSize + 4,
               paddingHorizontal: getWidthnHeight(2)?.width,
+              flex: 1,
             }}
             colorType={"black"}
           >
