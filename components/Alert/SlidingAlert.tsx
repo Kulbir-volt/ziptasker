@@ -94,6 +94,7 @@ function SlidingAlert() {
 
   return (
     <ThemedView
+      animate={true}
       colorType={"transparent"}
       style={[styles.container, animatedStyles]}
       pointerEvents={"none"}

@@ -13,6 +13,10 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "developer": {
+      "tool": "expo-cli",
+      "url": "exp://192.168.1.156:19000"
+    },
     "androidStatusBar": {
       "backgroundColor": "#535151",
       "translucent": false

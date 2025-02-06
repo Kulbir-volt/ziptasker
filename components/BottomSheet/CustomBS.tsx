@@ -1,5 +1,17 @@
-import React, { useMemo, useCallback, forwardRef, useEffect } from "react";
-import { View, StyleSheet, StyleProp, ViewStyle } from "react-native";
+import React, {
+  useMemo,
+  useCallback,
+  forwardRef,
+  useEffect,
+  useRef,
+} from "react";
+import {
+  View,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  TextInput,
+} from "react-native";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -8,12 +20,19 @@ import BottomSheet, {
   BottomSheetView,
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
-import { fontSizeH4, getMarginTop, getWidthnHeight } from "../width";
+import {
+  fontSizeH4,
+  getMarginTop,
+  getMarginVertical,
+  getWidthnHeight,
+} from "../width";
 import { ThemedText } from "../ThemedText";
 import { ThemedBSView } from "../ThemedBSView";
 import { ThemedView } from "../ThemedView";
 import { ThemedSafe } from "../ThemedSafe";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { IconTextInput } from "../IconTextInput";
+import { ThemedIonicons } from "../ThemedIonicons";
 
 interface BottomSheetProps extends Partial<BottomSheetModalProps> {
   snapPoints?: string[]; // Snap points for the BottomSheet
@@ -22,6 +41,10 @@ interface BottomSheetProps extends Partial<BottomSheetModalProps> {
   onClose?: () => void; // Callback when BottomSheet closes
   backgroundStyle?: StyleProp<ViewStyle>; // Custom background style
   bsStyle?: StyleProp<ViewStyle>;
+  enableSearch?: boolean;
+  clearSearch?: () => void;
+  searchText?: string;
+  onChangeText?: (value: string) => void;
 }
 
 const CustomBS = forwardRef<BottomSheetModal, BottomSheetProps>(
@@ -33,18 +56,29 @@ const CustomBS = forwardRef<BottomSheetModal, BottomSheetProps>(
       backgroundStyle,
       bsStyle,
       onOpen = () => {},
+      enableSearch = false,
+      clearSearch = () => {},
+      searchText,
+      onChangeText = () => {},
       ...otherProps
     },
     ref
   ) => {
     const memoizedSnapPoints = useMemo(() => snapPoints, []);
 
+    const locationInputRef = useRef<TextInput>(null);
+
+    function focusLocationInput() {
+      locationInputRef.current?.focus();
+    }
+
     const handleSheetChanges = useCallback((index: number) => {
       if (index < 0) {
-        console.log("Additional Bottom Sheet", index);
+        // console.log("Additional Bottom Sheet", index);
         onClose();
       } else {
-        console.log("Open Bottom Sheet", index);
+        // console.log("Open Bottom Sheet", index);
+        focusLocationInput();
         onOpen();
       }
     }, []);
@@ -78,6 +112,35 @@ const CustomBS = forwardRef<BottomSheetModal, BottomSheetProps>(
         {...otherProps}
       >
         <ThemedBSView style={[styles.contentContainer, bsStyle]}>
+          {enableSearch && (
+            <IconTextInput
+              ref={locationInputRef}
+              value={searchText}
+              onChangeText={onChangeText}
+              onClear={clearSearch}
+              containerStyle={[
+                { width: "90%", borderWidth: 0 },
+                getMarginVertical(2),
+              ]}
+              icon={
+                <ThemedIonicons
+                  name="location"
+                  colorType={"iconColor"}
+                  size={getWidthnHeight(7)?.width}
+                />
+              }
+              placeholder="Enter your postcode"
+              placeholderTextColor={"darkGray"}
+              style={{
+                flex: 1,
+                paddingHorizontal: getWidthnHeight(3)?.width,
+                marginVertical: getWidthnHeight(2)?.width,
+                marginHorizontal: getWidthnHeight(1)?.width,
+                fontSize: fontSizeH4().fontSize + 5,
+                height: "100%",
+              }}
+            />
+          )}
           {children}
         </ThemedBSView>
       </BottomSheetModal>

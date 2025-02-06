@@ -85,15 +85,15 @@ import { checkInternetConnectivity } from "../../../netInfo";
 import { updateTaskToFirestore } from "../../../firebase/update/updateTask";
 import { UserDetails } from "../../../redux/slice/auth";
 import { RootState } from "../../../redux/store";
-import { Step1 } from "./Step1";
+// import { Step1, Step1Props } from "./Step1";
 import { ThemedAntDesign } from "../../../components/ThemedAntDesign";
+import { Step1 } from "./Step1";
 
 type CreateTaskRouteProp = RouteProp<PrimaryStackParamList, "createTask">;
 
-type ReusableScrollProps = {
-  headerTitle: ReactNode | null;
-  children: ReactNode;
-};
+interface CertainTimeComponentProps {
+  item: TimeOfDayProps;
+}
 
 const apiKey = "AIzaSyDVRsp7LueqZB-lS1fP5RaKeUwGLB6U8rY";
 interface Location {
@@ -186,7 +186,9 @@ const CreateTask: React.FC<CreateTaskProps> = ({
   const [toTimeStamp, setToTimeStamp] = useState(
     moment(currentTimeStamp).add(2, "days").valueOf()
   );
-  const [taskTitle, setTaskTitle] = useState<string | undefined>("");
+  const [taskTitle, setTaskTitle] = useState<string | undefined>(
+    route?.params?.title ?? ""
+  );
   const [certainTime, setCertainTime] = useState<string | null>(null);
 
   // STEP 1 STATE
@@ -198,10 +200,9 @@ const CreateTask: React.FC<CreateTaskProps> = ({
   // STEP 2 STATE
   const [selected, setSelected] = useState<number>(1);
   const [selectedLocation, setSelectedLocation] = useState<Place | null>(null);
-  const [searchText, setSearchText] = useState<string | undefined>("");
+  const [searchText, setSearchText] = useState<string | undefined>(undefined);
   const [locations, setLocations] = useState<LocationDetails[]>([]);
   const [submitStep2, setSubmitStep2] = useState<boolean>(false);
-  const locationInputRef = useRef<TextInput>(null);
   const googleSearchRef = useRef<BottomSheetModal>(null);
 
   // STEP 3 STATE
@@ -342,27 +343,12 @@ const CreateTask: React.FC<CreateTaskProps> = ({
     }
   }
 
-  function focusLocationInput() {
-    locationInputRef.current?.focus();
-  }
-
   function openBottomSheet(sheetRef: BottomSheetModal) {
     sheetRef.present();
-    // if (type === GOOGLE) {
-    //   console.log("@@@ CALL");
-    //   googleSearchRef.current?.present();
-    // } else if (type === PHOTO) {
-    //   photoRef.current?.present();
-    // }
   }
 
   function closeBottomSheet(sheetRef: BottomSheetModal) {
     sheetRef.close();
-    // if (type === GOOGLE) {
-    //   googleSearchRef.current?.close();
-    // } else if (type === PHOTO) {
-    //   photoRef.current?.close();
-    // }
   }
 
   const fetchResults = async (searchQuery: string) => {
@@ -387,6 +373,12 @@ const CreateTask: React.FC<CreateTaskProps> = ({
       console.error("Error fetching data:", error);
     }
   };
+
+  useEffect(() => {
+    if (searchText) {
+      debouncedFetchResults(searchText);
+    }
+  }, [searchText]);
 
   const debouncedFetchResults = useCallback(
     _.debounce((text) => fetchResults(text), 1000), // 1000ms debounce delay
@@ -426,12 +418,6 @@ const CreateTask: React.FC<CreateTaskProps> = ({
   }
 
   useEffect(() => {
-    if (route && route?.params?.title) {
-      setTaskTitle(route?.params.title);
-    }
-  }, []);
-
-  useEffect(() => {
     checkStep1ForErrors();
   }, [
     onDate,
@@ -452,13 +438,6 @@ const CreateTask: React.FC<CreateTaskProps> = ({
   function checkStep1ForErrors() {
     const dateBoolean = (!!onDate || !!beforeDate || flexibleTimings) === false;
     setStep1DateError(dateBoolean);
-    // console.log(
-    //   "!!! DATE BOOLEAN: ",
-    //   !!onDate,
-    //   !!beforeDate,
-    //   flexibleTimings,
-    //   dateBoolean
-    // );
     if (!taskTitle || dateBoolean || (checked && !certainTime)) {
       setStep1Error(true);
     } else {
@@ -720,6 +699,35 @@ const CreateTask: React.FC<CreateTaskProps> = ({
               Suggest your budget?
             </ThemedText>
           )}
+          {step === 5 && (
+            <View>
+              <ThemedText
+                style={[
+                  {
+                    fontFamily: "SquadaOne_400Regular",
+                    color: Colors[theme]["iconColor"],
+                    fontSize: fontSizeH2().fontSize + 4,
+                  },
+                ]}
+              >
+                {!edit
+                  ? "Alright, ready to get offers?"
+                  : "Ok! Making some tweaks?"}
+              </ThemedText>
+              <View style={[getMarginTop(1)]}>
+                <ThemedText
+                  style={[
+                    {
+                      fontSize: fontSizeH4().fontSize + 4,
+                      fontWeight: "500",
+                    },
+                  ]}
+                >
+                  {`${edit ? "Update" : "Post"} the task when you're ready`}
+                </ThemedText>
+              </View>
+            </View>
+          )}
         </View>
       </View>
     );
@@ -826,7 +834,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({
     );
   };
 
-  const Background = (): React.JSX.Element => {
+  const Background = useCallback((): React.JSX.Element => {
     return (
       <>
         {!edit && theme === "light" && (
@@ -854,7 +862,28 @@ const CreateTask: React.FC<CreateTaskProps> = ({
         )}
       </>
     );
-  };
+  }, [edit, theme]);
+
+  useEffect(() => {
+    if (!onDate && !showOnDate) {
+      // console.log("reset onDate");
+      setTempDate(moment(currentTimeStamp).format("ddd DD,MMM"));
+      setFromTimeStamp(moment(currentTimeStamp).valueOf());
+    } else if (onDate && !showOnDate) {
+      // console.log("restore onDate");
+      setTempDate(onDate);
+      setFromTimeStamp(moment(onDate, "ddd DD,MMM").valueOf());
+    }
+    if (!beforeDate && !showBeforeDate) {
+      // console.log("reset beforeDate");
+      setTempDate(moment(currentTimeStamp).format("ddd DD,MMM"));
+      setToTimeStamp(moment(currentTimeStamp).add(2, "days").valueOf());
+    } else if (beforeDate && !showBeforeDate) {
+      // console.log("restore beforeDate");
+      setTempDate(beforeDate);
+      setToTimeStamp(moment(beforeDate, "ddd DD,MMM").valueOf());
+    }
+  }, [showOnDate, showBeforeDate, onDate, beforeDate]);
 
   return (
     <ThemedSafe
@@ -881,235 +910,512 @@ const CreateTask: React.FC<CreateTaskProps> = ({
           >
             <View style={{ flex: 1 }}>
               <Header />
-              <View style={{ flex: 1, borderWidth: 0 }}>
-                {step === 1 && (
-                  <Step1
-                    edit={edit}
-                    checked={checked}
-                    timeOfDay={timeOfDay}
-                    certainTime={certainTime}
-                    setCertainTime={setCertainTime}
-                    submitStep1={submitStep1}
-                    taskTitle={taskTitle}
-                    setTaskTitle={setTaskTitle}
-                    setOnDate={setOnDate}
-                    onDate={onDate}
-                    setShowOnDate={setShowOnDate}
-                    showOnDate={showOnDate}
-                    fromTimeStamp={fromTimeStamp}
-                    setFromTimeStamp={setFromTimeStamp}
-                    currentTimeStamp={currentTimeStamp}
-                    setFlexibleTimings={setFlexibleTimings}
-                    flexibleTimings={flexibleTimings}
-                    setBeforeDate={setBeforeDate}
-                    beforeDate={beforeDate}
-                    toTimeStamp={toTimeStamp}
-                    setToTimeStamp={setToTimeStamp}
-                    showBeforeDate={showBeforeDate}
-                    setShowBeforeDate={setShowBeforeDate}
-                    step1DateError={step1DateError}
-                    setChecked={setChecked}
-                    openDateBS={() =>
-                      datePickerRef.current &&
-                      openBottomSheet(datePickerRef.current)
-                    }
-                  />
-                )}
-                {step === 2 && (
-                  <Step2
-                    selected={selected}
-                    setSelected={setSelected}
-                    selectedLocation={selectedLocation}
-                    setSelectedLocation={setSelectedLocation}
-                    submitStep2={submitStep2}
-                    openBottomSheet={() =>
-                      googleSearchRef.current &&
-                      openBottomSheet(googleSearchRef.current)
-                    }
-                  />
-                )}
-                {step === 3 && (
-                  <Step3
-                    details={details}
-                    images={images}
-                    setDetails={setDetails}
-                    setImages={setImages}
-                    submitStep3={submitStep3}
-                    onPress={() =>
-                      photoRef.current && openBottomSheet(photoRef.current)
-                    }
-                  />
-                )}
-                {step === 4 && (
-                  <Step4
-                    budget={budget}
-                    setBudget={setBudget}
-                    submitStep4={submitStep4}
-                  />
-                )}
-                {step === 5 && (
-                  <View
-                    style={[
-                      {
-                        flex: 1,
-                        paddingHorizontal: getWidthnHeight(4)?.width,
-                      },
-                    ]}
-                  >
-                    <ThemedText
-                      style={[
-                        {
-                          // lineHeight: -1,
-                          fontFamily: "SquadaOne_400Regular",
-                          color: Colors[theme]["iconColor"],
-                          fontSize: fontSizeH2().fontSize + 4,
-                        },
-                        // fontSizeH2(),
-                      ]}
-                    >
-                      {!edit
-                        ? "Alright, ready to get offers?"
-                        : "Ok! Making some tweaks?"}
-                    </ThemedText>
-                    <View style={[getMarginTop(1)]}>
-                      <ThemedText
-                        style={[
-                          {
-                            fontSize: fontSizeH4().fontSize + 4,
-                            fontWeight: "500",
-                          },
-                        ]}
+              <FlatList
+                keyboardShouldPersistTaps="always"
+                data={["dummy"]}
+                keyExtractor={() => "dummyID"}
+                renderItem={() => {
+                  return (
+                    <View style={{ flex: 1 }}>
+                      <View
+                        style={{
+                          flex: 1,
+                          borderWidth: 0,
+                        }}
                       >
-                        {`${
-                          edit ? "Update" : "Post"
-                        } the task when you're ready`}
-                      </ThemedText>
+                        {step === 1 && (
+                          <View
+                            style={{
+                              flex: 1,
+                              paddingHorizontal: getWidthnHeight(4)?.width,
+                            }}
+                          >
+                            <View style={[getMarginTop(4)]}>
+                              <ThemedText
+                                style={[
+                                  {
+                                    fontSize: fontSizeH4().fontSize + 4,
+                                    fontWeight: "500",
+                                  },
+                                ]}
+                              >
+                                In a few words, what do you need done?
+                              </ThemedText>
+                              <View
+                                style={[
+                                  {
+                                    backgroundColor: Colors[theme]["screenBG"],
+                                    borderRadius: getWidthnHeight(3)?.width,
+                                    borderWidth:
+                                      theme === "light"
+                                        ? submitStep1 && !taskTitle
+                                          ? 1
+                                          : 0
+                                        : 1,
+                                    borderColor:
+                                      submitStep1 && !taskTitle
+                                        ? Colors[theme]["red"]
+                                        : Colors[theme]["iconColor"],
+                                  },
+                                  getMarginTop(1.5),
+                                ]}
+                              >
+                                <PrimaryInput
+                                  containerStyle={{
+                                    backgroundColor: "transparent",
+                                  }}
+                                  numberOfLines={1}
+                                  value={taskTitle}
+                                  style={{
+                                    fontSize: fontSizeH4().fontSize + 4,
+                                    marginVertical: getWidthnHeight(4)?.width,
+                                    marginHorizontal: getWidthnHeight(4)?.width,
+                                  }}
+                                  placeholder="eg. Help me move sofa"
+                                  placeholderTextColor={"darkGray"}
+                                  onChangeText={(text) => {
+                                    setTaskTitle(text.trimStart());
+                                  }}
+                                />
+                                {submitStep1 && !taskTitle && (
+                                  <View>
+                                    <ThemedText
+                                      style={{
+                                        position: "absolute",
+                                        color: Colors[theme]["red"],
+                                        fontSize: fontSizeH4().fontSize - 1,
+                                      }}
+                                    >
+                                      *Task title is required
+                                    </ThemedText>
+                                  </View>
+                                )}
+                              </View>
+                            </View>
+                            <View style={[getMarginTop(3)]}>
+                              <ThemedText
+                                style={[
+                                  {
+                                    fontSize: fontSizeH4().fontSize + 4,
+                                    fontWeight: "500",
+                                  },
+                                ]}
+                              >
+                                When do you need this done?
+                              </ThemedText>
+                              <View
+                                style={[
+                                  {
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                  },
+                                  getMarginTop(2),
+                                ]}
+                              >
+                                <View>
+                                  <RoundedDropdown
+                                    title={onDate ? `On ${onDate}` : "On date"}
+                                    onPress={() => setShowOnDate(true)}
+                                    titleStyle={{
+                                      fontSize:
+                                        fontSizeH4().fontSize +
+                                        (onDate ? 1 : 3),
+                                    }}
+                                    style={{
+                                      borderWidth: 2,
+                                      borderColor: Colors[theme]["iconColor"],
+                                      paddingHorizontal:
+                                        getWidthnHeight(2)?.width,
+                                      paddingVertical:
+                                        getWidthnHeight(1)?.width,
+                                      borderRadius: getWidthnHeight(10)?.width,
+                                      backgroundColor: onDate
+                                        ? Colors[theme]["yellow"]
+                                        : "transparent",
+                                    }}
+                                  />
+                                  {Platform.OS === "android" && showOnDate && (
+                                    <View>
+                                      <DateTimePicker
+                                        value={moment(fromTimeStamp)
+                                          .utc()
+                                          .toDate()}
+                                        display="default"
+                                        minimumDate={moment(currentTimeStamp)
+                                          .utc()
+                                          .toDate()}
+                                        onChange={(event, date) => {
+                                          if (event.type === "dismissed") {
+                                            setShowOnDate(!showOnDate);
+                                            return;
+                                          }
+                                          setFlexibleTimings(false);
+                                          setBeforeDate(null);
+                                          const timeStamp =
+                                            event.nativeEvent.timestamp;
+                                          setFromTimeStamp(timeStamp);
+                                          if (Platform.OS === "android") {
+                                            setShowOnDate(!showOnDate);
+                                            setOnDate(
+                                              moment(date).format("ddd DD,MMM")
+                                            );
+                                            if (fromTimeStamp > toTimeStamp) {
+                                              setBeforeDate(null);
+                                            }
+                                          }
+                                          Keyboard.dismiss();
+                                        }}
+                                      />
+                                    </View>
+                                  )}
+                                </View>
+                                <View>
+                                  <RoundedDropdown
+                                    title={
+                                      beforeDate
+                                        ? `Before ${beforeDate}`
+                                        : "Before date"
+                                    }
+                                    onPress={() => setShowBeforeDate(true)}
+                                    titleStyle={{
+                                      fontSize:
+                                        fontSizeH4().fontSize +
+                                        (beforeDate ? 1 : 3),
+                                    }}
+                                    style={{
+                                      borderWidth: 2,
+                                      borderColor: Colors[theme]["iconColor"],
+                                      paddingHorizontal:
+                                        getWidthnHeight(2)?.width,
+                                      paddingVertical:
+                                        getWidthnHeight(1)?.width,
+                                      borderRadius: getWidthnHeight(10)?.width,
+                                      backgroundColor: beforeDate
+                                        ? Colors[theme]["yellow"]
+                                        : "transparent",
+                                    }}
+                                  />
+                                  {Platform.OS === "android" &&
+                                    showBeforeDate && (
+                                      <View>
+                                        <DateTimePicker
+                                          value={moment(toTimeStamp)
+                                            .utc()
+                                            .toDate()}
+                                          display="default"
+                                          minimumDate={moment(currentTimeStamp)
+                                            .add(1, "day")
+                                            .utc()
+                                            .toDate()}
+                                          onChange={(event, date) => {
+                                            if (event.type === "dismissed") {
+                                              setShowBeforeDate(
+                                                !showBeforeDate
+                                              );
+                                              return;
+                                            }
+                                            setFlexibleTimings(false);
+                                            setOnDate(null);
+                                            const timeStamp =
+                                              event.nativeEvent.timestamp;
+                                            setToTimeStamp(timeStamp);
+                                            if (Platform.OS === "android") {
+                                              setShowBeforeDate(
+                                                !showBeforeDate
+                                              );
+                                              setBeforeDate(
+                                                moment(date).format(
+                                                  "ddd DD,MMM"
+                                                )
+                                              );
+                                            }
+                                            Keyboard.dismiss();
+                                          }}
+                                        />
+                                      </View>
+                                    )}
+                                </View>
+                                <RoundedDropdown
+                                  title={"I'm flexible"}
+                                  onPress={() => {
+                                    setOnDate(null);
+                                    setBeforeDate(null);
+                                    setFlexibleTimings(true);
+                                  }}
+                                  iconSize={null}
+                                  titleStyle={{
+                                    fontSize: fontSizeH4().fontSize + 3,
+                                  }}
+                                  style={{
+                                    borderWidth: 2,
+                                    borderColor: Colors[theme]["iconColor"],
+                                    backgroundColor: flexibleTimings
+                                      ? Colors[theme]["yellow"]
+                                      : "transparent",
+                                    paddingHorizontal:
+                                      getWidthnHeight(2)?.width,
+                                    paddingVertical:
+                                      getWidthnHeight(1.5)?.width,
+                                    borderRadius: getWidthnHeight(10)?.width,
+                                  }}
+                                />
+                              </View>
+                              {submitStep1 && step1DateError && (
+                                <View>
+                                  <ThemedText
+                                    style={{
+                                      position: "absolute",
+                                      color: Colors[theme]["red"],
+                                      fontSize: fontSizeH4().fontSize - 1,
+                                    }}
+                                  >
+                                    *Date is required
+                                  </ThemedText>
+                                </View>
+                              )}
+                              <View
+                                style={[
+                                  {
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                  },
+                                  getMarginTop(3),
+                                ]}
+                              >
+                                <Checkbox
+                                  value={checked}
+                                  onValueChange={() => {
+                                    if (checked) {
+                                      setCertainTime(null);
+                                    }
+                                    setChecked(!checked);
+                                  }}
+                                />
+                                <ThemedText style={getMarginLeft(3)}>
+                                  I need certain time of day
+                                </ThemedText>
+                              </View>
+                            </View>
+                            {checked && submitStep1 && !certainTime && (
+                              <View>
+                                <ThemedText
+                                  style={{
+                                    position: "absolute",
+                                    color: Colors[theme]["red"],
+                                    fontSize: fontSizeH4().fontSize - 1,
+                                  }}
+                                >
+                                  *Please select certain time
+                                </ThemedText>
+                              </View>
+                            )}
+                            <Step1
+                              checked={checked}
+                              timeOfDay={timeOfDay}
+                              certainTime={certainTime}
+                              setCertainTime={setCertainTime}
+                              submitStep1={submitStep1}
+                              taskTitle={taskTitle}
+                              setTaskTitle={setTaskTitle}
+                              setOnDate={setOnDate}
+                              onDate={onDate}
+                              setShowOnDate={setShowOnDate}
+                              showOnDate={showOnDate}
+                              fromTimeStamp={fromTimeStamp}
+                              setFromTimeStamp={setFromTimeStamp}
+                              currentTimeStamp={currentTimeStamp}
+                              setFlexibleTimings={setFlexibleTimings}
+                              flexibleTimings={flexibleTimings}
+                              setBeforeDate={setBeforeDate}
+                              beforeDate={beforeDate}
+                              toTimeStamp={toTimeStamp}
+                              setToTimeStamp={setToTimeStamp}
+                              showBeforeDate={showBeforeDate}
+                              setShowBeforeDate={setShowBeforeDate}
+                              step1DateError={step1DateError}
+                              setChecked={setChecked}
+                              openDateBS={() => {
+                                if (datePickerRef?.current) {
+                                  openBottomSheet(datePickerRef?.current);
+                                }
+                              }}
+                            />
+                          </View>
+                        )}
+                        {step === 2 && (
+                          <Step2
+                            selected={selected}
+                            setSelected={setSelected}
+                            selectedLocation={selectedLocation}
+                            setSelectedLocation={setSelectedLocation}
+                            submitStep2={submitStep2}
+                            openBottomSheet={() => {
+                              if (googleSearchRef?.current) {
+                                openBottomSheet(googleSearchRef?.current);
+                              }
+                            }}
+                          />
+                        )}
+                        {step === 3 && (
+                          <Step3
+                            details={details}
+                            images={images}
+                            setDetails={setDetails}
+                            setImages={setImages}
+                            submitStep3={submitStep3}
+                            onPress={() => {
+                              if (photoRef.current) {
+                                openBottomSheet(photoRef.current);
+                              }
+                            }}
+                          />
+                        )}
+                        {step === 4 && (
+                          <Step4
+                            budget={budget}
+                            setBudget={setBudget}
+                            submitStep4={submitStep4}
+                          />
+                        )}
+                        {step === 5 && (
+                          <View
+                            style={[
+                              {
+                                flex: 1,
+                                paddingHorizontal: getWidthnHeight(4)?.width,
+                              },
+                            ]}
+                          >
+                            <TaskDetailsTile
+                              title={taskTitle}
+                              onPress={() => setStep(1)}
+                              leftIcon={
+                                <ThemedMaterialCommunityIcons
+                                  name="clipboard-text-outline"
+                                  size={getWidthnHeight(6)?.width}
+                                  lightColor={Colors.light.iconColor}
+                                  darkColor={Colors.dark.white}
+                                />
+                              }
+                              style={[
+                                {
+                                  shadowColor: Colors[theme]["black"],
+                                  backgroundColor:
+                                    theme === "light"
+                                      ? Colors.light.yellow
+                                      : Colors.dark.primary,
+                                },
+                                getMarginTop(2),
+                              ]}
+                            />
+                            <TaskDetailsTile
+                              title={
+                                onDate
+                                  ? `On ${onDate}`
+                                  : beforeDate
+                                  ? `Before ${beforeDate}`
+                                  : flexibleTimings
+                                  ? "I'm flexible"
+                                  : ""
+                              }
+                              onPress={() => setStep(1)}
+                              leftIcon={
+                                <ThemedMaterialCommunityIcons
+                                  name={"calendar-text"}
+                                  size={getWidthnHeight(6)?.width}
+                                  lightColor={Colors.light.iconColor}
+                                  darkColor={Colors.dark.white}
+                                />
+                              }
+                              style={[
+                                {
+                                  shadowColor: Colors[theme]["black"],
+                                  backgroundColor:
+                                    theme === "light"
+                                      ? Colors.light.yellow
+                                      : Colors.dark.primary,
+                                },
+                                getMarginTop(2),
+                              ]}
+                            />
+                            <TaskDetailsTile
+                              title={
+                                selected === 1
+                                  ? selectedLocation?.description
+                                  : "Online"
+                              }
+                              onPress={() => setStep(2)}
+                              leftIcon={
+                                <ThemedIonicons
+                                  name={"location-outline"}
+                                  size={getWidthnHeight(6)?.width}
+                                  lightColor={Colors.light.iconColor}
+                                  darkColor={Colors.dark.white}
+                                />
+                              }
+                              style={[
+                                {
+                                  shadowColor: Colors[theme]["black"],
+                                  backgroundColor:
+                                    theme === "light"
+                                      ? Colors.light.yellow
+                                      : Colors.dark.primary,
+                                },
+                                getMarginTop(2),
+                              ]}
+                            />
+                            <TaskDetailsTile
+                              title={details}
+                              onPress={() => setStep(3)}
+                              leftIcon={
+                                <ThemedFontAwesome
+                                  name={"tasks"}
+                                  size={getWidthnHeight(6)?.width}
+                                  lightColor={Colors.light.iconColor}
+                                  darkColor={Colors.dark.white}
+                                />
+                              }
+                              style={[
+                                {
+                                  shadowColor: Colors[theme]["black"],
+                                  backgroundColor:
+                                    theme === "light"
+                                      ? Colors.light.yellow
+                                      : Colors.dark.primary,
+                                },
+                                getMarginTop(2),
+                              ]}
+                            />
+                            <TaskDetailsTile
+                              title={budget}
+                              onPress={() => setStep(4)}
+                              leftIcon={
+                                <ThemedFontAwesome6
+                                  name={"dollar"}
+                                  size={getWidthnHeight(6)?.width}
+                                  lightColor={Colors.light.iconColor}
+                                  darkColor={Colors.dark.white}
+                                />
+                              }
+                              style={[
+                                {
+                                  shadowColor: Colors[theme]["black"],
+                                  backgroundColor:
+                                    theme === "light"
+                                      ? Colors.light.yellow
+                                      : Colors.dark.primary,
+                                },
+                                getMarginTop(2),
+                              ]}
+                            />
+                          </View>
+                        )}
+                      </View>
                     </View>
-                    <TaskDetailsTile
-                      title={taskTitle}
-                      onPress={() => setStep(1)}
-                      leftIcon={
-                        <ThemedMaterialCommunityIcons
-                          name="clipboard-text-outline"
-                          size={getWidthnHeight(6)?.width}
-                          lightColor={Colors.light.iconColor}
-                          darkColor={Colors.dark.white}
-                        />
-                      }
-                      style={[
-                        {
-                          shadowColor: Colors[theme]["black"],
-                          backgroundColor:
-                            theme === "light"
-                              ? Colors.light.yellow
-                              : Colors.dark.primary,
-                        },
-                        getMarginTop(2),
-                      ]}
-                    />
-                    <TaskDetailsTile
-                      title={
-                        onDate
-                          ? `On ${onDate}`
-                          : beforeDate
-                          ? `Before ${beforeDate}`
-                          : flexibleTimings
-                          ? "I'm flexible"
-                          : ""
-                      }
-                      onPress={() => setStep(1)}
-                      leftIcon={
-                        <ThemedMaterialCommunityIcons
-                          name={"calendar-text"}
-                          size={getWidthnHeight(6)?.width}
-                          lightColor={Colors.light.iconColor}
-                          darkColor={Colors.dark.white}
-                        />
-                      }
-                      style={[
-                        {
-                          shadowColor: Colors[theme]["black"],
-                          backgroundColor:
-                            theme === "light"
-                              ? Colors.light.yellow
-                              : Colors.dark.primary,
-                        },
-                        getMarginTop(2),
-                      ]}
-                    />
-                    <TaskDetailsTile
-                      title={
-                        selected === 1
-                          ? selectedLocation?.description
-                          : "Online"
-                      }
-                      onPress={() => setStep(2)}
-                      leftIcon={
-                        <ThemedIonicons
-                          name={"location-outline"}
-                          size={getWidthnHeight(6)?.width}
-                          lightColor={Colors.light.iconColor}
-                          darkColor={Colors.dark.white}
-                        />
-                      }
-                      style={[
-                        {
-                          shadowColor: Colors[theme]["black"],
-                          backgroundColor:
-                            theme === "light"
-                              ? Colors.light.yellow
-                              : Colors.dark.primary,
-                        },
-                        getMarginTop(2),
-                      ]}
-                    />
-                    <TaskDetailsTile
-                      title={details}
-                      onPress={() => setStep(3)}
-                      leftIcon={
-                        <ThemedFontAwesome
-                          name={"tasks"}
-                          size={getWidthnHeight(6)?.width}
-                          lightColor={Colors.light.iconColor}
-                          darkColor={Colors.dark.white}
-                        />
-                      }
-                      style={[
-                        {
-                          shadowColor: Colors[theme]["black"],
-                          backgroundColor:
-                            theme === "light"
-                              ? Colors.light.yellow
-                              : Colors.dark.primary,
-                        },
-                        getMarginTop(2),
-                      ]}
-                    />
-                    <TaskDetailsTile
-                      title={budget}
-                      onPress={() => setStep(4)}
-                      leftIcon={
-                        <ThemedFontAwesome6
-                          name={"dollar"}
-                          size={getWidthnHeight(6)?.width}
-                          lightColor={Colors.light.iconColor}
-                          darkColor={Colors.dark.white}
-                        />
-                      }
-                      style={[
-                        {
-                          shadowColor: Colors[theme]["black"],
-                          backgroundColor:
-                            theme === "light"
-                              ? Colors.light.yellow
-                              : Colors.dark.primary,
-                        },
-                        getMarginTop(2),
-                      ]}
-                    />
-                  </View>
-                )}
-              </View>
+                  );
+                }}
+              />
               <Footer />
             </View>
           </TouchableWithoutFeedback>
@@ -1119,12 +1425,19 @@ const CreateTask: React.FC<CreateTaskProps> = ({
       {/* Google Places Bottom Sheet */}
       <CustomBS
         ref={googleSearchRef}
-        onOpen={focusLocationInput}
         stackBehavior={"push"}
         snapPoints={["85%"]}
+        searchText={searchText}
+        enableSearch={true}
+        onChangeText={(text) => setSearchText(text.trimStart())}
+        clearSearch={() => {
+          setSearchText("");
+          setLocations([]);
+        }}
         bsStyle={{
           borderTopLeftRadius: getWidthnHeight(5)?.width,
           borderTopRightRadius: getWidthnHeight(5)?.width,
+          alignItems: "center",
           // borderWidth: 4,
         }}
         handleComponent={() => (
@@ -1150,13 +1463,12 @@ const CreateTask: React.FC<CreateTaskProps> = ({
             getWidthnHeight(100),
           ]}
         >
-          <IconTextInput
+          {/* <IconTextInput
             ref={locationInputRef}
             value={searchText}
             onChangeText={(text) => {
               const value = text.trimStart();
               setSearchText(value);
-              debouncedFetchResults(value);
             }}
             onClear={() => {
               setSearchText("");
@@ -1183,7 +1495,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({
               fontSize: fontSizeH4().fontSize + 5,
               height: "100%",
             }}
-          />
+          /> */}
           <View
             style={[{ alignItems: "center", borderWidth: 0, width: "100%" }]}
           >
@@ -1302,10 +1614,21 @@ const CreateTask: React.FC<CreateTaskProps> = ({
         ref={datePickerRef}
         stackBehavior="push"
         onClose={() => {
+          if (onDate) {
+            console.log("onDate: ", showOnDate, onDate, tempDate);
+            setTempDate(onDate);
+            setFromTimeStamp(moment(onDate, "ddd DD,MMM").valueOf());
+          }
+          if (beforeDate) {
+            console.log("beforeDate: ", showBeforeDate, beforeDate, tempDate);
+            setTempDate(beforeDate);
+            setToTimeStamp(moment(beforeDate, "ddd DD,MMM").valueOf());
+          }
           setShowOnDate(false);
           setShowBeforeDate(false);
           // setTempDate(null);
         }}
+        onOpen={() => {}}
         snapPoints={["45%"]}
         bsStyle={{
           borderTopLeftRadius: getWidthnHeight(5)?.width,

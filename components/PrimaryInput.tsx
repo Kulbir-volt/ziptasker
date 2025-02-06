@@ -1,4 +1,4 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import {
   StyleProp,
   TextInput,
@@ -16,21 +16,27 @@ interface InputProps extends TextInputProps {
   placeholderTextColor?: keyof typeof Colors.light & keyof typeof Colors.dark;
 }
 
-const PrimaryInput: React.FC<InputProps> = ({
-  containerStyle,
-  colorType = "background",
-  placeholderTextColor = "gradeOut",
-  ...props
-}) => {
-  const theme = useColorScheme() ?? "light";
-  return (
-    <ThemedView colorType={colorType} style={containerStyle}>
-      <TextInput
-        placeholderTextColor={Colors[theme][placeholderTextColor]}
-        {...props}
-      />
-    </ThemedView>
-  );
-};
+const PrimaryInput = forwardRef<TextInput, InputProps>(
+  (
+    {
+      containerStyle,
+      colorType = "background",
+      placeholderTextColor = "gradeOut",
+      ...props
+    },
+    ref
+  ) => {
+    const theme = useColorScheme() ?? "light";
+    return (
+      <ThemedView colorType={colorType} style={containerStyle}>
+        <TextInput
+          ref={ref}
+          placeholderTextColor={Colors[theme][placeholderTextColor]}
+          {...props}
+        />
+      </ThemedView>
+    );
+  }
+);
 
 export { PrimaryInput };

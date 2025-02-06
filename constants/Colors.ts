@@ -53,6 +53,7 @@ export const Colors = {
     blackShade: "#3f4243",
     lightBlack: "#646666",
     iosBlue: "#007AFF",
+    blue: "#2367EC",
   },
   dark: {
     text: "#ECEDEE",
@@ -93,5 +94,6 @@ export const Colors = {
     blackShade: "#3f4243",
     lightBlack: "#646666",
     iosBlue: "#007AFF",
+    blue: "#2367EC",
   },
 };

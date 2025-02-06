@@ -13,6 +13,7 @@ export type ThemedViewProps = ViewProps & {
   lightColor?: string;
   darkColor?: string;
   style?: StyleProp<ViewStyle>;
+  animate?: boolean;
 };
 
 interface ColorTypeProps extends ThemedViewProps {
@@ -24,12 +25,17 @@ export function ThemedView({
   lightColor,
   darkColor,
   colorType = "background",
+  animate,
   ...otherProps
 }: ColorTypeProps) {
   const backgroundColor = useThemeColor(
     { light: lightColor, dark: darkColor },
     colorType
   );
+
+  if (!animate) {
+    return <View style={[{ backgroundColor }, style]} {...otherProps} />;
+  }
 
   return <Animated.View style={[{ backgroundColor }, style]} {...otherProps} />;
 }
