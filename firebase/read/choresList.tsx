@@ -1,7 +1,6 @@
 import firestore from "@react-native-firebase/firestore";
 
 import { store } from "../../redux/store";
-import { authActions } from "../../redux/slice/auth";
 import {
   AntDesignNames,
   EntypoNames,
@@ -22,11 +21,17 @@ import {
 } from "../../constants/VectorIcons";
 import { tasksActions } from "../../redux/slice/tasks";
 import { verifyAuth } from "../authCheck/verifyAuth";
+import { checkInternetConnectivity } from "../../netInfo";
 
 export const getChoresList = async () => {
+  const { isConnected } = await checkInternetConnectivity();
+  if (!isConnected) {
+    return null;
+  }
   const isAuthenticated = verifyAuth();
   if (isAuthenticated) {
     try {
+      store.dispatch(tasksActions.setLoading(true));
       const choresListRef = firestore()
         .collection("chores")
         .doc("MfT7YvcdO3ZuLZcEquNO");
@@ -49,10 +54,12 @@ export const getChoresList = async () => {
         | SimpleLineIconsNames
       >[] = data?.list;
       // console.log("$$$ choresListRef: ", list);
+      store.dispatch(tasksActions.setLoading(false));
       if (Array.isArray(list)) {
         store.dispatch(tasksActions.setChores(list));
       }
     } catch (error) {
+      store.dispatch(tasksActions.setLoading(false));
       console.error("Error fetching tasks:", error);
     }
   }

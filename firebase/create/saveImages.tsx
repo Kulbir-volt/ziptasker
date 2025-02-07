@@ -1,5 +1,7 @@
 import storage, { FirebaseStorageTypes } from "@react-native-firebase/storage";
 import { verifyAuth } from "../authCheck/verifyAuth";
+import { store } from "../../redux/store";
+import { checkInternetConnectivity } from "../../netInfo";
 
 export const saveImagesToFirebase = async (
   path: string,
@@ -7,6 +9,10 @@ export const saveImagesToFirebase = async (
   callback: (value: string) => void
 ): Promise<string> => {
   try {
+    const { isConnected } = await checkInternetConnectivity();
+    if (!isConnected) {
+      return Promise.reject(`No Internet.`);
+    }
     const isAuthenticated = verifyAuth();
     if (isAuthenticated) {
       const storageRef = storage().ref(path);
@@ -29,7 +35,7 @@ export const saveImagesToFirebase = async (
 
       return url;
     } else {
-      return Promise.reject(`No user logged in.`);
+      return Promise.reject("No user logged in.");
     }
   } catch (error) {
     return Promise.reject(new Error(`!!!Save image failed: ${error}`));

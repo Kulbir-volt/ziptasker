@@ -6,7 +6,7 @@ import { authActions } from "../../redux/slice/auth";
 import { tasksActions } from "../../redux/slice/tasks";
 import { checkInternetConnectivity } from "../../netInfo";
 
-export const getSavedTasksList = async () => {
+export const getSavedComments = async (task_id: string) => {
   const { isConnected } = await checkInternetConnectivity();
   if (!isConnected) {
     return null;
@@ -14,22 +14,22 @@ export const getSavedTasksList = async () => {
   try {
     const user = auth().currentUser;
     if (user) {
-      store.dispatch(tasksActions.setLoading(true));
-      const savedTasksListRef = firestore().collection("tasks");
-      const tasksSnapshot = await savedTasksListRef.get();
-      const tasks = tasksSnapshot.docs.map((doc) => ({
-        id: doc.id, // The document ID (taskId)
+      const savedCommentsListRef = firestore()
+        .collection("tasks")
+        .doc(task_id)
+        .collection("comments");
+      const commentsSnapshot = await savedCommentsListRef.get();
+      const comments = commentsSnapshot.docs.map((doc) => ({
+        id: doc.id, // The document ID (commentId)
         ...doc.data(),
       }));
-      store.dispatch(tasksActions.setLoading(false));
-      store.dispatch(tasksActions.setSavedTasks(tasks));
+      // console.log("@@@ SAVED COMMENTS: ", comments);
+      store.dispatch(tasksActions.setComments(comments));
     } else {
-      store.dispatch(tasksActions.setLoading(false));
       logoutUser();
       console.log("No user is logged in");
     }
   } catch (error) {
-    store.dispatch(tasksActions.setLoading(false));
-    console.error("Error fetching tasks:", error);
+    console.error("Error fetching comments:", error);
   }
 };

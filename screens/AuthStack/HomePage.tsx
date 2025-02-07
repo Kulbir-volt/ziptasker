@@ -9,6 +9,8 @@ import {
   FlatList,
   Pressable,
   ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
@@ -64,15 +66,15 @@ import {
 import { alertActions } from "../../redux/slice/slidingAlert";
 import { checkInternetConnectivity } from "../../netInfo";
 import { getChoresList } from "../../firebase/read/choresList";
+import { LoadingIndicator } from "../../components/LoadingIndicator";
 
 function HomePage() {
   const dispatch = useDispatch();
   const { details } = useSelector((state: RootState) => state.auth);
-  const { taskTypesList, chores } = useSelector(
+  const { taskTypesList, chores, isLoading } = useSelector(
     (state: RootState) => state.tasks
   );
   const theme = useColorScheme() ?? "light";
-  const [hourHand, setHourHand] = useState<number | null>(null);
   const [greetings, setGreetings] = useState<string>("Good morning");
   const [task, setTask] = useState<string | null>("");
   const [todayTasks, setTodaysTasks] = useState<
@@ -205,305 +207,239 @@ function HomePage() {
       darkColor={Colors.dark.screenBG}
       style={{ flex: 1, borderWidth: 0 }}
     >
-      <View
-        style={[
-          {
-            height: getWidthnHeight(75)?.width,
-          },
-        ]}
-      >
-        {theme === "light" && (
-          <>
-            <Image
-              source={require("../../assets/planner.jpg")}
-              resizeMode="cover"
-              // blurRadius={7}
-              style={[
-                {
-                  // opacity: 0.25,
-                  width: getWidthnHeight(100)?.width,
-                  height: getWidthnHeight(75)?.width,
-                },
-                StyleSheet.absoluteFillObject,
-              ]}
-            />
-          </>
-        )}
-        <ThemedView
-          lightColor={`${Colors["light"]["buttonBG"]}D0`}
-          darkColor="transparent"
-          style={[
-            // getMarginTop(1.5),
-            {
-              padding: getWidthnHeight(3)?.width,
-            },
-          ]}
-        >
-          <ThemedText
-            lightColor={Colors[theme]["black"]}
-            darkColor={Colors[theme]["white"]}
-            style={{ fontWeight: "400" }}
-          >
-            {`${greetings}, ${userDetails?.name || "--"}`}
-          </ThemedText>
-          <ThemedText
-            style={[
-              fontSizeH2(),
-              {
-                // lineHeight: -1,
-                fontFamily: "SquadaOne_400Regular",
-                color: Colors[theme]["iconColor"],
-              },
-              getMarginTop(1),
-            ]}
-          >
-            Post a task. Get it done.
-          </ThemedText>
-        </ThemedView>
-        <View
-          style={[
-            {
-              flex: 1,
-              // alignItems: "center",
-              justifyContent: "space-evenly",
-              paddingHorizontal: getWidthnHeight(2)?.width,
-            },
-            getMarginVertical(2),
-          ]}
-        >
+      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+        <View style={{ flex: 1 }}>
           <View
             style={[
               {
-                backgroundColor: `${Colors[theme]["white"]}F0`,
-                borderRadius: getWidthnHeight(3)?.width,
-                borderWidth: getWidthnHeight(0.3)?.width,
-                borderColor: Colors[theme]["iconColor"],
+                height: getWidthnHeight(75)?.width,
               },
             ]}
           >
-            <PrimaryInput
-              containerStyle={{
-                backgroundColor: "transparent",
-              }}
-              style={{
-                fontSize: fontSizeH4().fontSize + 4,
-                padding: getWidthnHeight(4)?.width,
-              }}
-              placeholder="In a few words, what do you need done?"
-              placeholderTextColor={"darkGray"}
-              onChangeText={(text) => setTask(text.trimStart())}
-            />
-          </View>
-          <View style={[getMarginTop(1.5)]}>
-            <TouchableOpacity activeOpacity={0.7}>
-              <ThemedView
-                lightColor={Colors["light"]["muddy"]}
-                darkColor={Colors["dark"]["iconColor"]}
-                style={[
-                  {
-                    borderWidth: 1,
-                    borderColor: "transparent",
-                    width: "100%",
-                    paddingVertical: getWidthnHeight(2)?.width,
-                    paddingHorizontal: getWidthnHeight(4)?.width,
-                    borderRadius: getWidthnHeight(10)?.width,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  },
-                ]}
-              >
-                <ThemedText
-                  lightColor={Colors["light"]["buttonBG"]}
-                  darkColor={Colors["dark"]["black"]}
-                  style={{ fontWeight: "700" }}
-                >
-                  Get Offers
-                </ThemedText>
-                <ThemedAntDesign
-                  name={"arrowright"}
-                  size={getWidthnHeight(4)?.width}
+            {theme === "light" && (
+              <>
+                <Image
+                  source={require("../../assets/planner.jpg")}
+                  resizeMode="cover"
+                  // blurRadius={7}
+                  style={[
+                    {
+                      // opacity: 0.25,
+                      width: getWidthnHeight(100)?.width,
+                      height: getWidthnHeight(75)?.width,
+                    },
+                    StyleSheet.absoluteFillObject,
+                  ]}
                 />
-              </ThemedView>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View
-          style={[
-            {
-              flex: 0.5,
-              flexDirection: "row",
-              justifyContent: "center",
-            },
-          ]}
-        >
-          <FlatList
-            keyExtractor={(item) => `${item.id}`}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={choresList}
-            renderItem={({ item }) => {
-              return (
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate("createTask", {
-                      title: item.title,
-                    })
-                  }
-                >
-                  <ThemedView
-                    lightColor={`${Colors[theme]["white"]}D0`}
-                    darkColor={"tranparent"}
-                    style={[
-                      {
-                        borderRadius: getWidthnHeight(10)?.width,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: getWidthnHeight(2)?.width,
-                        borderWidth: 1,
-                        borderColor: Colors[theme]["iconColor"],
-                      },
-                      getMarginHorizontal(3),
-                    ]}
-                  >
-                    <View
-                      style={{ paddingHorizontal: getWidthnHeight(2)?.width }}
-                    >
-                      {item.icon &&
-                        item.icon({
-                          name: item.name,
-                          iconSize: getWidthnHeight(4)?.width!,
-                        })}
-                    </View>
-                    <ThemedText
-                      style={[
-                        {
-                          fontSize: fontSizeH4().fontSize + 2,
-                        },
-                      ]}
-                    >
-                      {`${item.title?.slice(0, 17)}${
-                        item.title && item.title?.length > 17 ? "..." : ""
-                      }`}
-                    </ThemedText>
-                  </ThemedView>
-                </TouchableOpacity>
-              );
-            }}
-          />
-        </View>
-      </View>
-      <View style={[{ flex: 1, height: "100%" }, getWidthnHeight(100)]}>
-        <ScrollView
-          nestedScrollEnabled
-          style={{ borderWidth: 0, borderColor: "red" }}
-        >
-          <View
-            style={[
-              {
-                paddingTop: getWidthnHeight(2)?.width,
-                paddingHorizontal: getWidthnHeight(4)?.width,
-              },
-            ]}
-          >
-            <ThemedText
+              </>
+            )}
+            <ThemedView
+              lightColor={`${Colors["light"]["buttonBG"]}D0`}
+              darkColor="transparent"
               style={[
-                { fontSize: fontSizeH4().fontSize + 6, fontWeight: "500" },
+                // getMarginTop(1.5),
+                {
+                  padding: getWidthnHeight(3)?.width,
+                },
               ]}
             >
-              Rebook a Tasker
-            </ThemedText>
-            <ThemedText style={[{}, fontSizeH4(), getMarginTop(0.5)]}>
-              Get a quote from Taskers you've worked with previously!
-            </ThemedText>
-            <ThemedView
+              <ThemedText
+                lightColor={Colors[theme]["black"]}
+                darkColor={Colors[theme]["white"]}
+                style={{ fontWeight: "400" }}
+              >
+                {`${greetings}, ${userDetails?.name || "--"}`}
+              </ThemedText>
+              <ThemedText
+                style={[
+                  fontSizeH2(),
+                  {
+                    // lineHeight: -1,
+                    fontFamily: "SquadaOne_400Regular",
+                    color: Colors[theme]["iconColor"],
+                  },
+                  getMarginTop(1),
+                ]}
+              >
+                Post a task. Get it done.
+              </ThemedText>
+            </ThemedView>
+            <View
               style={[
                 {
-                  paddingHorizontal: getWidthnHeight(3)?.width,
-                  paddingVertical: getWidthnHeight(6)?.width,
-                  borderRadius: getWidthnHeight(3)?.width,
-                  shadowColor: Colors[theme]["iconColor"],
-                  shadowOpacity: 0.4,
-                  shadowRadius: 6,
-                  elevation: 4,
-                  shadowOffset: {
-                    width: 0,
-                    height: getWidthnHeight(0.5)?.width!,
-                  },
+                  flex: 1,
+                  // alignItems: "center",
+                  justifyContent: "space-evenly",
+                  paddingHorizontal: getWidthnHeight(2)?.width,
                 },
                 getMarginVertical(2),
               ]}
             >
-              <TouchableOpacity
-                activeOpacity={0.6}
-                onPress={() => navigation.navigate("pvtMessage")}
+              <View
+                style={[
+                  {
+                    backgroundColor: `${Colors[theme]["white"]}F0`,
+                    borderRadius: getWidthnHeight(3)?.width,
+                    borderWidth: getWidthnHeight(0.3)?.width,
+                    borderColor: Colors[theme]["iconColor"],
+                  },
+                ]}
               >
-                <MessageComponent
-                  title={"Ruchit D."}
-                  numberOfLines={1}
-                  showDate={false}
+                <PrimaryInput
+                  containerStyle={{
+                    backgroundColor: "transparent",
+                  }}
+                  style={{
+                    fontSize: fontSizeH4().fontSize + 4,
+                    padding: getWidthnHeight(4)?.width,
+                  }}
+                  placeholder="In a few words, what do you need done?"
+                  placeholderTextColor={"darkGray"}
+                  onChangeText={(text) => setTask(text.trimStart())}
                 />
-              </TouchableOpacity>
-            </ThemedView>
-          </View>
-          <View
-            style={[
-              {
-                flex: 1,
-                paddingHorizontal: getWidthnHeight(2)?.width,
-                // paddingTop: getMarginTop(1).marginTop,
-              },
-            ]}
-          >
-            <ThemedText
+              </View>
+              <View style={[getMarginTop(1.5)]}>
+                <TouchableOpacity activeOpacity={0.7}>
+                  <ThemedView
+                    lightColor={Colors["light"]["muddy"]}
+                    darkColor={Colors["dark"]["iconColor"]}
+                    style={[
+                      {
+                        borderWidth: 1,
+                        borderColor: "transparent",
+                        width: "100%",
+                        paddingVertical: getWidthnHeight(2)?.width,
+                        paddingHorizontal: getWidthnHeight(4)?.width,
+                        borderRadius: getWidthnHeight(10)?.width,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      lightColor={Colors["light"]["buttonBG"]}
+                      darkColor={Colors["dark"]["black"]}
+                      style={{ fontWeight: "700" }}
+                    >
+                      Get Offers
+                    </ThemedText>
+                    <ThemedAntDesign
+                      name={"arrowright"}
+                      size={getWidthnHeight(4)?.width}
+                    />
+                  </ThemedView>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View
               style={[
                 {
-                  fontSize: fontSizeH4().fontSize + 6,
-                  fontWeight: "500",
+                  flexDirection: "row",
+                  borderWidth: 0,
+                  borderColor: "white",
+                  justifyContent: "center",
                 },
-                getMarginHorizontal(2),
+                getMarginBottom(3),
               ]}
             >
-              Need something done ?
-            </ThemedText>
-            <ThemedText
-              style={[getMarginHorizontal(2), fontSizeH4(), getMarginTop(0.5)]}
-            >
-              To-do list never getting shorter ? Take the burden off and find
-              the help you need on Ziptasker.
-            </ThemedText>
-            {todayTasks.length > 0 && (
-              <View
-                style={{
-                  alignItems: "center",
-                }}
-              >
+              {isLoading ? (
+                <LoadingIndicator size={"small"} />
+              ) : (
                 <FlatList
-                  data={todayTasks}
-                  numColumns={2}
-                  nestedScrollEnabled
                   keyExtractor={(item) => `${item.id}`}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  data={choresList}
                   renderItem={({ item }) => {
-                    // console.log("### ICON: ", item.icon);
                     return (
-                      <Pressable
-                        style={({ pressed }) => ({
-                          opacity: pressed ? 0.9 : 1,
-                        })}
-                        onPress={() => {
+                      <TouchableOpacity
+                        onPress={() =>
                           navigation.navigate("createTask", {
                             title: item.title,
-                          });
-                        }}
+                          })
+                        }
                       >
                         <ThemedView
-                          style={{
-                            width: getWidthnHeight(42)?.width!,
-                            height: getWidthnHeight(28)?.width!,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: getWidthnHeight(3)?.width!,
+                          lightColor={`${Colors[theme]["white"]}D0`}
+                          darkColor={"tranparent"}
+                          style={[
+                            {
+                              borderRadius: getWidthnHeight(10)?.width,
+                              flexDirection: "row",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: getWidthnHeight(2)?.width,
+                              borderWidth: 1,
+                              borderColor: Colors[theme]["iconColor"],
+                            },
+                            getMarginHorizontal(3),
+                          ]}
+                        >
+                          <View
+                            style={{
+                              paddingHorizontal: getWidthnHeight(2)?.width,
+                            }}
+                          >
+                            {item.icon &&
+                              item.icon({
+                                name: item.name,
+                                iconSize: getWidthnHeight(4)?.width!,
+                              })}
+                          </View>
+                          <ThemedText
+                            style={[
+                              {
+                                fontSize: fontSizeH4().fontSize + 2,
+                              },
+                            ]}
+                          >
+                            {`${item.title?.slice(0, 17)}${
+                              item.title && item.title?.length > 17 ? "..." : ""
+                            }`}
+                          </ThemedText>
+                        </ThemedView>
+                      </TouchableOpacity>
+                    );
+                  }}
+                />
+              )}
+            </View>
+          </View>
+          <View style={[{ flex: 1, height: "100%" }, getWidthnHeight(100)]}>
+            <FlatList
+              data={["homeScreen"]}
+              keyExtractor={() => "homeScreenDummy"}
+              renderItem={() => {
+                return (
+                  <View style={{ flex: 1 }}>
+                    <View
+                      style={[
+                        {
+                          paddingTop: getWidthnHeight(2)?.width,
+                          paddingHorizontal: getWidthnHeight(4)?.width,
+                        },
+                      ]}
+                    >
+                      <ThemedText
+                        style={[
+                          {
+                            fontSize: fontSizeH4().fontSize + 6,
+                            fontWeight: "500",
+                          },
+                        ]}
+                      >
+                        Rebook a Tasker
+                      </ThemedText>
+                      <ThemedText style={[{}, fontSizeH4(), getMarginTop(0.5)]}>
+                        Get a quote from Taskers you've worked with previously!
+                      </ThemedText>
+                      <ThemedView
+                        style={[
+                          {
+                            paddingHorizontal: getWidthnHeight(3)?.width,
+                            paddingVertical: getWidthnHeight(6)?.width,
+                            borderRadius: getWidthnHeight(3)?.width,
                             shadowColor: Colors[theme]["iconColor"],
                             shadowOpacity: 0.4,
                             shadowRadius: 6,
@@ -512,56 +448,152 @@ function HomePage() {
                               width: 0,
                               height: getWidthnHeight(0.5)?.width!,
                             },
-                            margin: getWidthnHeight(2.5)?.width!,
-                            borderWidth: 1,
-                            borderColor:
-                              theme === "dark"
-                                ? Colors[theme]["white"]
-                                : "transparent",
-                            backgroundColor: Colors[theme]["white"],
+                          },
+                          getMarginVertical(2),
+                        ]}
+                      >
+                        <TouchableOpacity
+                          activeOpacity={0.6}
+                          onPress={() => navigation.navigate("pvtMessage")}
+                        >
+                          <MessageComponent
+                            title={"Ruchit D."}
+                            numberOfLines={1}
+                            showDate={false}
+                          />
+                        </TouchableOpacity>
+                      </ThemedView>
+                    </View>
+                    <View
+                      style={[
+                        {
+                          flex: 1,
+                          paddingHorizontal: getWidthnHeight(2)?.width,
+                          // paddingTop: getMarginTop(1).marginTop,
+                        },
+                      ]}
+                    >
+                      <ThemedText
+                        style={[
+                          {
+                            fontSize: fontSizeH4().fontSize + 6,
+                            fontWeight: "500",
+                          },
+                          getMarginHorizontal(2),
+                        ]}
+                      >
+                        Need something done ?
+                      </ThemedText>
+                      <ThemedText
+                        style={[
+                          getMarginHorizontal(2),
+                          fontSizeH4(),
+                          getMarginTop(0.5),
+                        ]}
+                      >
+                        To-do list never getting shorter ? Take the burden off
+                        and find the help you need on Ziptasker.
+                      </ThemedText>
+                      {isLoading ? (
+                        <LoadingIndicator
+                          size={"large"}
+                          colorType={"black"}
+                          style={[getMarginTop(5)]}
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            alignItems: "center",
                           }}
                         >
-                          {item.icon &&
-                            item?.icon({
-                              name: item.name,
-                              iconSize: item.iconSize!,
-                            })}
-                          <ThemedText numberOfLines={1}>
-                            {item.title}
-                          </ThemedText>
-                        </ThemedView>
-                      </Pressable>
-                    );
-                  }}
-                />
-              </View>
-            )}
-          </View>
-          {/* <View style={{ flex: 1, height: "100%" }}>
-            <ThemedView
-              lightColor={`${Colors[theme]["primary"]}3F`}
-              darkColor={"transparent"}
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
+                          <FlatList
+                            data={todayTasks}
+                            numColumns={2}
+                            nestedScrollEnabled
+                            keyExtractor={(item) => `${item.id}`}
+                            renderItem={({ item }) => {
+                              // console.log("### ICON: ", item.icon);
+                              return (
+                                <Pressable
+                                  style={({ pressed }) => ({
+                                    opacity: pressed ? 0.9 : 1,
+                                  })}
+                                  onPress={() => {
+                                    navigation.navigate("createTask", {
+                                      title: item.title,
+                                    });
+                                  }}
+                                >
+                                  <ThemedView
+                                    style={{
+                                      width: getWidthnHeight(42)?.width!,
+                                      height: getWidthnHeight(28)?.width!,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      borderRadius: getWidthnHeight(3)?.width!,
+                                      shadowColor: Colors[theme]["iconColor"],
+                                      shadowOpacity: 0.4,
+                                      shadowRadius: 6,
+                                      elevation: 4,
+                                      shadowOffset: {
+                                        width: 0,
+                                        height: getWidthnHeight(0.5)?.width!,
+                                      },
+                                      margin: getWidthnHeight(2.5)?.width!,
+                                      borderWidth: 1,
+                                      borderColor:
+                                        theme === "dark"
+                                          ? Colors[theme]["white"]
+                                          : "transparent",
+                                      backgroundColor: Colors[theme]["white"],
+                                    }}
+                                  >
+                                    {item.icon &&
+                                      item?.icon({
+                                        name: item.name,
+                                        iconSize: item.iconSize!,
+                                      })}
+                                    <ThemedText numberOfLines={1}>
+                                      {item.title}
+                                    </ThemedText>
+                                  </ThemedView>
+                                </Pressable>
+                              );
+                            }}
+                          />
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                );
               }}
-            >
-              <ThemedText style={[getMarginTop(2)]}>
-                Can't find what you need ?
-              </ThemedText>
-              <ThemedButton
-                title="Post a task & get offers"
-                lightColor={Colors[theme]["primary"]}
-                style={[
-                  { paddingHorizontal: getWidthnHeight(3)?.width },
-                  getMarginVertical(1),
-                ]}
-              />
-            </ThemedView>
-          </View> */}
-        </ScrollView>
-      </View>
+            />
+            {/* <View style={{ flex: 1, height: "100%" }}>
+              <ThemedView
+                lightColor={`${Colors[theme]["primary"]}3F`}
+                darkColor={"transparent"}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ThemedText style={[getMarginTop(2)]}>
+                  Can't find what you need ?
+                </ThemedText>
+                <ThemedButton
+                  title="Post a task & get offers"
+                  lightColor={Colors[theme]["primary"]}
+                  style={[
+                    { paddingHorizontal: getWidthnHeight(3)?.width },
+                    getMarginVertical(1),
+                  ]}
+                />
+              </ThemedView>
+            </View> */}
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
     </ThemedView>
   );
 }

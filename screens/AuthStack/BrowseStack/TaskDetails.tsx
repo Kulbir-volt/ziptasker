@@ -38,7 +38,7 @@ import { ThemedPicker } from "../../../components/ThemedPicker";
 import { ThemedGradientView } from "../../../components/ThemedGradientView";
 import { ThemedMaterialIcons } from "../../../components/ThemedMaterialIcon";
 import { ThemedEvilIcons } from "../../../components/ThemedEvilicons";
-import { UserDetails } from "../../../components/UserDetails";
+import { UserDetails } from "../../../components/UserProfileDetails";
 import { ThemedMaterialCommunityIcons } from "../../../components/ThemedMaterialCommunityIcon";
 import { PrimaryInput } from "../../../components/PrimaryInput";
 import { ChatComponent } from "../../../components/ChatComponent";

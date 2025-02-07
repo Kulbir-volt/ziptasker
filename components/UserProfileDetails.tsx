@@ -14,7 +14,7 @@ type UserDetailsProps = {
   verified?: boolean;
 };
 
-const UserDetails: React.FC<UserDetailsProps> = ({
+const UserProfileDetails: React.FC<UserDetailsProps> = ({
   colorType,
   title,
   subTitle,
@@ -107,4 +107,4 @@ const UserDetails: React.FC<UserDetailsProps> = ({
   );
 };
 
-export { UserDetails };
+export { UserProfileDetails };

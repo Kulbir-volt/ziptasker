@@ -8,6 +8,7 @@ import React, {
 import {
   Animated,
   Easing,
+  FlatList,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -20,6 +21,7 @@ import {
 } from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 
 import { ThemedView } from "../../../components/ThemedView";
 import { ThemedSafe } from "../../../components/ThemedSafe";
@@ -50,7 +52,6 @@ import { ThemedPicker } from "../../../components/ThemedPicker";
 import { ThemedGradientView } from "../../../components/ThemedGradientView";
 import { ThemedMaterialIcons } from "../../../components/ThemedMaterialIcon";
 import { ThemedEvilIcons } from "../../../components/ThemedEvilicons";
-import { UserDetails } from "../../../components/UserDetails";
 import { ThemedMaterialCommunityIcons } from "../../../components/ThemedMaterialCommunityIcon";
 import { PrimaryInput } from "../../../components/PrimaryInput";
 import { ChatComponent } from "../../../components/ChatComponent";
@@ -58,7 +59,10 @@ import { CommonTaskDetails } from "../CommonTaskDetails";
 import { CustomBS } from "../../../components/BottomSheet/CustomBS";
 import { CloseButtonBS } from "../../../components/CloseButtonBS";
 import { CreateTask } from "../CreateTask/CreateTask";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { getSavedComments } from "../../../firebase/read/fetchComments";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
+import { UserDetails } from "../../../redux/slice/auth";
 
 type TaskDetailsRouteProp = RouteProp<TaskDetailsStackParamList, "taskDetails">;
 // type MyTaskDetailsRouteProp = RouteProp<MyTaskDetailsStackParamList, "myTaskDetails">;
@@ -67,6 +71,16 @@ const HEADER_MAX_HEIGHT = getWidthnHeight(20)?.width!; // Max header height
 type MoreOptionsProps = {
   id: string;
   title: string;
+};
+
+export type CommentDetailsProps = {
+  id?: string;
+  user_id?: string;
+  user_image?: string;
+  createdBy?: string;
+  createdAt?: FirebaseFirestoreTypes.FieldValue;
+  task_id: string;
+  comment: string;
 };
 
 const moreOptions: MoreOptionsProps[] = [
@@ -109,18 +123,6 @@ const MyTaskDetails: React.FC = () => {
 
   const moreOptionsRef = useRef<BottomSheetModal>(null);
   const editTaskRef = useRef<BottomSheetModal>(null);
-
-  const openBottomSheet = useCallback((sheetRef: BottomSheetModal) => {
-    sheetRef.present();
-  }, []);
-
-  const closeBottomSheet = useCallback((sheetRef: BottomSheetModal) => {
-    sheetRef.close();
-  }, []);
-
-  useEffect(() => {
-    // console.log("@@@ ROUTE: ", taskDetails);
-  }, []);
 
   const handleSnapPress = useCallback(
     (sheetRef: BottomSheetModal, index: number) => {
@@ -225,15 +227,28 @@ const MyTaskDetails: React.FC = () => {
         </ThemedView>
       </View>
       <View style={{ flex: 1 }}>
-        <ScrollView style={[styles.scrollView]}>
-          <CommonTaskDetails
-            style={{
-              marginTop: HEADER_MAX_HEIGHT,
-            }}
-            taskDetails={taskDetails}
-          />
-        </ScrollView>
+        {/* <ScrollView style={[styles.scrollView]}> */}
+        <FlatList
+          data={["MyTasksDummy"]}
+          keyExtractor={() => "myTasksDummyId"}
+          renderItem={() => (
+            <CommonTaskDetails
+              style={{
+                marginTop: HEADER_MAX_HEIGHT,
+              }}
+              taskDetails={taskDetails}
+              fetchComments={() => {
+                if (taskDetails?.id) {
+                  getSavedComments(taskDetails?.id);
+                }
+              }}
+            />
+          )}
+        />
+        {/* </ScrollView> */}
       </View>
+
+      {/* MORE OPTIONS BS */}
       <CustomBS
         ref={moreOptionsRef}
         stackBehavior={"push"}
@@ -329,6 +344,7 @@ const MyTaskDetails: React.FC = () => {
         </ThemedView>
       </CustomBS>
 
+      {/* EDIT TASK BS */}
       <CustomBS
         ref={editTaskRef}
         snapPoints={["100%"]}

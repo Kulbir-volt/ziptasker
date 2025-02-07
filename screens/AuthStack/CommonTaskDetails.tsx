@@ -1,18 +1,18 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import {
   Animated,
-  Easing,
-  Image,
+  FlatList,
   Platform,
-  ScrollView,
   StyleProp,
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
   View,
   ViewStyle,
+  Image,
 } from "react-native";
 import moment from "moment";
+import { useSelector } from "react-redux";
 
 import { ThemedView } from "../../components/ThemedView";
 import { ThemedSafe } from "../../components/ThemedSafe";
@@ -39,27 +39,49 @@ import { ThemedPicker } from "../../components/ThemedPicker";
 import { ThemedGradientView } from "../../components/ThemedGradientView";
 import { ThemedMaterialIcons } from "../../components/ThemedMaterialIcon";
 import { ThemedEvilIcons } from "../../components/ThemedEvilicons";
-import { UserDetails } from "../../components/UserDetails";
+import { UserProfileDetails } from "../../components/UserProfileDetails";
 import { ThemedMaterialCommunityIcons } from "../../components/ThemedMaterialCommunityIcon";
 import { PrimaryInput } from "../../components/PrimaryInput";
 import { ChatComponent } from "../../components/ChatComponent";
 import { SaveDetailsProps } from "./CreateTask/CreateTask";
+import { CommentDetailsProps } from "./MyTasksStack/MyTaskDetails";
+import { UserDetails } from "../../redux/slice/auth";
+import { RootState } from "../../redux/store";
+import {
+  defaultUserImage,
+  saveCommentToFirebase,
+} from "../../firebase/create/saveComment";
+import { getSavedComments } from "../../firebase/read/fetchComments";
 
 type CommonTaskDetailsProps = {
   taskDetails: SaveDetailsProps;
   style?: StyleProp<ViewStyle>;
+  fetchComments?: () => void;
 };
 
 const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
   taskDetails,
   style,
+  fetchComments = () => {},
 }) => {
   const theme = useColorScheme() ?? "light";
+  const { details } = useSelector((state: RootState) => state.auth);
+  const { comments } = useSelector((state: RootState) => state.tasks);
   const [expand, setExpand] = useState<boolean>(true);
   const [animateSlide, setAnimateSlide] = useState<Animated.Value>(
     new Animated.Value(1)
   );
+  const [commentText, setCommentText] = useState<string | null>(null);
   const [selectedOffers, setSelectedOffers] = useState<boolean>(true);
+
+  const userDetails: UserDetails = JSON.parse(details as string);
+
+  useEffect(() => {
+    async function loadImage() {
+      await Image.prefetch(defaultUserImage);
+    }
+    // loadImage();
+  }, []);
 
   useEffect(() => {
     if (expand) {
@@ -355,7 +377,10 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
               <FlatButton
                 colorType={!selectedOffers ? "yellow" : "transparent"}
                 title="Questions"
-                onPress={() => setSelectedOffers(false)}
+                onPress={() => {
+                  setSelectedOffers(false);
+                  fetchComments();
+                }}
                 style={[
                   {
                     borderRadius: getWidthnHeight(10)?.width,
@@ -372,7 +397,7 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
             <ThemedView style={[{ borderWidth: 0 }, getMarginTop(3)]}>
               {selectedOffers && (
                 <>
-                  <UserDetails
+                  <UserProfileDetails
                     title={taskDetails.postedBy ?? "--"}
                     ratings={"4.9"}
                     count={25}
@@ -390,7 +415,7 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                           borderRadius: getWidthnHeight(2)?.width,
                           backgroundColor: Colors[theme]["commonScreenBG"],
                         },
-                        animateHeight,
+                        // animateHeight,
                       ]}
                     >
                       <ThemedText
@@ -409,7 +434,7 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                       <Animated.View
                         style={[
                           { flex: 1 },
-                          animateVertically,
+                          // animateVertically,
                           getMarginTop(2),
                         ]}
                       >
@@ -521,7 +546,7 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                       ]}
                     >
                       {
-                        "These messages are publlic and can be seen by anyone. Do not share your personal info."
+                        "These messages are public and can be seen by anyone. Do not share your personal info."
                       }
                     </ThemedText>
                   </ThemedView>
@@ -550,9 +575,12 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                           fontSize: fontSizeH4().fontSize + 4,
                           margin: getWidthnHeight(2)?.width,
                         }}
+                        value={commentText ?? ""}
                         placeholder="Ask a question"
                         placeholderTextColor={"darkGray"}
-                        onChangeText={(text) => {}}
+                        onChangeText={(text) =>
+                          setCommentText(text.trimStart())
+                        }
                       />
                       <View
                         style={{
@@ -569,7 +597,32 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                         />
                         <FlatButton
                           title={"Send"}
-                          onPress={() => {}}
+                          onPress={() => {
+                            if (commentText && taskDetails?.id) {
+                              const commentDetails: CommentDetailsProps = {
+                                comment: commentText,
+                                task_id: taskDetails.id,
+                              };
+                              async function saveComment() {
+                                try {
+                                  const commentRef =
+                                    await saveCommentToFirebase(commentDetails);
+                                  console.log(
+                                    "$$$ COMMENT SAVED: ",
+                                    commentRef.id
+                                  );
+                                  fetchComments();
+                                  setCommentText("");
+                                } catch (error) {
+                                  console.error(
+                                    "!!! SAVE COMMENT ERROR: ",
+                                    error
+                                  );
+                                }
+                              }
+                              saveComment();
+                            }
+                          }}
                           colorType={"commonScreenBG"}
                           style={{
                             borderRadius: getWidthnHeight(10)?.width,
@@ -586,8 +639,24 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                     </ThemedView>
                   </View>
                   <View style={[{ flex: 1 }, getMarginTop(2)]}>
-                    <ChatComponent />
-                    <ChatComponent style={getMarginTop(2)} />
+                    {/* <ChatComponent />
+                    <ChatComponent style={getMarginTop(2)} /> */}
+                    {Array.isArray(comments) && (
+                      <FlatList
+                        data={comments}
+                        keyExtractor={(item) => `${item.id}`}
+                        renderItem={({ item, index }) => {
+                          return (
+                            <ChatComponent
+                              style={[index > 0 && getMarginTop(2)]}
+                              name={item.createdBy}
+                              image={item.user_image}
+                              message={item.comment}
+                            />
+                          );
+                        }}
+                      />
+                    )}
                   </View>
                 </ThemedView>
               )}

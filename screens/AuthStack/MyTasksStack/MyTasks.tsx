@@ -20,10 +20,13 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { getSavedTasksList } from "../../../firebase/read/savedTasks";
 import { ThemedAntDesign } from "../../../components/ThemedAntDesign";
+import { LoadingIndicator } from "../../../components/LoadingIndicator";
 
 const MyTasks: React.FC = () => {
   const theme = useColorScheme() ?? "light";
-  const { savedTasks } = useSelector((state: RootState) => state.tasks);
+  const { savedTasks, isLoading } = useSelector(
+    (state: RootState) => state.tasks
+  );
   const navigation = useNavigation<MyStackNavigationProps>();
   const [visible, setVisible] = React.useState(false);
   const [selectedItem, setSelectedItem] = useState<string>("All tasks");
@@ -105,6 +108,10 @@ const MyTasks: React.FC = () => {
     getSavedTasksList();
   }, []);
 
+  useEffect(() => {
+    console.log("@@@ LOADING: ", isLoading);
+  }, [isLoading]);
+
   return (
     <ThemedView style={{ flex: 1 }}>
       <ThemedView
@@ -148,39 +155,46 @@ const MyTasks: React.FC = () => {
         </View>
       </ThemedView>
       <ThemedView
-        style={{ flex: 1 }}
+        style={[
+          { flex: 1 },
+          isLoading && { alignItems: "center", justifyContent: "center" },
+        ]}
         lightColor={Colors[theme]["commonScreenBG"]}
         darkColor={Colors[theme]["background"]}
       >
-        <FlatList
-          data={savedTasks}
-          keyExtractor={(item) => item.id!}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) => {
-            return (
-              <View
-                style={[
-                  {
-                    paddingHorizontal: getWidthnHeight(3)?.width,
-                    paddingVertical: getWidthnHeight(2)?.width,
-                    borderWidth: 1,
-                    borderColor: "transparent",
-                  },
-                  getMarginTop(index === 0 ? 1 : 0),
-                ]}
-              >
-                <TaskCard
-                  task={item}
-                  onPress={() =>
-                    navigation.navigate("myTaskDetails", {
-                      details: item,
-                    })
-                  }
-                />
-              </View>
-            );
-          }}
-        />
+        {isLoading ? (
+          <LoadingIndicator size={"large"} colorType={"black"} />
+        ) : (
+          <FlatList
+            data={savedTasks}
+            keyExtractor={(item) => item.id!}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item, index }) => {
+              return (
+                <View
+                  style={[
+                    {
+                      paddingHorizontal: getWidthnHeight(3)?.width,
+                      paddingVertical: getWidthnHeight(2)?.width,
+                      borderWidth: 1,
+                      borderColor: "transparent",
+                    },
+                    getMarginTop(index === 0 ? 1 : 0),
+                  ]}
+                >
+                  <TaskCard
+                    task={item}
+                    onPress={() =>
+                      navigation.navigate("myTaskDetails", {
+                        details: item,
+                      })
+                    }
+                  />
+                </View>
+              );
+            }}
+          />
+        )}
       </ThemedView>
     </ThemedView>
   );

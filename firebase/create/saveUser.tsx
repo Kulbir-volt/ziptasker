@@ -1,8 +1,13 @@
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { logoutUser } from "../../redux/store";
+import { checkInternetConnectivity } from "../../netInfo";
 
 export const saveUserToFirebase = async () => {
+  const { isConnected } = await checkInternetConnectivity();
+  if (!isConnected) {
+    return null;
+  }
   const user = auth().currentUser;
   try {
     if (user) {

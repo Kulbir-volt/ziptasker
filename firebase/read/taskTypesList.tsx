@@ -22,11 +22,17 @@ import {
 } from "../../constants/VectorIcons";
 import { tasksActions } from "../../redux/slice/tasks";
 import { verifyAuth } from "../authCheck/verifyAuth";
+import { checkInternetConnectivity } from "../../netInfo";
 
 export const getTaskTypesList = async () => {
+  const { isConnected } = await checkInternetConnectivity();
+  if (!isConnected) {
+    return null;
+  }
   const isAuthenticated = verifyAuth();
   if (isAuthenticated) {
     try {
+      store.dispatch(tasksActions.setLoading(true));
       const taskTypesListRef = firestore()
         .collection("task_types")
         .doc("3Zu7yDVxPF5rWRqyJC89");
@@ -49,11 +55,13 @@ export const getTaskTypesList = async () => {
         | SimpleLineIconsNames
       >[] = data?.list;
       // console.log("$$$ taskTypesListRef: ", list);
+      store.dispatch(tasksActions.setLoading(false));
       if (Array.isArray(list)) {
         store.dispatch(tasksActions.setTaskTypesList(list));
         // setTaskTypesList(list);
       }
     } catch (error) {
+      store.dispatch(tasksActions.setLoading(false));
       console.error("Error fetching tasks:", error);
     }
   }

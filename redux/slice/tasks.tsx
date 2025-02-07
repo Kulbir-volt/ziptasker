@@ -18,6 +18,7 @@ import {
   ZocialNames,
 } from "../../constants/VectorIcons";
 import { SaveDetailsProps } from "../../screens/AuthStack/CreateTask/CreateTask";
+import { CommentDetailsProps } from "../../screens/AuthStack/MyTasksStack/MyTaskDetails";
 
 type InitialStateProps = {
   taskTypesList: VectorIconsProps<
@@ -55,12 +56,16 @@ type InitialStateProps = {
     | SimpleLineIconsNames
   >[];
   savedTasks: SaveDetailsProps[];
+  isLoading: boolean;
+  comments: CommentDetailsProps[] | null;
 };
 
 const initialState: InitialStateProps = {
   taskTypesList: [],
   chores: [],
   savedTasks: [],
+  isLoading: false,
+  comments: [],
 };
 
 const tasksSlice = createSlice({
@@ -85,8 +90,21 @@ const tasksSlice = createSlice({
         savedTasks: action.payload,
       };
     },
+    setComments: (state, action) => {
+      console.log("$$$ SAVED COMMENTS: ", action.payload);
+      return {
+        ...state,
+        comments: action.payload,
+      };
+    },
     resetTasksSlice: () => {
       return initialState;
+    },
+    setLoading: (state, action) => {
+      return {
+        ...state,
+        isLoading: action.payload,
+      };
     },
   },
   extraReducers: (builder) => {},

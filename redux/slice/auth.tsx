@@ -25,14 +25,14 @@ export type UserDetails = FirebaseAuthTypes.UserCredential & {
 };
 
 type InitialStateProps = {
-  isConnected: boolean | null;
+  isConnected: boolean;
   isLoggedIn: boolean | null;
   details: UserDetails | null | string;
   showMap: boolean;
 };
 
 const initialState: InitialStateProps = {
-  isConnected: null,
+  isConnected: true,
   isLoggedIn: null,
   details: null,
   showMap: false,

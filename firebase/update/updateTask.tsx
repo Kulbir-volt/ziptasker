@@ -5,6 +5,7 @@ import firestore, {
 import { logoutUser } from "../../redux/store";
 import { verifyAuth } from "../authCheck/verifyAuth";
 import { SaveDetailsProps } from "../../screens/AuthStack/CreateTask/CreateTask";
+import { checkInternetConnectivity } from "../../netInfo";
 
 type UpdateTaskProps = {
   title: string;
@@ -15,6 +16,10 @@ export const updateTaskToFirestore = async (
   details: SaveDetailsProps
 ): Promise<UpdateTaskProps> => {
   try {
+    const { isConnected } = await checkInternetConnectivity();
+    if (!isConnected) {
+      return Promise.reject(new Error("No internet."));
+    }
     const isAuthenticated = verifyAuth();
     const userId = auth().currentUser?.uid;
     if (!isAuthenticated || !userId) {
