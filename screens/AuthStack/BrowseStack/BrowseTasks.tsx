@@ -112,7 +112,7 @@ const BrowseTasks: React.FC = () => {
   const [countSelection, setCountSelection] = useState<number>(0);
 
   const { showMap } = useSelector((state: RootState) => state.auth);
-  const { savedTasks } = useSelector((state: RootState) => state.tasks);
+  const { othersTasks } = useSelector((state: RootState) => state.tasks);
 
   const mapRef = useRef(null);
   const markerRef = useRef(null);
@@ -325,7 +325,7 @@ const BrowseTasks: React.FC = () => {
               style={{ flex: 1, borderWidth: 0 }}
             >
               <FlatList
-                data={savedTasks}
+                data={othersTasks}
                 keyExtractor={(item) => item.id!}
                 renderItem={({ item }) => {
                   return (

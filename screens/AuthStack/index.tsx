@@ -50,13 +50,19 @@ import { PvtMessage } from "./PvtMessage";
 import { MyTaskDetails } from "./MyTasksStack/MyTaskDetails";
 import { ThemedSafe } from "../../components/ThemedSafe";
 
+export type PvtMessageProps = {
+  userId: string;
+  recipientId: string;
+  bookAgain?: boolean;
+};
+
 export type PrimaryStackParamList = {
   tabs: NavigatorScreenParams<BottomTabsParamsList>;
   notifications: undefined;
   createTask?: {
     title?: string;
   };
-  pvtMessage: undefined;
+  pvtMessage: PvtMessageProps;
 };
 
 export type BrowseTasksNavigatorParamsList = {

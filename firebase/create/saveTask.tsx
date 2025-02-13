@@ -26,6 +26,7 @@ export const saveTask = async (
     const newTask: SaveDetailsProps = {
       ...details,
       createdBy: userId,
+      userId: userId,
     };
 
     const docRef = await tasksRef.add(newTask);

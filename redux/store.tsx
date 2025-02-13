@@ -14,7 +14,7 @@ const rootReducer = combineReducers({
   [authSlice.name]: authSlice.reducer,
   [alertSlice.name]: alertSlice.reducer,
   [tasksSlice.name]: tasksSlice.reducer,
-  // [userSlice.name]: userSlice.reducer,
+  [userSlice.name]: userSlice.reducer,
 });
 
 export const store = configureStore({

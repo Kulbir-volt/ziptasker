@@ -14,7 +14,7 @@ import auth from "@react-native-firebase/auth";
 // import { PhoneAuthProvider, signInWithCredential } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StackScreenProps } from "@react-navigation/stack";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import { ThemedView } from "../../components/ThemedView";
 import { ThemedText } from "../../components/ThemedText";
@@ -29,6 +29,7 @@ import { Colors } from "../../constants/Colors";
 import { NextIconButton } from "../../components/Buttons/RoundButton";
 import { LoginTypesStackParamList } from ".";
 import { authActions } from "../../redux/slice/auth";
+import { RootState } from "../../redux/store";
 
 type OtpVerifyProps = StackScreenProps<LoginTypesStackParamList, "otpVerify">;
 
@@ -36,10 +37,17 @@ const CELL_COUNT = 6;
 
 const OtpVerify: React.FC<OtpVerifyProps> = ({ route, navigation }) => {
   const dispatch = useDispatch();
+  const { details } = useSelector((state: RootState) => state.auth);
   const theme = useColorScheme() ?? "light";
   const { verificationId, phoneNumber } = route.params;
 
   const [otp, setOtp] = useState<string | null>("");
+
+  useEffect(() => {
+    if (details) {
+      dispatch(authActions.setIsLoggedIn(true));
+    }
+  }, [details]);
 
   useEffect(() => {
     if (otp?.length === CELL_COUNT && verificationId) {
@@ -58,12 +66,12 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ route, navigation }) => {
         const response = await auth().signInWithCredential(credential);
         const data = {
           name: "User",
-          details: response,
+          ...response,
         };
+        const stringifyData = JSON.stringify(data);
         // console.log("^^^ RESPONSE: ", JSON.stringify(data, null, 4));
-        AsyncStorage.setItem("userData", JSON.stringify(data));
-        dispatch(authActions.setIsLoggedIn(true));
-        dispatch(authActions.setUserDetails(JSON.stringify(data)));
+        AsyncStorage.setItem("userData", stringifyData);
+        dispatch(authActions.setUserDetails(stringifyData));
       } catch (error: any) {
         console.log("!!!! confirmationERROR: ", JSON.stringify(error, null, 4));
       } finally {

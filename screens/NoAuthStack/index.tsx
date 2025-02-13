@@ -1,11 +1,13 @@
 import React from "react";
-import { useColorScheme } from "react-native";
+import { Platform, TouchableOpacity, useColorScheme } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import LoginPage from "./Login";
 import PhoneAuth from "./PhoneAuth";
 import { OtpVerify } from "./OtpVerify";
 import { Colors } from "../../constants/Colors";
+import { getMarginRight, getWidthnHeight } from "../../components/width";
+import { ThemedMaterialIcons } from "../../components/ThemedMaterialIcon";
 
 export type RootStackParamList = {
   startup: undefined;
@@ -49,8 +51,54 @@ function LoginTypes() {
         headerTintColor: Colors[theme]["iconColor"],
       }}
     >
-      <LoginTypesStack.Screen name="phoneAuth" component={PhoneAuth} />
-      <LoginTypesStack.Screen name="otpVerify" component={OtpVerify} />
+      <LoginTypesStack.Screen
+        options={({ navigation }) => ({
+          ...Platform.select({
+            ios: {
+              headerShown: true,
+
+              headerLeft: () => (
+                <TouchableOpacity
+                  style={getMarginRight(3)}
+                  onPress={() => navigation.goBack()}
+                >
+                  <ThemedMaterialIcons
+                    name={"keyboard-backspace"}
+                    size={getWidthnHeight(6)?.width}
+                    colorType={"iconColor"}
+                  />
+                </TouchableOpacity>
+              ),
+            },
+          }),
+        })}
+        name="phoneAuth"
+        component={PhoneAuth}
+      />
+      <LoginTypesStack.Screen
+        options={({ navigation }) => ({
+          ...Platform.select({
+            ios: {
+              headerShown: true,
+
+              headerLeft: () => (
+                <TouchableOpacity
+                  style={getMarginRight(3)}
+                  onPress={() => navigation.goBack()}
+                >
+                  <ThemedMaterialIcons
+                    name={"keyboard-backspace"}
+                    size={getWidthnHeight(6)?.width}
+                    colorType={"iconColor"}
+                  />
+                </TouchableOpacity>
+              ),
+            },
+          }),
+        })}
+        name="otpVerify"
+        component={OtpVerify}
+      />
     </LoginTypesStack.Navigator>
   );
 }

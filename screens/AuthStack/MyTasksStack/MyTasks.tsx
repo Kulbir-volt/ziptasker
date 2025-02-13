@@ -24,9 +24,7 @@ import { LoadingIndicator } from "../../../components/LoadingIndicator";
 
 const MyTasks: React.FC = () => {
   const theme = useColorScheme() ?? "light";
-  const { savedTasks, isLoading } = useSelector(
-    (state: RootState) => state.tasks
-  );
+  const { myTasks, isLoading } = useSelector((state: RootState) => state.tasks);
   const navigation = useNavigation<MyStackNavigationProps>();
   const [visible, setVisible] = React.useState(false);
   const [selectedItem, setSelectedItem] = useState<string>("All tasks");
@@ -74,12 +72,6 @@ const MyTasks: React.FC = () => {
       status: "Unpaid",
     },
   ];
-
-  useEffect(() => {
-    if (savedTasks.length > 0) {
-      // console.log("### SAVED TASKS: ", savedTasks);
-    }
-  }, [savedTasks]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -166,7 +158,7 @@ const MyTasks: React.FC = () => {
           <LoadingIndicator size={"large"} colorType={"black"} />
         ) : (
           <FlatList
-            data={savedTasks}
+            data={myTasks}
             keyExtractor={(item) => item.id!}
             showsVerticalScrollIndicator={false}
             renderItem={({ item, index }) => {

@@ -5,6 +5,7 @@ import { logoutUser, store } from "../../redux/store";
 import { authActions } from "../../redux/slice/auth";
 import { tasksActions } from "../../redux/slice/tasks";
 import { checkInternetConnectivity } from "../../netInfo";
+import { SaveDetailsProps } from "../../screens/AuthStack/CreateTask/CreateTask";
 
 export const getSavedTasksList = async () => {
   const { isConnected } = await checkInternetConnectivity();
@@ -15,14 +16,22 @@ export const getSavedTasksList = async () => {
     const user = auth().currentUser;
     if (user) {
       store.dispatch(tasksActions.setLoading(true));
-      const savedTasksListRef = firestore().collection("tasks");
+      const savedTasksListRef = firestore()
+        .collection("tasks")
+        .orderBy("createdAt", "desc");
+      // .where("createdBy", "==", user.uid)
       const tasksSnapshot = await savedTasksListRef.get();
-      const tasks = tasksSnapshot.docs.map((doc) => ({
+      const allTasks = tasksSnapshot.docs.map((doc) => ({
         id: doc.id, // The document ID (taskId)
         ...doc.data(),
-      }));
+      })) as SaveDetailsProps[];
+      const myTasks = allTasks.filter((task) => task.createdBy === user.uid);
+      const othersTasks = allTasks.filter(
+        (task) => task.createdBy !== user.uid
+      );
       store.dispatch(tasksActions.setLoading(false));
-      store.dispatch(tasksActions.setSavedTasks(tasks));
+      store.dispatch(tasksActions.setMyTasks(myTasks));
+      store.dispatch(tasksActions.setOthersTasks(othersTasks));
     } else {
       store.dispatch(tasksActions.setLoading(false));
       logoutUser();

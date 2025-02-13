@@ -128,6 +128,7 @@ type StatusTypes =
 
 export type SaveDetailsProps = {
   id?: string;
+  userId?: string;
   title: string | undefined;
   on_date: string | null;
   before_date: string | null;
@@ -154,6 +155,17 @@ type CreateTaskProps = {
   editDetails?: SaveDetailsProps | null;
   onFinish?: () => void;
 };
+
+export type ListingProps = {
+  id: string;
+  title: string;
+};
+
+export const listing: ListingProps[] = [
+  { id: "1", title: "Take a photo" },
+  { id: "2", title: "Choose photo(s)" },
+  { id: "3", title: "Cancel" },
+];
 
 const CreateTask: React.FC<CreateTaskProps> = ({
   edit = false,
@@ -269,12 +281,6 @@ const CreateTask: React.FC<CreateTaskProps> = ({
         />
       ),
     },
-  ];
-
-  const listing = [
-    { id: "1", title: "Take a photo" },
-    { id: "2", title: "Choose photo(s)" },
-    { id: "3", title: "Cancel" },
   ];
 
   useEffect(() => {

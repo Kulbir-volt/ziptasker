@@ -22,13 +22,14 @@ import { SquadaOne_400Regular } from "@expo-google-fonts/squada-one";
 import { Whisper_400Regular } from "@expo-google-fonts/whisper";
 import { View, Text, ActivityIndicator, Platform } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import firebase from "@react-native-firebase/app";
 import auth from "@react-native-firebase/auth";
 
 import { ThemedSafe } from "../../components/ThemedSafe";
 import { authActions } from "../../redux/slice/auth";
+import { RootState } from "../../redux/store";
 
 // Set Firestore host for the specific region
 // firestore().settings({
@@ -59,6 +60,7 @@ SplashScreen.preventAutoHideAsync();
 function LoadingStack() {
   const dispatch = useDispatch();
   const [key, setKey] = useState(0); // Key to force component reset
+  const { details } = useSelector((state: RootState) => state.auth);
   const [loaded, error] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -79,28 +81,40 @@ function LoadingStack() {
   });
 
   useEffect(() => {
+    if (details) {
+      dispatch(authActions.setIsLoggedIn(true));
+    }
+  }, [details]);
+
+  useEffect(() => {
     if (loaded && !error) {
       SplashScreen.hideAsync()
-        .then(() => console.log("^^^ SPLASH LOADED "))
+        .then(() => {
+          console.log("^^^ SPLASH LOADED ");
+          checkData();
+        })
         .catch((error) => console.log("!!! SPLASH ERROR: ", error));
     } else {
       // Force reload only once if fonts are not loading
       setTimeout(() => {
         setKey((prevKey) => prevKey + 1);
         SplashScreen.hideAsync()
-          .then(() => console.log("^^^ELSE SPLASH LOADED "))
+          .then(() => {
+            console.log("^^^ELSE SPLASH LOADED ");
+            checkData();
+          })
           .catch((error) => console.log("!!!ELSE SPLASH ERROR: ", error));
       }, 1000); // Small delay to avoid immediate re-renders
     }
     console.log("@@@ LOADER: ", loaded, error);
   }, [loaded, error]);
 
-  useEffect(() => {
+  const checkData = (): void => {
     AsyncStorage.getItem("userData")
       .then((userData) => {
         if (userData) {
-          dispatch(authActions.setIsLoggedIn(true));
-          //   console.log("@@@ USER DATA: ", !!userData);
+          console.log("^^^ LOADING DATA: ", userData);
+          dispatch(authActions.setUserDetails(userData));
         } else {
           dispatch(authActions.setIsLoggedIn(false));
           //   console.log("### NO USER DATA: ", !!userData);
@@ -109,7 +123,7 @@ function LoadingStack() {
       .catch((error) => {
         __DEV__ && console.log("!!! ASYNC ERROR: ", error);
       });
-  }, []);
+  };
 
   if (!loaded) {
     return (

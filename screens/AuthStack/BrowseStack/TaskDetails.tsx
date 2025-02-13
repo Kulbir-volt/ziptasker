@@ -28,20 +28,8 @@ import {
 } from "../../../components/width";
 import { ThemedText } from "../../../components/ThemedText";
 import { BrowseStackNavigationProps, TaskDetailsStackParamList } from "..";
-import { ThemedAntDesign } from "../../../components/ThemedAntDesign";
 import { Colors } from "../../../constants/Colors";
-import { PostComponent } from "../../../components/PostComponent";
-import { ThemedFontAwesome } from "../../../components/ThemedFontAwesome";
-import { ThemedIonicons } from "../../../components/ThemedIonicons";
 import { FlatButton } from "../../../components/Buttons/FlatButton";
-import { ThemedPicker } from "../../../components/ThemedPicker";
-import { ThemedGradientView } from "../../../components/ThemedGradientView";
-import { ThemedMaterialIcons } from "../../../components/ThemedMaterialIcon";
-import { ThemedEvilIcons } from "../../../components/ThemedEvilicons";
-import { UserDetails } from "../../../components/UserProfileDetails";
-import { ThemedMaterialCommunityIcons } from "../../../components/ThemedMaterialCommunityIcon";
-import { PrimaryInput } from "../../../components/PrimaryInput";
-import { ChatComponent } from "../../../components/ChatComponent";
 import { CommonTaskDetails } from "../CommonTaskDetails";
 
 type TaskDetailsRouteProp = RouteProp<TaskDetailsStackParamList, "taskDetails">;

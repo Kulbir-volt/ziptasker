@@ -1,6 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ThemedView } from "./ThemedView";
-import { Image, StyleProp, ViewStyle } from "react-native";
+import {
+  Image,
+  ImageProps,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from "react-native";
 import { fontSizeH4, getMarginLeft, getWidthnHeight } from "./width";
 import { ThemedText } from "./ThemedText";
 
@@ -17,6 +24,8 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   image,
   message,
 }) => {
+  const imageRef = useRef<Image>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const splitName = name ? name.split(" ") : [];
   let userName = "";
   if (splitName.length === 1) {
@@ -37,16 +46,35 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         style,
       ]}
     >
-      <Image
-        source={image ? { uri: image } : require("../assets/login2.jpg")}
-        resizeMode="contain"
-        resizeMethod="resize"
-        style={{
-          width: getWidthnHeight(10)?.width,
-          height: getWidthnHeight(10)?.width,
-          borderRadius: getWidthnHeight(5)?.width,
-        }}
-      />
+      <View style={{ borderWidth: 0 }}>
+        <Image
+          ref={imageRef}
+          source={{ uri: image, cache: "force-cache" }}
+          resizeMode="contain"
+          resizeMethod="resize"
+          onLoad={() => setImageLoaded(true)}
+          style={{
+            width: getWidthnHeight(10)?.width,
+            height: getWidthnHeight(10)?.width,
+            borderRadius: getWidthnHeight(5)?.width,
+          }}
+        />
+
+        {/* {!imageLoaded && (
+          <ThemedView
+            colorType="gradeOut"
+            style={[
+              {
+                width: getWidthnHeight(10)?.width,
+                height: getWidthnHeight(10)?.width,
+                borderRadius: getWidthnHeight(5)?.width,
+                borderWidth: 0.5,
+              },
+              StyleSheet.absoluteFillObject,
+            ]}
+          />
+        )} */}
+      </View>
       <ThemedView
         style={[
           {

@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useLayoutEffect, useState } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -11,6 +11,7 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   Keyboard,
+  Platform,
 } from "react-native";
 import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
@@ -67,6 +68,8 @@ import { alertActions } from "../../redux/slice/slidingAlert";
 import { checkInternetConnectivity } from "../../netInfo";
 import { getChoresList } from "../../firebase/read/choresList";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
+import { preloadImages } from "../../firebase/create/saveComment";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function HomePage() {
   const dispatch = useDispatch();
@@ -76,6 +79,7 @@ function HomePage() {
   );
   const theme = useColorScheme() ?? "light";
   const [greetings, setGreetings] = useState<string>("Good morning");
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [task, setTask] = useState<string | null>("");
   const [todayTasks, setTodaysTasks] = useState<
     VectorIconsProps<
@@ -117,6 +121,33 @@ function HomePage() {
   >([]);
 
   const navigation = useNavigation<BrowseStackNavigationProps>();
+
+  useEffect(() => {
+    if (details) {
+      const parsedDetails: UserDetails =
+        typeof details === "string" ? JSON.parse(details) : details;
+      console.log("###$$$ USER DETAILS: ", details, "\n\n", parsedDetails);
+      if (parsedDetails?.user) {
+        setUserDetails(parsedDetails);
+      }
+    }
+  }, [details]);
+
+  useEffect(() => {
+    async function loadImage() {
+      Promise.all(
+        preloadImages.map((uri) => {
+          if (Platform.OS === "ios") {
+            return Image.getSize(uri, () => Image.prefetch(uri));
+          }
+          return Image.prefetch(uri);
+        })
+      )
+        .then(() => console.log("Images preloaded"))
+        .catch((err) => console.error("Error preloading images", err));
+    }
+    loadImage();
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -192,8 +223,6 @@ function HomePage() {
       setGreetings("Good evening");
     }
   }, []);
-  // "#FF9D3D"
-  const userDetails: UserDetails = JSON.parse(details as string);
 
   let color1 = Colors[theme]["primary"];
   let color2 = Colors[theme]["orange"];
@@ -248,7 +277,7 @@ function HomePage() {
                 darkColor={Colors[theme]["white"]}
                 style={{ fontWeight: "400" }}
               >
-                {`${greetings}, ${userDetails?.name || "--"}`}
+                {`${greetings}, ${userDetails?.user.phoneNumber || "--"}`}
               </ThemedText>
               <ThemedText
                 style={[
@@ -454,7 +483,16 @@ function HomePage() {
                       >
                         <TouchableOpacity
                           activeOpacity={0.6}
-                          onPress={() => navigation.navigate("pvtMessage")}
+                          onPress={() =>
+                            navigation.navigate("pvtMessage", {
+                              userId: userDetails?.user?.uid!,
+                              recipientId:
+                                Platform.OS === "ios"
+                                  ? "pV4GUyEP74NTJ3scXuQtiaRRdej2"
+                                  : "5SzWEqfmhpbvobUTeebwetES2UE3",
+                              bookAgain: true,
+                            })
+                          }
                         >
                           <MessageComponent
                             title={"Ruchit D."}

@@ -64,7 +64,10 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { UserDetails } from "../../../redux/slice/auth";
 
-type TaskDetailsRouteProp = RouteProp<TaskDetailsStackParamList, "taskDetails">;
+export type TaskDetailsRouteProp = RouteProp<
+  TaskDetailsStackParamList,
+  "taskDetails"
+>;
 // type MyTaskDetailsRouteProp = RouteProp<MyTaskDetailsStackParamList, "myTaskDetails">;
 const HEADER_MAX_HEIGHT = getWidthnHeight(20)?.width!; // Max header height
 
@@ -78,7 +81,7 @@ export type CommentDetailsProps = {
   user_id?: string;
   user_image?: string;
   createdBy?: string;
-  createdAt?: FirebaseFirestoreTypes.FieldValue;
+  createdAt?: number;
   task_id: string;
   comment: string;
 };

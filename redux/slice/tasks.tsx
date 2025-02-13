@@ -1,4 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { Timestamp } from "@react-native-firebase/firestore";
+
 import {
   AntDesignNames,
   EntypoNames,
@@ -19,6 +21,7 @@ import {
 } from "../../constants/VectorIcons";
 import { SaveDetailsProps } from "../../screens/AuthStack/CreateTask/CreateTask";
 import { CommentDetailsProps } from "../../screens/AuthStack/MyTasksStack/MyTaskDetails";
+import moment from "moment";
 
 type InitialStateProps = {
   taskTypesList: VectorIconsProps<
@@ -55,7 +58,8 @@ type InitialStateProps = {
     | ZocialNames
     | SimpleLineIconsNames
   >[];
-  savedTasks: SaveDetailsProps[];
+  myTasks: SaveDetailsProps[];
+  othersTasks: SaveDetailsProps[];
   isLoading: boolean;
   comments: CommentDetailsProps[] | null;
 };
@@ -63,7 +67,8 @@ type InitialStateProps = {
 const initialState: InitialStateProps = {
   taskTypesList: [],
   chores: [],
-  savedTasks: [],
+  myTasks: [],
+  othersTasks: [],
   isLoading: false,
   comments: [],
 };
@@ -84,17 +89,29 @@ const tasksSlice = createSlice({
         chores: action.payload,
       };
     },
-    setSavedTasks: (state, action) => {
+    setMyTasks: (state, action) => {
       return {
         ...state,
-        savedTasks: action.payload,
+        myTasks: action.payload,
+      };
+    },
+    setOthersTasks: (state, action) => {
+      return {
+        ...state,
+        othersTasks: action.payload,
       };
     },
     setComments: (state, action) => {
       console.log("$$$ SAVED COMMENTS: ", action.payload);
+      let unsortedComments = action.payload as CommentDetailsProps[];
+      const sortedComments = unsortedComments.sort((a, b) => {
+        const dateA = a?.createdAt ? moment(a.createdAt) : moment(0);
+        const dateB = b?.createdAt ? moment(b.createdAt) : moment(0);
+        return dateB.valueOf() - dateA.valueOf();
+      });
       return {
         ...state,
-        comments: action.payload,
+        comments: sortedComments,
       };
     },
     resetTasksSlice: () => {

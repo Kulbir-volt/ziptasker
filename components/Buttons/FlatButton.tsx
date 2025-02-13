@@ -18,6 +18,7 @@ type FlatButtonProps = {
   darkColor?: string;
   style?: StyleProp<ViewStyle>;
   textStyle?: TextStyle;
+  activeOpacity?: number;
   colorType?: keyof typeof Colors.light & keyof typeof Colors.dark;
 };
 
@@ -25,6 +26,7 @@ const FlatButton: React.FC<FlatButtonProps> = ({
   title,
   style,
   textStyle,
+  activeOpacity = 0.7,
   lightColor,
   darkColor,
   colorType = "yellow",
@@ -33,7 +35,7 @@ const FlatButton: React.FC<FlatButtonProps> = ({
   return (
     <ThemedView colorType={colorType} style={[{ alignItems: "center" }, style]}>
       <TouchableOpacity
-        activeOpacity={0.7}
+        activeOpacity={activeOpacity}
         onPress={onPress}
         style={{ borderWidth: 0, width: "100%", alignItems: "center" }}
       >

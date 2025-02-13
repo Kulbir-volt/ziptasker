@@ -8,9 +8,12 @@ import { checkInternetConnectivity } from "../../netInfo";
 import { CommentDetailsProps } from "../../screens/AuthStack/MyTasksStack/MyTaskDetails";
 import { store } from "../../redux/store";
 import { tasksActions } from "../../redux/slice/tasks";
+import moment from "moment";
 
 export const defaultUserImage =
   "https://firebasestorage.googleapis.com/v0/b/taskermanager.appspot.com/o/images%2Fdefault%2Fuser.png?alt=media&token=4e9569fc-c551-4e3e-a231-a8f02ee3f21a";
+
+export const preloadImages = [defaultUserImage];
 
 export const saveCommentToFirebase = async (
   details: CommentDetailsProps
@@ -36,9 +39,9 @@ export const saveCommentToFirebase = async (
     const newComment: CommentDetailsProps = {
       ...details,
       user_id: userId,
-      user_image: user?.photoURL ?? defaultUserImage,
+      user_image: user?.photoURL ?? "",
       createdBy: user?.displayName ?? "",
-      createdAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: moment().valueOf(),
     };
 
     const docRef = await commentRef.add(newComment);

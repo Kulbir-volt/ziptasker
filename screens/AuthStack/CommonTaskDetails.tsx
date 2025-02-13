@@ -51,7 +51,7 @@ import {
   defaultUserImage,
   saveCommentToFirebase,
 } from "../../firebase/create/saveComment";
-import { getSavedComments } from "../../firebase/read/fetchComments";
+import { LoadingIndicator } from "../../components/LoadingIndicator";
 
 type CommonTaskDetailsProps = {
   taskDetails: SaveDetailsProps;
@@ -66,7 +66,9 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
 }) => {
   const theme = useColorScheme() ?? "light";
   const { details } = useSelector((state: RootState) => state.auth);
-  const { comments } = useSelector((state: RootState) => state.tasks);
+  const { comments, isLoading } = useSelector(
+    (state: RootState) => state.tasks
+  );
   const [expand, setExpand] = useState<boolean>(true);
   const [animateSlide, setAnimateSlide] = useState<Animated.Value>(
     new Animated.Value(1)
@@ -75,13 +77,6 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
   const [selectedOffers, setSelectedOffers] = useState<boolean>(true);
 
   const userDetails: UserDetails = JSON.parse(details as string);
-
-  useEffect(() => {
-    async function loadImage() {
-      await Image.prefetch(defaultUserImage);
-    }
-    // loadImage();
-  }, []);
 
   useEffect(() => {
     if (expand) {
@@ -595,46 +590,60 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                           colorType={"darkGray"}
                           size={getWidthnHeight(5)?.width}
                         />
-                        <FlatButton
-                          title={"Send"}
-                          onPress={() => {
-                            if (commentText && taskDetails?.id) {
-                              const commentDetails: CommentDetailsProps = {
-                                comment: commentText,
-                                task_id: taskDetails.id,
-                              };
-                              async function saveComment() {
-                                try {
-                                  const commentRef =
-                                    await saveCommentToFirebase(commentDetails);
-                                  console.log(
-                                    "$$$ COMMENT SAVED: ",
-                                    commentRef.id
-                                  );
-                                  fetchComments();
-                                  setCommentText("");
-                                } catch (error) {
-                                  console.error(
-                                    "!!! SAVE COMMENT ERROR: ",
-                                    error
-                                  );
+                        {isLoading ? (
+                          <LoadingIndicator
+                            size={"small"}
+                            colorType={"black"}
+                            style={{
+                              paddingVertical: getWidthnHeight(1.2)?.width,
+                              paddingHorizontal: getWidthnHeight(5)?.width,
+                              borderWidth: 0,
+                            }}
+                          />
+                        ) : (
+                          <FlatButton
+                            title={"Send"}
+                            onPress={() => {
+                              if (commentText && taskDetails?.id) {
+                                const commentDetails: CommentDetailsProps = {
+                                  comment: commentText,
+                                  task_id: taskDetails.id,
+                                };
+                                async function saveComment() {
+                                  try {
+                                    const commentRef =
+                                      await saveCommentToFirebase(
+                                        commentDetails
+                                      );
+                                    console.log(
+                                      "$$$ COMMENT SAVED: ",
+                                      commentRef.id
+                                    );
+                                    fetchComments();
+                                    setCommentText("");
+                                  } catch (error) {
+                                    console.error(
+                                      "!!! SAVE COMMENT ERROR: ",
+                                      error
+                                    );
+                                  }
                                 }
+                                saveComment();
                               }
-                              saveComment();
-                            }
-                          }}
-                          colorType={"commonScreenBG"}
-                          style={{
-                            borderRadius: getWidthnHeight(10)?.width,
-                            borderWidth: 1,
-                          }}
-                          textStyle={{
-                            fontWeight: "normal",
-                            fontSize: fontSizeH4().fontSize + 3,
-                            paddingHorizontal: getWidthnHeight(5)?.width,
-                            paddingVertical: getWidthnHeight(1)?.width,
-                          }}
-                        />
+                            }}
+                            colorType={"commonScreenBG"}
+                            style={{
+                              borderRadius: getWidthnHeight(10)?.width,
+                              borderWidth: 1,
+                            }}
+                            textStyle={{
+                              fontWeight: "normal",
+                              fontSize: fontSizeH4().fontSize + 3,
+                              paddingHorizontal: getWidthnHeight(5)?.width,
+                              paddingVertical: getWidthnHeight(1)?.width,
+                            }}
+                          />
+                        )}
                       </View>
                     </ThemedView>
                   </View>
@@ -650,7 +659,7 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                             <ChatComponent
                               style={[index > 0 && getMarginTop(2)]}
                               name={item.createdBy}
-                              image={item.user_image}
+                              image={item.user_image || defaultUserImage}
                               message={item.comment}
                             />
                           );

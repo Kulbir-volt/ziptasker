@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useLayoutEffect } from "react";
 import { View } from "react-native";
+import { useDispatch } from "react-redux";
 
 import { ThemedSafe } from "../../components/ThemedSafe";
 import { ThemedView } from "../../components/ThemedView";
@@ -12,8 +13,13 @@ import { ThemedText } from "../../components/ThemedText";
 import { IconTextInput } from "../../components/IconTextInput";
 import { ThemedIonicons } from "../../components/ThemedIonicons";
 import { MessageComponent } from "../../components/MessageComponent";
+import { getUserList } from "../../firebase/read/fetchUsers";
 
 const Messages: React.FC = () => {
+  useEffect(() => {
+    getUserList();
+  }, []);
+
   return (
     <ThemedView style={{ flex: 1 }}>
       <ThemedView

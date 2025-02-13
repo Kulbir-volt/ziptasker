@@ -59,7 +59,7 @@ function PhoneAuth() {
   const theme = useColorScheme() ?? "light";
 
   return (
-    <ThemedSafe style={{ flex: 1, alignItems: "center", borderWidth: 0 }}>
+    <ThemedView style={{ flex: 1, alignItems: "center", borderWidth: 0 }}>
       <ThemedView
         style={[
           {
@@ -92,7 +92,7 @@ function PhoneAuth() {
                   textAlignVertical: "center",
                   textAlign: "left",
                 },
-                getMarginTop(-5),
+                // getMarginTop(-5),
               ]}
             >
               {"Phone\nAuthentication"}
@@ -220,7 +220,7 @@ function PhoneAuth() {
         </KeyboardAvoidingView> */}
         {/* <View style={[{ flex: 1, justifyContent: "center" }]}></View> */}
       </ThemedView>
-    </ThemedSafe>
+    </ThemedView>
   );
 }
 
