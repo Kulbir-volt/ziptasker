@@ -34,7 +34,7 @@ function SlidingAlert() {
   );
   const dispatch = useDispatch();
   useEffect(() => {
-    console.log("@@ ALERT SLICE: ", alertSlice);
+    // console.log("@@ ALERT SLICE: ", alertSlice);
     if (alertSlice?.visible) {
       animateMessage();
     }

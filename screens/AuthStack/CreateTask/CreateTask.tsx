@@ -124,7 +124,8 @@ type StatusTypes =
   | "cancelled"
   | "assigned"
   | "unpaid"
-  | "paid";
+  | "paid"
+  | "posted";
 
 export type SaveDetailsProps = {
   id?: string;
@@ -537,7 +538,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({
         task_details: details,
         images: downloadUrl,
         budget: budget,
-        status: "open",
+        status: "posted",
         createdAt: firestore.FieldValue.serverTimestamp(),
         postedBy: userDetails?.user?.displayName || userDetails?.name || null,
       };

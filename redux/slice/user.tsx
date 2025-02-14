@@ -1,9 +1,17 @@
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { createSlice } from "@reduxjs/toolkit";
 
-export type UsersListProps = {
-  id: string;
+type OptionalMethods<T> = {
+  [K in keyof T]: T[K] extends (...args: any[]) => any
+    ? T[K] | undefined
+    : T[K];
 };
+
+export type UsersListProps = {
+  id?: string;
+  name?: string | undefined;
+};
+
 type InitialStateProps = {
   usersList: UsersListProps[];
 };

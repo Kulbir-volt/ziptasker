@@ -88,7 +88,7 @@ const PvtMessage: React.FC = () => {
 
   const { userId, recipientId, bookAgain } = route?.params;
 
-  const chatId = [userId, recipientId].sort().join("-");
+  const chatId = [userId, recipientId].sort().join("_");
 
   // console.log("&&& CHATID: ", chatId);
 
@@ -149,6 +149,7 @@ const PvtMessage: React.FC = () => {
               _id: doc.id,
               text: data.text,
               createdAt: data?.createdAt?.toDate(),
+              seen: data?.seen ?? false,
               user: {
                 _id: data?.senderId,
                 // avatar: data?.avatar,
@@ -176,6 +177,8 @@ const PvtMessage: React.FC = () => {
             recipientId,
             text,
             createdAt,
+            seen: false,
+            seenAt: null,
             // avatar: user?.avatar,
           });
           setMessages((prevMessages) =>

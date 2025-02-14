@@ -126,7 +126,7 @@ function HomePage() {
     if (details) {
       const parsedDetails: UserDetails =
         typeof details === "string" ? JSON.parse(details) : details;
-      console.log("###$$$ USER DETAILS: ", details, "\n\n", parsedDetails);
+      // console.log("###$$$ USER DETAILS: ", details, "\n\n", parsedDetails);
       if (parsedDetails?.user) {
         setUserDetails(parsedDetails);
       }

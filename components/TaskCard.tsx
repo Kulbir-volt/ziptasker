@@ -28,7 +28,7 @@ import { ThemedMaterialCommunityIcons } from "./ThemedMaterialCommunityIcon";
 type TaskCardProps = TouchableOpacityProps & {
   lightColor?: string;
   darkColor?: string;
-  status?: string;
+  status?: string | null;
   title?: string;
   task: SaveDetailsProps;
 };
@@ -36,6 +36,7 @@ type TaskCardProps = TouchableOpacityProps & {
 const TaskCard: React.FC<TaskCardProps> = ({
   onPress,
   task,
+  status = null,
   ...otherProps
 }) => {
   const theme = useColorScheme() ?? "light";
@@ -207,7 +208,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 },
               ]}
             >
-              {task.status.replace(/^\w/, (c) => c.toUpperCase())}
+              {status || task.status.replace(/^\w/, (c) => c.toUpperCase())}
             </ThemedText>
             <ThemedFontAwesome
               name={"user-circle"}

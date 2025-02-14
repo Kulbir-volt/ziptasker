@@ -60,6 +60,7 @@ type InitialStateProps = {
   >[];
   myTasks: SaveDetailsProps[];
   othersTasks: SaveDetailsProps[];
+  taskOffers: [];
   isLoading: boolean;
   comments: CommentDetailsProps[] | null;
 };
@@ -68,6 +69,7 @@ const initialState: InitialStateProps = {
   taskTypesList: [],
   chores: [],
   myTasks: [],
+  taskOffers: [],
   othersTasks: [],
   isLoading: false,
   comments: [],
@@ -99,6 +101,12 @@ const tasksSlice = createSlice({
       return {
         ...state,
         othersTasks: action.payload,
+      };
+    },
+    setTaskOffers: (state, action) => {
+      return {
+        ...state,
+        taskOffers: action.payload,
       };
     },
     setComments: (state, action) => {

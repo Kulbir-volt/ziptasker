@@ -124,16 +124,9 @@ const BrowseTasks: React.FC = () => {
     longitudeDelta: 0.1,
   };
 
-  const data = [
-    {
-      id: "1",
-      title: "PDF to Excel",
-    },
-    {
-      id: "2",
-      title: "MS Word",
-    },
-  ];
+  useEffect(() => {
+    // console.log("@@@ OTHERS TASKS: ", othersTasks);
+  }, []);
 
   useEffect(() => {
     const selectedItem = categoriesList?.find((item) => item?.selected);

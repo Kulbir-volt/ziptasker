@@ -2,8 +2,6 @@ import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 
 import { logoutUser, store } from "../../redux/store";
-import { authActions } from "../../redux/slice/auth";
-import { tasksActions } from "../../redux/slice/tasks";
 import { checkInternetConnectivity } from "../../netInfo";
 import { userActions, UsersListProps } from "../../redux/slice/user";
 

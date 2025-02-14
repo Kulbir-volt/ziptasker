@@ -57,11 +57,13 @@ type CommonTaskDetailsProps = {
   taskDetails: SaveDetailsProps;
   style?: StyleProp<ViewStyle>;
   fetchComments?: () => void;
+  showOffersPrice?: boolean;
 };
 
 const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
   taskDetails,
   style,
+  showOffersPrice = true,
   fetchComments = () => {},
 }) => {
   const theme = useColorScheme() ?? "light";

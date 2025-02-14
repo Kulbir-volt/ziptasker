@@ -113,7 +113,7 @@ function LoadingStack() {
     AsyncStorage.getItem("userData")
       .then((userData) => {
         if (userData) {
-          console.log("^^^ LOADING DATA: ", userData);
+          // console.log("^^^ LOADING DATA: ", userData);
           dispatch(authActions.setUserDetails(userData));
         } else {
           dispatch(authActions.setIsLoggedIn(false));
