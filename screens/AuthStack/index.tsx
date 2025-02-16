@@ -1,6 +1,7 @@
 import React from "react";
 import {
   ColorSchemeName,
+  Platform,
   TouchableOpacity,
   useColorScheme,
   View,
@@ -31,6 +32,7 @@ import {
 import { HomePage } from "./HomePage";
 import { Colors } from "../../constants/Colors";
 import {
+  fontSizeH2,
   fontSizeH3,
   getMarginRight,
   getWidthnHeight,
@@ -49,6 +51,10 @@ import { Messages } from "./Messages";
 import { PvtMessage } from "./PvtMessage";
 import { MyTaskDetails } from "./MyTasksStack/MyTaskDetails";
 import { ThemedSafe } from "../../components/ThemedSafe";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
+import { LoginResponseProps } from "../NoAuthStack/OtpVerify";
+import { UserProfile } from "./UserProfile";
 
 export type PvtMessageProps = {
   userId: string;
@@ -57,6 +63,7 @@ export type PvtMessageProps = {
 };
 
 export type PrimaryStackParamList = {
+  userProfile: undefined;
   tabs: NavigatorScreenParams<BottomTabsParamsList>;
   notifications: undefined;
   createTask?: {
@@ -189,10 +196,11 @@ export default function AuthStackNavigator() {
 }
 
 const AppNavigator = () => {
+  const { isNewUser } = useSelector((state: RootState) => state.auth);
   const theme = useColorScheme() ?? "light";
   return (
     <PrimaryStack.Navigator
-      initialRouteName={"tabs"}
+      initialRouteName={isNewUser ? "userProfile" : "tabs"}
       screenOptions={{
         headerShown: false,
       }}
@@ -201,6 +209,27 @@ const AppNavigator = () => {
         name={"tabs"}
         component={TabsNavigator}
         options={{ headerShown: false }} // Hide header for tabs
+      />
+      <PrimaryStack.Screen
+        name="userProfile"
+        component={UserProfile}
+        options={({ navigation }) => ({
+          headerShadowVisible: false,
+          headerTitle: "User Profile",
+          headerTitleStyle: {
+            fontFamily: "Cookie_400Regular",
+            fontSize: fontSizeH2().fontSize + 8,
+          },
+          headerStyle: {
+            backgroundColor: Colors[theme]["yellow"],
+          },
+          headerTitleAlign: "center",
+          ...Platform.select({
+            ios: {
+              headerShown: true,
+            },
+          }),
+        })}
       />
       <PrimaryStack.Screen
         name={"notifications"}

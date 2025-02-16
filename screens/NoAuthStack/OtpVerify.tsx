@@ -30,14 +30,35 @@ import { NextIconButton } from "../../components/Buttons/RoundButton";
 import { LoginTypesStackParamList } from ".";
 import { authActions } from "../../redux/slice/auth";
 import { RootState } from "../../redux/store";
+import { saveUserToFirebase } from "../../firebase/create/saveUser";
+import { getUserDetails } from "../../firebase/read/fetchUsers";
 
 type OtpVerifyProps = StackScreenProps<LoginTypesStackParamList, "otpVerify">;
+
+export type LoggedInUserDetailsProps = {
+  photoURL?: string | undefined | null;
+  phoneNumber: string | null;
+  displayName?: string | undefined | null;
+  emailVerified?: boolean;
+  uid: string | undefined;
+  email?: string | undefined | null;
+  providerId?: string;
+};
+
+export type LoginResponseProps = {
+  name?: string | null | undefined;
+  additionalUserInfo?: {
+    isNewUser?: boolean;
+    providerId?: string;
+  };
+  user: LoggedInUserDetailsProps;
+};
 
 const CELL_COUNT = 6;
 
 const OtpVerify: React.FC<OtpVerifyProps> = ({ route, navigation }) => {
   const dispatch = useDispatch();
-  const { details } = useSelector((state: RootState) => state.auth);
+  const { details, isNewUser } = useSelector((state: RootState) => state.auth);
   const theme = useColorScheme() ?? "light";
   const { verificationId, phoneNumber } = route.params;
 
@@ -47,7 +68,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ route, navigation }) => {
     if (details) {
       dispatch(authActions.setIsLoggedIn(true));
     }
-  }, [details]);
+  }, [details, isNewUser]);
 
   useEffect(() => {
     if (otp?.length === CELL_COUNT && verificationId) {
@@ -64,14 +85,38 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ route, navigation }) => {
           otp
         );
         const response = await auth().signInWithCredential(credential);
-        const data = {
-          name: "User",
-          ...response,
-        };
-        const stringifyData = JSON.stringify(data);
-        // console.log("^^^ RESPONSE: ", JSON.stringify(data, null, 4));
-        AsyncStorage.setItem("userData", stringifyData);
-        dispatch(authActions.setUserDetails(stringifyData));
+        const stringifyData = await getUserDetails(response.user.uid);
+        if (stringifyData) {
+          const parsedUserData: LoggedInUserDetailsProps =
+            JSON.parse(stringifyData);
+          const data: LoginResponseProps = {
+            additionalUserInfo: response.additionalUserInfo,
+            user: {
+              ...parsedUserData,
+              emailVerified: response.user.emailVerified,
+              providerId: response.user.providerId,
+              uid: response.user.uid,
+            },
+          };
+          console.log("^^ DATABASE DETAILS: ", data);
+          if (parsedUserData?.displayName) {
+            dispatch(authActions.setIsNewUser(false));
+          }
+          AsyncStorage.setItem("userData", JSON.stringify(data));
+          dispatch(authActions.setUserDetails(JSON.stringify(data)));
+        } else {
+          const data: LoginResponseProps = {
+            additionalUserInfo: response.additionalUserInfo,
+            user: response.user,
+          };
+          console.log("^^ LOGIN RESPONSE: ", data);
+          if (response.user.displayName) {
+            dispatch(authActions.setIsNewUser(false));
+          }
+          console.log("### USER DETAILS: ", response.user.displayName);
+          AsyncStorage.setItem("userData", JSON.stringify(data));
+          dispatch(authActions.setUserDetails(JSON.stringify(data)));
+        }
       } catch (error: any) {
         console.log("!!!! confirmationERROR: ", JSON.stringify(error, null, 4));
       } finally {

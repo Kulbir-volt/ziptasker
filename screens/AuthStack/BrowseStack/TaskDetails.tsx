@@ -59,6 +59,7 @@ import { IconTextInput } from "../../../components/IconTextInput";
 type TaskDetailsRouteProp = RouteProp<TaskDetailsStackParamList, "taskDetails">;
 // type MyTaskDetailsRouteProp = RouteProp<MyTaskDetailsStackParamList, "myTaskDetails">;
 const HEADER_MAX_HEIGHT = getWidthnHeight(35)?.width!; // Max header height
+const minimumCharacters = 15;
 
 type RenderPriceDetailsProps = {
   showIcon?: boolean;
@@ -81,7 +82,6 @@ const TaskDetails: React.FC = () => {
   const [animateSlide, setAnimateSlide] = useState<Animated.Value>(
     new Animated.Value(1)
   );
-  const [step1, setStep1] = useState<boolean>(true);
 
   const offerBSRef = useRef<BottomSheetModal>(null);
   const offerFlatlistRef = useRef<FlatList>(null);
@@ -286,6 +286,7 @@ const TaskDetails: React.FC = () => {
               <TouchableOpacity
                 style={{ borderWidth: 0, padding: getWidthnHeight(2)?.width }}
                 onPress={() => {
+                  setSelectedIndex(0);
                   offerFlatlistRef.current?.scrollToIndex({
                     animated: true,
                     index: 0,
@@ -351,7 +352,7 @@ const TaskDetails: React.FC = () => {
                 getMarginTop(1),
               ]}
             >
-              Minimum 15 characters
+              {`Minimum ${minimumCharacters} characters`}
             </ThemedText>
             <IconTextInput
               value={offerDescription ?? ""}
@@ -514,14 +515,29 @@ const TaskDetails: React.FC = () => {
           </View>
           <FlatButton
             activeOpacity={0.5}
-            lightColor={Colors[theme]["yellow"]}
-            darkColor={Colors[theme]["yellow"]}
+            colorType={
+              selectedIndex === 0
+                ? "yellow"
+                : offerDescription &&
+                  offerDescription.length >= minimumCharacters
+                ? "yellow"
+                : "gradeOut"
+            }
             title="Continue"
             onPress={() => {
-              offerFlatlistRef.current?.scrollToIndex({
-                animated: true,
-                index: 1,
-              });
+              if (selectedIndex === 0) {
+                setSelectedIndex(1);
+                offerFlatlistRef.current?.scrollToIndex({
+                  animated: true,
+                  index: 1,
+                });
+              } else if (
+                selectedIndex === 1 &&
+                offerDescription &&
+                offerDescription?.length >= minimumCharacters
+              ) {
+                console.log("### DETAILS: ", taskDetails);
+              }
             }}
             style={[
               {

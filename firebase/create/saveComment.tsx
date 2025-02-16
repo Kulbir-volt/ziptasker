@@ -13,7 +13,7 @@ import moment from "moment";
 export const defaultUserImage =
   "https://firebasestorage.googleapis.com/v0/b/taskermanager.appspot.com/o/images%2Fdefault%2Fuser.png?alt=media&token=4e9569fc-c551-4e3e-a231-a8f02ee3f21a";
 
-export const preloadImages = [defaultUserImage];
+export let preloadImages = [defaultUserImage];
 
 export const saveCommentToFirebase = async (
   details: CommentDetailsProps

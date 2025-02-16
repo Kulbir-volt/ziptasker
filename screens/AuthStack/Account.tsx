@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  Image,
 } from "react-native";
 import auth from "@react-native-firebase/auth";
 import { useDispatch } from "react-redux";
@@ -30,6 +31,7 @@ import { ArrowComponent } from "../../components/ArrowComponent";
 import { ThemedAntDesign } from "../../components/ThemedAntDesign";
 import { ThemedIonicons } from "../../components/ThemedIonicons";
 import { authActions, UserDetails } from "../../redux/slice/auth";
+import { ThemedEntypo } from "../../components/ThemedEntypo";
 
 const Account = () => {
   const theme = useColorScheme() ?? "light";
@@ -48,11 +50,48 @@ const Account = () => {
         darkColor={Colors[theme]["background"]}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <ThemedFontAwesome
-            name={"user-circle"}
-            colorType={"iconColor"}
-            size={getWidthnHeight(15)?.width}
-          />
+          <View>
+            <View style={{ alignItems: "center", justifyContent: "center" }}>
+              {userDetails?.user?.photoURL ? (
+                <Image
+                  source={{ uri: userDetails?.user?.photoURL }}
+                  resizeMode="contain"
+                  style={{
+                    width: getWidthnHeight(20)?.width,
+                    height: getWidthnHeight(20)?.width,
+                    borderRadius: getWidthnHeight(14)?.width,
+                  }}
+                />
+              ) : (
+                <ThemedFontAwesome
+                  name="user-circle"
+                  size={getWidthnHeight(20)?.width}
+                  colorType={"blackShade"}
+                />
+              )}
+            </View>
+            <View
+              style={{
+                position: "absolute",
+                alignSelf: "flex-end",
+                bottom: 0,
+                right: 0,
+              }}
+            >
+              <ThemedView
+                style={{
+                  padding: getWidthnHeight(2)?.width,
+                  borderRadius: getWidthnHeight(5)?.width,
+                }}
+              >
+                <ThemedEntypo
+                  name="camera"
+                  size={getWidthnHeight(5)?.width}
+                  colorType={"blackShade"}
+                />
+              </ThemedView>
+            </View>
+          </View>
           <View style={{ paddingHorizontal: getWidthnHeight(3)?.width }}>
             <ThemedText
               style={[
@@ -64,7 +103,7 @@ const Account = () => {
                 },
               ]}
             >
-              {userDetails?.name}
+              {userDetails?.user?.displayName}
             </ThemedText>
             <ThemedText
               style={[

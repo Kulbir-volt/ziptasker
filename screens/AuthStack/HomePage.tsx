@@ -135,6 +135,13 @@ function HomePage() {
 
   useEffect(() => {
     async function loadImage() {
+      if (details) {
+        const parsedDetails: UserDetails = JSON.parse(details as string);
+        // console.log("###$$$ USER DETAILS: ", details, "\n\n", parsedDetails);
+        if (parsedDetails?.user?.photoURL) {
+          preloadImages.push(parsedDetails?.user?.photoURL);
+        }
+      }
       Promise.all(
         preloadImages.map((uri) => {
           if (Platform.OS === "ios") {
@@ -153,7 +160,6 @@ function HomePage() {
     async function init() {
       const isConnected = await checkInternetConnectivity();
       if (isConnected) {
-        await saveUserToFirebase();
         if (taskTypesList.length === 0) {
           await getTaskTypesList();
         }
@@ -277,7 +283,7 @@ function HomePage() {
                 darkColor={Colors[theme]["white"]}
                 style={{ fontWeight: "400" }}
               >
-                {`${greetings}, ${userDetails?.user.phoneNumber || "--"}`}
+                {`${greetings}, ${userDetails?.user.displayName || "--"}`}
               </ThemedText>
               <ThemedText
                 style={[

@@ -4,10 +4,15 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import LoginPage from "./Login";
 import PhoneAuth from "./PhoneAuth";
-import { OtpVerify } from "./OtpVerify";
+import { LoginResponseProps, OtpVerify } from "./OtpVerify";
 import { Colors } from "../../constants/Colors";
-import { getMarginRight, getWidthnHeight } from "../../components/width";
+import {
+  fontSizeH2,
+  getMarginRight,
+  getWidthnHeight,
+} from "../../components/width";
 import { ThemedMaterialIcons } from "../../components/ThemedMaterialIcon";
+import { UserProfile } from "../AuthStack/UserProfile";
 
 export type RootStackParamList = {
   startup: undefined;
@@ -99,6 +104,38 @@ function LoginTypes() {
         name="otpVerify"
         component={OtpVerify}
       />
+      {/* <LoginTypesStack.Screen
+        options={({ navigation }) => ({
+          headerTitle: "User Profile",
+          headerTitleStyle: {
+            fontFamily: "Cookie_400Regular",
+            fontSize: fontSizeH2().fontSize + 8,
+          },
+          headerStyle: {
+            backgroundColor: Colors[theme]["yellow"],
+          },
+          headerTitleAlign: "center",
+          ...Platform.select({
+            ios: {
+              headerShown: true,
+              headerLeft: () => (
+                <TouchableOpacity
+                  style={getMarginRight(3)}
+                  onPress={() => navigation.goBack()}
+                >
+                  <ThemedMaterialIcons
+                    name={"keyboard-backspace"}
+                    size={getWidthnHeight(6)?.width}
+                    colorType={"iconColor"}
+                  />
+                </TouchableOpacity>
+              ),
+            },
+          }),
+        })}
+        name="userProfile"
+        component={UserProfile}
+      /> */}
     </LoginTypesStack.Navigator>
   );
 }

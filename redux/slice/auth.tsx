@@ -27,6 +27,7 @@ export type UserDetails = FirebaseAuthTypes.UserCredential & {
 type InitialStateProps = {
   isConnected: boolean;
   isLoggedIn: boolean | null;
+  isNewUser: boolean;
   details: UserDetails | null | string;
   showMap: boolean;
 };
@@ -34,6 +35,7 @@ type InitialStateProps = {
 const initialState: InitialStateProps = {
   isConnected: true,
   isLoggedIn: null,
+  isNewUser: true,
   details: null,
   showMap: false,
 };
@@ -52,6 +54,12 @@ const authSlice = createSlice({
       return {
         ...state,
         isLoggedIn: action.payload,
+      };
+    },
+    setIsNewUser: (state, action) => {
+      return {
+        ...state,
+        isNewUser: action.payload,
       };
     },
     resetAuthSlice: () => {

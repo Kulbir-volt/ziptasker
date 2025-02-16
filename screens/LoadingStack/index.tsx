@@ -30,6 +30,7 @@ import auth from "@react-native-firebase/auth";
 import { ThemedSafe } from "../../components/ThemedSafe";
 import { authActions } from "../../redux/slice/auth";
 import { RootState } from "../../redux/store";
+import { LoginResponseProps } from "../NoAuthStack/OtpVerify";
 
 // Set Firestore host for the specific region
 // firestore().settings({
@@ -60,7 +61,10 @@ SplashScreen.preventAutoHideAsync();
 function LoadingStack() {
   const dispatch = useDispatch();
   const [key, setKey] = useState(0); // Key to force component reset
-  const { details } = useSelector((state: RootState) => state.auth);
+  const { details, isNewUser } = useSelector((state: RootState) => state.auth);
+  const [userProfileDetails, setUserProfileDetails] = useState<string | null>(
+    null
+  );
   const [loaded, error] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -84,7 +88,7 @@ function LoadingStack() {
     if (details) {
       dispatch(authActions.setIsLoggedIn(true));
     }
-  }, [details]);
+  }, [details, isNewUser]);
 
   useEffect(() => {
     if (loaded && !error) {
@@ -113,7 +117,14 @@ function LoadingStack() {
     AsyncStorage.getItem("userData")
       .then((userData) => {
         if (userData) {
-          // console.log("^^^ LOADING DATA: ", userData);
+          const parsedData: LoginResponseProps = JSON.parse(userData);
+          console.log("^^^ LOADING DATA: ", parsedData);
+          setUserProfileDetails(userData);
+          if (!parsedData?.user?.displayName) {
+            dispatch(authActions.setIsNewUser(true));
+          } else {
+            dispatch(authActions.setIsNewUser(false));
+          }
           dispatch(authActions.setUserDetails(userData));
         } else {
           dispatch(authActions.setIsLoggedIn(false));
