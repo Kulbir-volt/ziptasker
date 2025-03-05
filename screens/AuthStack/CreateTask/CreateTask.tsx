@@ -118,7 +118,7 @@ export type TimeOfDayProps = {
   icon?: ReactNode;
 };
 
-type StatusTypes =
+export type StatusTypes =
   | "open"
   | "completed"
   | "cancelled"
@@ -141,6 +141,8 @@ export type SaveDetailsProps = {
   images?: string[];
   budget: string | undefined;
   status: StatusTypes;
+  assignedTo?: string;
+  assignedOn?: FirebaseFirestoreTypes.FieldValue;
   createdAt?: FirebaseFirestoreTypes.FieldValue;
   updatedAt?: FirebaseFirestoreTypes.FieldValue;
   createdBy?: string;
@@ -283,6 +285,11 @@ const CreateTask: React.FC<CreateTaskProps> = ({
       ),
     },
   ];
+
+  useEffect(() => {
+    // setLoader(false);
+    // setDownloadUrl([]);
+  }, []);
 
   useEffect(() => {
     if (edit) {
@@ -540,7 +547,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({
         budget: budget,
         status: "posted",
         createdAt: firestore.FieldValue.serverTimestamp(),
-        postedBy: userDetails?.user?.displayName || userDetails?.name || null,
+        postedBy: userDetails?.user?.displayName,
       };
       if (edit) {
         delete saveDetails.createdAt;
@@ -579,6 +586,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({
       navigation.goBack();
     } catch (error) {
       setLoader(false);
+      setDownloadUrl([]);
       console.error("Error adding task:", error);
       dispatch(
         alertActions.setAlert({

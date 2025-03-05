@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -8,8 +8,10 @@ import {
   useColorScheme,
   View,
 } from "react-native";
-import auth from "@react-native-firebase/auth";
-import { useNavigation } from "@react-navigation/native";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import {
   BottomSheetFlatList,
   BottomSheetModal,
@@ -47,7 +49,9 @@ import { Categories } from "../../../components/Modal/Categories";
 import { ThemedIonicons } from "../../../components/ThemedIonicons";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
-import { authActions } from "../../../redux/slice/auth";
+import { authActions, UserDetails } from "../../../redux/slice/auth";
+import { SaveDetailsProps } from "../CreateTask/CreateTask";
+import { tasksActions } from "../../../redux/slice/tasks";
 
 const SORT = "sort";
 const FILTER = "filter";
@@ -94,6 +98,7 @@ const listOfCategories = [
 const BrowseTasks: React.FC = () => {
   const theme = useColorScheme() ?? "light";
   const dispatch = useDispatch();
+  const { details } = useSelector((state: RootState) => state.auth);
   const navigation = useNavigation<BrowseStackNavigationProps>();
   const filterBSRef = useRef<BottomSheetModal>(null);
   const sortFilterRef = useRef<BottomSheetModal>(null);
@@ -110,9 +115,10 @@ const BrowseTasks: React.FC = () => {
     ""
   );
   const [countSelection, setCountSelection] = useState<number>(0);
+  const [othersTasks, setOthersTasks] = useState<SaveDetailsProps[]>([]);
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
 
   const { showMap } = useSelector((state: RootState) => state.auth);
-  const { othersTasks } = useSelector((state: RootState) => state.tasks);
 
   const mapRef = useRef(null);
   const markerRef = useRef(null);
@@ -124,9 +130,44 @@ const BrowseTasks: React.FC = () => {
     longitudeDelta: 0.1,
   };
 
+  const tasksRef = firestore().collection("tasks");
+
   useEffect(() => {
-    // console.log("@@@ OTHERS TASKS: ", othersTasks);
+    const parsedDetails: UserDetails = JSON.parse(details as string);
+    setUserDetails(parsedDetails);
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!userDetails?.user?.uid) return;
+      const unsubscribe = tasksRef
+        .orderBy("createdAt", "desc")
+        .where("status", "==", "posted")
+        .onSnapshot(
+          (snapshot) => {
+            if (!snapshot?.empty) {
+              const allTasks: SaveDetailsProps[] = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              })) as SaveDetailsProps[];
+              const filterMyTasks = allTasks.filter(
+                (item) => item.createdBy !== userDetails?.user?.uid
+              );
+              console.log("^^^ OTHERS TASKS: ", filterMyTasks);
+              setOthersTasks(filterMyTasks);
+            } else {
+              console.log("^^^ OTHERS TASKS EMPTY: ", snapshot.empty);
+              setOthersTasks([]);
+            }
+          },
+          (error) => {
+            console.log("!!! BROWSE TASK SNAPSHOT ERROR: ", error);
+          }
+        );
+
+      return () => unsubscribe();
+    }, [userDetails?.user?.uid])
+  );
 
   useEffect(() => {
     const selectedItem = categoriesList?.find((item) => item?.selected);
@@ -333,6 +374,7 @@ const BrowseTasks: React.FC = () => {
                       ]}
                     >
                       <TaskCard
+                        status={item.status === "posted" ? "Open" : null}
                         task={item}
                         onPress={() =>
                           navigation.navigate("taskDetails", {

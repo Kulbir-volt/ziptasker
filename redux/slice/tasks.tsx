@@ -20,8 +20,13 @@ import {
   ZocialNames,
 } from "../../constants/VectorIcons";
 import { SaveDetailsProps } from "../../screens/AuthStack/CreateTask/CreateTask";
-import { CommentDetailsProps } from "../../screens/AuthStack/MyTasksStack/MyTaskDetails";
+import { QuestionDetailsProps } from "../../screens/AuthStack/MyTasksStack/MyTaskDetails";
 import moment from "moment";
+import { SubmitTaskRequestProps } from "../../screens/AuthStack/BrowseStack/TaskDetails";
+
+export type TaskOffersProps = SubmitTaskRequestProps & {
+  id?: string;
+};
 
 type InitialStateProps = {
   taskTypesList: VectorIconsProps<
@@ -60,9 +65,9 @@ type InitialStateProps = {
   >[];
   myTasks: SaveDetailsProps[];
   othersTasks: SaveDetailsProps[];
-  taskOffers: [];
+  taskOffers: TaskOffersProps[];
   isLoading: boolean;
-  comments: CommentDetailsProps[] | null;
+  comments: QuestionDetailsProps[] | null;
 };
 
 const initialState: InitialStateProps = {
@@ -104,14 +109,15 @@ const tasksSlice = createSlice({
       };
     },
     setTaskOffers: (state, action) => {
+      // console.log("@@@ REDUX OFFERS: ", action.payload);
       return {
         ...state,
         taskOffers: action.payload,
       };
     },
     setComments: (state, action) => {
-      console.log("$$$ SAVED COMMENTS: ", action.payload);
-      let unsortedComments = action.payload as CommentDetailsProps[];
+      // console.log("$$$ SAVED COMMENTS: ", action.payload);
+      let unsortedComments = action.payload as QuestionDetailsProps[];
       const sortedComments = unsortedComments.sort((a, b) => {
         const dateA = a?.createdAt ? moment(a.createdAt) : moment(0);
         const dateB = b?.createdAt ? moment(b.createdAt) : moment(0);

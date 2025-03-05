@@ -212,8 +212,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ route, navigation }) => {
   }, [downloadUrl]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ThemedView style={{ flex: 1 }}>
+    <ThemedSafe
+      edges={["left", "right", "bottom"]}
+      style={{ flex: 1, borderWidth: 0 }}
+    >
+      <ThemedView style={{ flex: 1, borderWidth: 0 }}>
         <View
           style={[
             StyleSheet.absoluteFillObject,
@@ -238,6 +241,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ route, navigation }) => {
         <KeyboardAvoidingView
           style={{
             flex: 1,
+            borderWidth: 0,
           }}
           {...Platform.select({
             ios: {
@@ -274,9 +278,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ route, navigation }) => {
                       justifyContent: "center",
                     }}
                   >
-                    {image ? (
+                    {userProfileDetails?.user?.photoURL || image ? (
                       <Image
-                        source={{ uri: image }}
+                        source={{
+                          uri: userProfileDetails?.user?.photoURL! ?? image,
+                        }}
                         resizeMode="contain"
                         style={{
                           width: getWidthnHeight(28)?.width,
@@ -530,7 +536,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ route, navigation }) => {
         </View>
       </CustomBS>
       <Loader visible={loading} transparent title={"Saving user details"} />
-    </SafeAreaView>
+    </ThemedSafe>
   );
 };
 

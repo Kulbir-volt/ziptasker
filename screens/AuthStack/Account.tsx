@@ -9,9 +9,8 @@ import {
   View,
   Image,
 } from "react-native";
-import auth from "@react-native-firebase/auth";
 import { useDispatch } from "react-redux";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
 import { Colors } from "../../constants/Colors";
 import {
@@ -32,12 +31,14 @@ import { ThemedAntDesign } from "../../components/ThemedAntDesign";
 import { ThemedIonicons } from "../../components/ThemedIonicons";
 import { authActions, UserDetails } from "../../redux/slice/auth";
 import { ThemedEntypo } from "../../components/ThemedEntypo";
+import { BrowseStackNavigationProps } from ".";
 
 const Account = () => {
   const theme = useColorScheme() ?? "light";
   const dispatch = useDispatch();
   const { details } = useSelector((state: RootState) => state.auth);
   const userDetails: UserDetails = JSON.parse(details as string);
+  const navigation = useNavigation<BrowseStackNavigationProps>();
   return (
     <ThemedView style={{ flex: 1 }}>
       <ThemedView
@@ -50,7 +51,11 @@ const Account = () => {
         darkColor={Colors[theme]["background"]}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <View>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={{ borderWidth: 0 }}
+            onPress={() => navigation.navigate("userProfile")}
+          >
             <View style={{ alignItems: "center", justifyContent: "center" }}>
               {userDetails?.user?.photoURL ? (
                 <Image
@@ -91,7 +96,7 @@ const Account = () => {
                 />
               </ThemedView>
             </View>
-          </View>
+          </TouchableOpacity>
           <View style={{ paddingHorizontal: getWidthnHeight(3)?.width }}>
             <ThemedText
               style={[

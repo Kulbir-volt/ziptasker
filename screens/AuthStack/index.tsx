@@ -55,11 +55,14 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { LoginResponseProps } from "../NoAuthStack/OtpVerify";
 import { UserProfile } from "./UserProfile";
+import { ChatsProps } from "../../redux/slice/chats";
 
 export type PvtMessageProps = {
   userId: string;
   recipientId: string;
   bookAgain?: boolean;
+  chatId: string;
+  chatDetails: ChatsProps;
 };
 
 export type PrimaryStackParamList = {
@@ -223,11 +226,21 @@ const AppNavigator = () => {
           headerStyle: {
             backgroundColor: Colors[theme]["yellow"],
           },
+          headerShown: true,
           headerTitleAlign: "center",
-          ...Platform.select({
-            ios: {
-              headerShown: true,
-            },
+          ...(navigation.canGoBack() && {
+            headerLeft: () => (
+              <TouchableOpacity
+                style={getMarginRight(3)}
+                onPress={() => navigation.goBack()}
+              >
+                <ThemedMaterialIcons
+                  name={"keyboard-backspace"}
+                  size={getWidthnHeight(6)?.width}
+                  colorType={"iconColor"}
+                />
+              </TouchableOpacity>
+            ),
           }),
         })}
       />

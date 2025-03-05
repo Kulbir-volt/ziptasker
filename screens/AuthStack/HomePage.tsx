@@ -68,7 +68,7 @@ import { alertActions } from "../../redux/slice/slidingAlert";
 import { checkInternetConnectivity } from "../../netInfo";
 import { getChoresList } from "../../firebase/read/choresList";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
-import { preloadImages } from "../../firebase/create/saveComment";
+import { preloadImages } from "../../firebase/create/saveQuestion";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function HomePage() {
@@ -448,7 +448,7 @@ function HomePage() {
               renderItem={() => {
                 return (
                   <View style={{ flex: 1 }}>
-                    <View
+                    {/* <View
                       style={[
                         {
                           paddingTop: getWidthnHeight(2)?.width,
@@ -497,6 +497,7 @@ function HomePage() {
                                   ? "pV4GUyEP74NTJ3scXuQtiaRRdej2"
                                   : "5SzWEqfmhpbvobUTeebwetES2UE3",
                               bookAgain: true,
+                              chatId: "pV4GUyEP74NTJ3scXuQtiaRRdej2",
                             })
                           }
                         >
@@ -507,13 +508,13 @@ function HomePage() {
                           />
                         </TouchableOpacity>
                       </ThemedView>
-                    </View>
+                    </View> */}
                     <View
                       style={[
                         {
                           flex: 1,
                           paddingHorizontal: getWidthnHeight(2)?.width,
-                          // paddingTop: getMarginTop(1).marginTop,
+                          paddingTop: getMarginTop(1).marginTop,
                         },
                       ]}
                     >

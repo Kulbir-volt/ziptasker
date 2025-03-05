@@ -6,7 +6,7 @@ import { authActions } from "../../redux/slice/auth";
 import { tasksActions } from "../../redux/slice/tasks";
 import { checkInternetConnectivity } from "../../netInfo";
 
-export const getSavedComments = async (task_id: string) => {
+export const getSavedQuestions = async (task_id: string) => {
   const { isConnected } = await checkInternetConnectivity();
   if (!isConnected) {
     return null;
@@ -17,7 +17,7 @@ export const getSavedComments = async (task_id: string) => {
       const savedCommentsListRef = firestore()
         .collection("tasks")
         .doc(task_id)
-        .collection("comments");
+        .collection("questions");
       const commentsSnapshot = await savedCommentsListRef.get();
       const comments = commentsSnapshot.docs.map((doc) => ({
         id: doc.id, // The document ID (commentId)

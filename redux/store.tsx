@@ -6,6 +6,7 @@ import authSlice, { authActions } from "./slice/auth";
 import userSlice from "./slice/user";
 import alertSlice, { alertActions } from "./slice/slidingAlert";
 import tasksSlice, { tasksActions } from "./slice/tasks";
+import chatsSlice, { chatsActions } from "./slice/chats";
 
 export type RootState = ReturnType<typeof store.getState>;
 
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
   [alertSlice.name]: alertSlice.reducer,
   [tasksSlice.name]: tasksSlice.reducer,
   [userSlice.name]: userSlice.reducer,
+  [chatsSlice.name]: chatsSlice.reducer,
 });
 
 export const store = configureStore({
@@ -33,5 +35,6 @@ export const logoutUser = async () => {
   store.dispatch(authActions.resetAuthSlice());
   store.dispatch(alertActions.resetAlertSlice());
   store.dispatch(tasksActions.resetTasksSlice());
+  store.dispatch(chatsActions.resetChats());
   await auth().signOut();
 };

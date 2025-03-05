@@ -1,14 +1,31 @@
 import React from "react";
 import { ThemedView } from "./ThemedView";
-import { Image, StyleProp, View, ViewStyle } from "react-native";
-import { fontSizeH4, getMarginLeft, getWidthnHeight } from "./width";
+import {
+  Image,
+  StyleProp,
+  TouchableOpacity,
+  View,
+  ViewStyle,
+} from "react-native";
+import {
+  fontSizeH4,
+  getMarginLeft,
+  getMarginTop,
+  getWidthnHeight,
+} from "./width";
 import { ThemedText } from "./ThemedText";
+import { ChatsProps } from "../redux/slice/chats";
+import { UserDetails } from "../redux/slice/auth";
+import moment from "moment";
 
 type MessageComponentProps = {
   style?: StyleProp<ViewStyle>;
   showDate?: boolean;
   numberOfLines?: number;
   title?: string;
+  item?: ChatsProps;
+  userDetails?: UserDetails;
+  onPress?: () => void;
 };
 
 const MessageComponent: React.FC<MessageComponentProps> = ({
@@ -16,9 +33,29 @@ const MessageComponent: React.FC<MessageComponentProps> = ({
   showDate = true,
   numberOfLines = 3,
   title = "Remove a radiator",
+  item,
+  userDetails,
+  onPress,
 }) => {
+  const image = item?.taskDetails?.tasker_image;
+  let messageTime = "N/A";
+  if (item?.createdAt instanceof Object && "seconds" in item?.createdAt) {
+    const date = item?.createdAt.toDate();
+    const now = moment();
+    const diffInHours = now.diff(date, "hours");
+
+    // If within last 24 hours, show "minutes ago"
+    if (diffInHours < 24) {
+      messageTime = moment(date).fromNow(); // Example: "5 minutes ago"
+    } else {
+      // If older than 24 hours, show date
+      messageTime = moment(date).format("DD MMM, YYYY"); // Example: "19 Feb, 2025"
+    }
+  }
   return (
-    <ThemedView
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
       style={[
         {
           flexDirection: "row",
@@ -28,7 +65,7 @@ const MessageComponent: React.FC<MessageComponentProps> = ({
       ]}
     >
       <Image
-        source={require("../assets/login2.jpg")}
+        source={image ? { uri: image } : require("../assets/chat.jpg")}
         resizeMode="contain"
         style={{
           width: getWidthnHeight(12)?.width,
@@ -36,41 +73,49 @@ const MessageComponent: React.FC<MessageComponentProps> = ({
           borderRadius: getWidthnHeight(10)?.width,
         }}
       />
-      <ThemedView style={[{ flex: 1, borderWidth: 0 }, getMarginLeft(2)]}>
+      <ThemedView
+        style={[
+          { flex: 1, borderWidth: 0, justifyContent: "space-between" },
+          getMarginLeft(2),
+        ]}
+      >
         <View
           style={{
-            // flex: 1,
             flexDirection: "row",
             justifyContent: "space-between",
+            borderWidth: 0,
           }}
         >
           <ThemedText
             style={{ flex: 1 }}
             type={"defaultSemiBold"}
             colorType={"iconColor"}
+            numberOfLines={2}
           >
-            {title}
+            {item?.taskDetails?.title}
           </ThemedText>
           {showDate && (
             <ThemedText
-              style={{ fontSize: fontSizeH4().fontSize + 2 }}
+              style={{
+                fontSize: fontSizeH4().fontSize + 2,
+                paddingLeft: getWidthnHeight(2)?.width,
+                borderWidth: 0,
+              }}
               colorType={"darkGray"}
             >
-              20 Nov 2024
+              {messageTime}
             </ThemedText>
           )}
         </View>
         <ThemedText
           numberOfLines={numberOfLines}
-          style={{ fontSize: fontSizeH4().fontSize + 2 }}
+          style={[{ fontSize: fontSizeH4().fontSize + 2 }, getMarginTop(0)]}
           colorType={"darkGray"}
         >
-          Me: Hi Janice, I'm happy to do this for 70% of your offer ($21). I
-          just need to know what the exact part is, as your link is to the
-          entire machine.
+          {item?.text}
         </ThemedText>
       </ThemedView>
-    </ThemedView>
+    </TouchableOpacity>
   );
 };
 

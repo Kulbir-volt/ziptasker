@@ -16,6 +16,17 @@ import {
 } from "@expo-google-fonts/dancing-script";
 import { GreatVibes_400Regular } from "@expo-google-fonts/great-vibes";
 import { Birthstone_400Regular } from "@expo-google-fonts/birthstone";
+import {
+  Lexend_100Thin,
+  Lexend_200ExtraLight,
+  Lexend_300Light,
+  Lexend_400Regular,
+  Lexend_500Medium,
+  Lexend_600SemiBold,
+  Lexend_700Bold,
+  Lexend_800ExtraBold,
+  Lexend_900Black,
+} from "@expo-google-fonts/lexend";
 import { Cookie_400Regular } from "@expo-google-fonts/cookie";
 import { Pacifico_400Regular } from "@expo-google-fonts/pacifico";
 import { SquadaOne_400Regular } from "@expo-google-fonts/squada-one";
@@ -38,6 +49,34 @@ import { LoginResponseProps } from "../NoAuthStack/OtpVerify";
 //   ssl: true, // Ensure SSL is enabled
 //   cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED, // Optional: Set unlimited cache size
 // });
+
+export enum AppFonts {
+  Inter_400Regular = "Inter_400Regular",
+  Inter_500Medium = "Inter_500Medium",
+  Inter_600SemiBold = "Inter_600SemiBold",
+  Inter_700Bold = "Inter_700Bold",
+  Inter_800ExtraBold = "Inter_800ExtraBold",
+  Inter_900Black = "Inter_900Black",
+  DancingScript_400Regular = "DancingScript_400Regular",
+  DancingScript_500Medium = "DancingScript_500Medium",
+  DancingScript_600SemiBold = "DancingScript_600SemiBold",
+  DancingScript_700Bold = "DancingScript_700Bold",
+  GreatVibes_400Regular = "GreatVibes_400Regular",
+  Birthstone_400Regular = "Birthstone_400Regular",
+  Cookie_400Regular = "Cookie_400Regular",
+  Pacifico_400Regular = "Pacifico_400Regular",
+  SquadaOne_400Regular = "SquadaOne_400Regular",
+  Whisper_400Regular = "Whisper_400Regular",
+  Lexend_100Thin = "Lexend_100Thin",
+  Lexend_200ExtraLight = "Lexend_200ExtraLight",
+  Lexend_300Light = "Lexend_300Light",
+  Lexend_400Regular = "Lexend_400Regular",
+  Lexend_500Medium = "Lexend_500Medium",
+  Lexend_600SemiBold = "Lexend_600SemiBold",
+  Lexend_700Bold = "Lexend_700Bold",
+  Lexend_800ExtraBold = "Lexend_800ExtraBold",
+  Lexend_900Black = "Lexend_900Black",
+}
 
 export const firebaseConfig = {
   apiKey: "AIzaSyArPtE4wvv9jhhWjzwHpSb3Y1GpEiCZBoc",
@@ -82,6 +121,15 @@ function LoadingStack() {
     Pacifico_400Regular,
     SquadaOne_400Regular,
     Whisper_400Regular,
+    Lexend_100Thin,
+    Lexend_200ExtraLight,
+    Lexend_300Light,
+    Lexend_400Regular,
+    Lexend_500Medium,
+    Lexend_600SemiBold,
+    Lexend_700Bold,
+    Lexend_800ExtraBold,
+    Lexend_900Black,
   });
 
   useEffect(() => {

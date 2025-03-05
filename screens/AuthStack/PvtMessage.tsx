@@ -64,7 +64,7 @@ import { Colors } from "../../constants/Colors";
 import { checkInternetConnectivity } from "../../netInfo";
 import { listing, SaveDetailsProps } from "./CreateTask/CreateTask";
 import { verifyAuth } from "../../firebase/authCheck/verifyAuth";
-import { defaultUserImage } from "../../firebase/create/saveComment";
+import { defaultUserImage } from "../../firebase/create/saveQuestion";
 
 type PvtMessageProps = {
   title?: string;
@@ -86,9 +86,7 @@ const PvtMessage: React.FC = () => {
   const [images, setImages] = useState<string[]>([]);
   const [messageText, setMessageText] = useState<string>("");
 
-  const { userId, recipientId, bookAgain } = route?.params;
-
-  const chatId = [userId, recipientId].sort().join("_");
+  const { userId, recipientId, bookAgain, chatId, chatDetails } = route?.params;
 
   // console.log("&&& CHATID: ", chatId);
 
@@ -108,7 +106,7 @@ const PvtMessage: React.FC = () => {
         mediaTypes: ["images"],
         aspect: [4, 3],
         quality: 0.5,
-        selectionLimit: 5,
+        selectionLimit: 1,
       });
     } else {
       result = await ImagePicker.launchCameraAsync({
@@ -122,14 +120,14 @@ const PvtMessage: React.FC = () => {
 
     if (!result.canceled) {
       const newImageUri = result.assets[0].uri;
-
+      sendImageMessage(newImageUri);
       // Use Set to ensure no duplicates
-      const updatedImages = Array.from(
-        new Set([...(images || []), newImageUri])
-      );
+      // const updatedImages = Array.from(
+      //   new Set([...(images || []), newImageUri])
+      // );
 
-      console.log("^^^ Updated IMAGES: ", updatedImages);
-      setImages(updatedImages);
+      // console.log("^^^ Updated IMAGES: ", newImageUri);
+      // setImages(updatedImages);
     }
   };
 
@@ -154,6 +152,7 @@ const PvtMessage: React.FC = () => {
                 _id: data?.senderId,
                 // avatar: data?.avatar,
               },
+              image: data?.image,
             };
           });
           // console.log("^^^ CHAT: ", messagesFirestore);
@@ -163,6 +162,42 @@ const PvtMessage: React.FC = () => {
 
     return () => unsubscribe();
   }, []);
+
+  const sendImageMessage = async (imageUri: string) => {
+    const newMessage: IMessage = {
+      _id: uuidv4(),
+      createdAt: new Date(),
+      user: {
+        _id: auth().currentUser?.uid!, // Current user ID
+      },
+      image: imageUri, // Use local image URI
+      text: "",
+    };
+    console.log("&&& IMAGE MESSAGE: ", newMessage);
+    const { isConnected } = await checkInternetConnectivity();
+    const isAuthenticated = verifyAuth();
+    const { _id, createdAt, text, image, user } = newMessage;
+    if (isConnected && isAuthenticated) {
+      try {
+        chatsRef.doc(`${_id}`).set({
+          senderId: userId,
+          recipientId,
+          image,
+          text,
+          createdAt,
+          seen: false,
+          seenAt: null,
+          user,
+          // avatar: user?.avatar,
+        });
+        setMessages((prevMessages) =>
+          GiftedChat.append(prevMessages, [newMessage])
+        );
+      } catch (error) {
+        console.log("!!! CHAT ERROR: ", error);
+      }
+    }
+  };
 
   const sendMessage = useCallback(
     async (allMessages: IMessage[]) => {
@@ -411,13 +446,15 @@ const PvtMessage: React.FC = () => {
           <ThemedText
             style={{ fontWeight: "600", fontSize: fontSizeH4().fontSize + 6 }}
           >
-            Ruchit D.
+            {userId !== chatDetails?.senderId
+              ? chatDetails?.senderName
+              : chatDetails?.taskDetails?.tasker_name}
           </ThemedText>
           <ThemedText
             colorType={"darkGray"}
             style={{ fontSize: fontSizeH4().fontSize }}
           >
-            Active 1 year ago
+            {/* Active 1 year ago */}
           </ThemedText>
         </View>
         <ThemedMaterialCommunityIcons
@@ -462,26 +499,28 @@ const PvtMessage: React.FC = () => {
             numberOfLines={1}
             style={{ fontSize: fontSizeH4().fontSize + 5, fontWeight: "500" }}
           >
-            Mould Remove and Apply the mould
+            {chatDetails?.taskDetails?.title}
           </ThemedText>
           <ThemedText
             colorType={"darkGray"}
             style={{ fontSize: fontSizeH4().fontSize + 2, fontWeight: "500" }}
           >
-            Ruchit D.
+            {chatDetails?.taskDetails?.tasker_name}
           </ThemedText>
         </View>
         <View style={{ alignItems: "flex-end" }}>
           <ThemedText
             style={{ fontSize: fontSizeH4().fontSize + 5, fontWeight: "500" }}
           >
-            $150
+            {chatDetails?.taskDetails?.budget}
           </ThemedText>
           <ThemedText
             colorType={"darkGray"}
             style={{ fontSize: fontSizeH4().fontSize + 2, fontWeight: "500" }}
           >
-            Completed
+            {chatDetails?.taskDetails?.status?.replace(/^\w/, (c) =>
+              c.toUpperCase()
+            )}
           </ThemedText>
         </View>
       </ThemedView>
@@ -505,9 +544,22 @@ const PvtMessage: React.FC = () => {
             renderSend={renderSend}
             renderBubble={renderBubble}
             renderTime={renderTime}
-            renderMessageImage={() => null}
+            // renderMessageImage={() => null}
             // renderAvatar={renderAvatar}
             renderActions={renderActions}
+            renderMessageImage={(props) => {
+              return (
+                <Image
+                  source={{ uri: props.currentMessage.image }}
+                  style={{
+                    width: getWidthnHeight(50)?.width,
+                    height: getWidthnHeight(50)?.width,
+                    borderRadius: 10,
+                  }}
+                  resizeMode="cover"
+                />
+              );
+            }}
             renderAvatarOnTop={false}
             showUserAvatar={false}
             onSend={(allMessages) => sendMessage(allMessages)}

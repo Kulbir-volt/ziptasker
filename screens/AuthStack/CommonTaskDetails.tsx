@@ -10,9 +10,13 @@ import {
   View,
   ViewStyle,
   Image,
+  Alert,
 } from "react-native";
 import moment from "moment";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 
 import { ThemedView } from "../../components/ThemedView";
 import { ThemedSafe } from "../../components/ThemedSafe";
@@ -44,41 +48,151 @@ import { ThemedMaterialCommunityIcons } from "../../components/ThemedMaterialCom
 import { PrimaryInput } from "../../components/PrimaryInput";
 import { ChatComponent } from "../../components/ChatComponent";
 import { SaveDetailsProps } from "./CreateTask/CreateTask";
-import { CommentDetailsProps } from "./MyTasksStack/MyTaskDetails";
+import { QuestionDetailsProps } from "./MyTasksStack/MyTaskDetails";
 import { UserDetails } from "../../redux/slice/auth";
-import { RootState } from "../../redux/store";
+import { logoutUser, RootState } from "../../redux/store";
 import {
   defaultUserImage,
-  saveCommentToFirebase,
-} from "../../firebase/create/saveComment";
+  saveQuestionToFirebase,
+} from "../../firebase/create/saveQuestion";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
+import { useNavigation } from "@react-navigation/native";
+import {
+  UpdateTaskStatus,
+  updateTaskToFirestore,
+} from "../../firebase/update/updateTask";
+import { alertActions } from "../../redux/slice/slidingAlert";
+import { createChat } from "../../firebase/create/createChat";
+import { TaskOffersProps } from "../../redux/slice/tasks";
+import { verifyAuth } from "../../firebase/authCheck/verifyAuth";
+import { currency } from "../../constants/currency";
 
 type CommonTaskDetailsProps = {
   taskDetails: SaveDetailsProps;
+  sortTaskOffers: TaskOffersProps[];
+  setSortTaskOffers: (data: TaskOffersProps[]) => void;
   style?: StyleProp<ViewStyle>;
   fetchComments?: () => void;
   showOffersPrice?: boolean;
+  enableApprove?: boolean;
+  setLoading?: (value: boolean) => void;
 };
 
 const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
   taskDetails,
+  sortTaskOffers,
+  setSortTaskOffers,
   style,
   showOffersPrice = true,
   fetchComments = () => {},
+  enableApprove = false,
+  setLoading = () => {},
 }) => {
   const theme = useColorScheme() ?? "light";
+  const dispatch = useDispatch();
+  const navigation = useNavigation<BrowseStackNavigationProps>();
   const { details } = useSelector((state: RootState) => state.auth);
-  const { comments, isLoading } = useSelector(
-    (state: RootState) => state.tasks
-  );
+  const { isLoading } = useSelector((state: RootState) => state.tasks);
   const [expand, setExpand] = useState<boolean>(true);
   const [animateSlide, setAnimateSlide] = useState<Animated.Value>(
     new Animated.Value(1)
   );
-  const [commentText, setCommentText] = useState<string | null>(null);
+  const [questionText, setQuestionText] = useState<string | null>(null);
   const [selectedOffers, setSelectedOffers] = useState<boolean>(true);
+  const [sortTaskQuestions, setSortTaskQuestions] = useState<
+    QuestionDetailsProps[]
+  >([]);
+
+  const [taskerDetails, setTaskerDetails] = useState<TaskOffersProps | null>(
+    null
+  );
 
   const userDetails: UserDetails = JSON.parse(details as string);
+
+  const offersRef = firestore()
+    .collection("tasks")
+    .doc(taskDetails.id)
+    .collection("offers");
+
+  const questionsRef = firestore()
+    .collection("tasks")
+    .doc(taskDetails.id)
+    .collection("questions");
+
+  useEffect(() => {
+    if (sortTaskOffers.length > 0) {
+      const findTasker = sortTaskOffers.find(
+        (task) => task.tasker_id === taskDetails?.assignedTo
+      );
+      if (findTasker) {
+        setTaskerDetails(findTasker);
+      }
+    }
+  }, [sortTaskOffers, taskDetails]);
+
+  useEffect(() => {
+    const isAuthenticated = verifyAuth();
+    if (!isAuthenticated) {
+      logoutUser();
+      return;
+    }
+    const unsubscribe = offersRef.orderBy("createdAt", "desc").onSnapshot(
+      (snapshot) => {
+        if (!snapshot?.empty) {
+          const taskOffers: TaskOffersProps[] = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as TaskOffersProps[];
+          // console.log("^^^ OFFERS: ", taskOffers);
+          if (taskerDetails && taskOffers.length > 1) {
+            const findTaskerIndex = taskOffers.findIndex(
+              (taskOffer) => taskOffer.tasker_id === taskDetails?.assignedTo
+            );
+            // console.log("@@@ FIND INDEX: ", findTaskerIndex);
+            if (findTaskerIndex > -1) {
+              const sortData = moveToTop(
+                Array.from(taskOffers),
+                findTaskerIndex
+              );
+              setSortTaskOffers(sortData);
+            }
+          } else {
+            setSortTaskOffers(taskOffers);
+          }
+        }
+      },
+      (error) => console.log("!!! SNAPSHOT OFFERS ERROR: ", error)
+    );
+
+    return () => unsubscribe();
+  }, [taskerDetails, taskDetails]);
+
+  useEffect(() => {
+    const unsubscribe = questionsRef.orderBy("createdAt", "desc").onSnapshot(
+      (snapshot) => {
+        if (!snapshot?.empty) {
+          const taskQuestions: QuestionDetailsProps[] = snapshot.docs.map(
+            (doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })
+          ) as QuestionDetailsProps[];
+          // console.log("^^^ OFFERS: ", taskQuestions);
+          setSortTaskQuestions(taskQuestions);
+        }
+      },
+      (error) => console.log("!!! SNAPSHOT QUESTION ERROR: ", error)
+    );
+
+    return () => unsubscribe();
+  }, [taskerDetails, taskDetails]);
+
+  function moveToTop(arr: TaskOffersProps[], index: number) {
+    if (index < 0 || index >= arr.length) return arr; // Invalid index, return as is
+    const item = arr.splice(index, 1)[0]; // Remove item at index
+    arr.unshift(item); // Add item to the start
+    return arr;
+  }
 
   useEffect(() => {
     if (expand) {
@@ -357,7 +471,11 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
             >
               <FlatButton
                 colorType={selectedOffers ? "yellow" : "transparent"}
-                title="Offers"
+                title={
+                  sortTaskOffers.length > 0
+                    ? `Offers (${sortTaskOffers.length})`
+                    : "Offers"
+                }
                 onPress={() => setSelectedOffers(true)}
                 style={[
                   {
@@ -373,10 +491,14 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
               />
               <FlatButton
                 colorType={!selectedOffers ? "yellow" : "transparent"}
-                title="Questions"
+                title={
+                  Array.isArray(sortTaskQuestions) &&
+                  sortTaskQuestions.length > 0
+                    ? `Questions (${sortTaskQuestions.length})`
+                    : "Questions"
+                }
                 onPress={() => {
                   setSelectedOffers(false);
-                  fetchComments();
                 }}
                 style={[
                   {
@@ -394,78 +516,199 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
             <ThemedView style={[{ borderWidth: 0 }, getMarginTop(3)]}>
               {selectedOffers && (
                 <>
-                  <UserProfileDetails
-                    title={taskDetails.postedBy ?? "--"}
-                    ratings={"4.9"}
-                    count={25}
-                    subTitle={"94%"}
-                  />
-                  <ThemedView
-                    style={{
-                      flex: 1,
-                    }}
-                  >
-                    <Animated.View
-                      style={[
-                        {
-                          padding: getWidthnHeight(4)?.width,
-                          borderRadius: getWidthnHeight(2)?.width,
-                          backgroundColor: Colors[theme]["commonScreenBG"],
-                        },
-                        // animateHeight,
-                      ]}
-                    >
-                      <ThemedText
-                        style={[
-                          {
-                            fontSize: fontSizeH4().fontSize + 2,
-                            textAlign: "justify",
-                            borderWidth: 0,
-                          },
-                        ]}
-                      >
-                        {taskDetails.task_details}
-                        {/* {`We are seeking a detail-oriented freelancer to transcribe data from PDF files into Excel spreadsheets.
-              \nThe ideal candidate will have experience in accurately converting text and tables, ensuring that all data is entered correctly and formatted appropriately. This project requires attention to detail and proficiency with both PDF and Excel. If you have a keen eye for detail and can work efficiently, we would love to hear from you!`} */}
-                      </ThemedText>
-                      <Animated.View
-                        style={[
-                          { flex: 1 },
-                          // animateVertically,
-                          getMarginTop(2),
-                        ]}
-                      >
-                        <ThemedView
-                          colorType={"commonScreenBG"}
-                          style={{
-                            flex: 1,
-                            paddingTop: getWidthnHeight(5)?.width,
-                          }}
-                        >
-                          <TouchableOpacity
-                            style={{
-                              justifyContent: "flex-start",
-                              flexDirection: "row",
-                              alignItems: "center",
-                              // paddingBottom: getMarginTop(4).marginTop,
-                            }}
-                            onPress={() => setExpand(!expand)}
-                          >
-                            <ThemedText>{expand ? "More" : "Less"}</ThemedText>
-                            <ThemedMaterialIcons
-                              name={
-                                expand
-                                  ? "keyboard-arrow-down"
-                                  : "keyboard-arrow-up"
+                  <FlatList
+                    data={sortTaskOffers}
+                    keyExtractor={(item) => item.id!}
+                    renderItem={({ item }) => {
+                      return (
+                        <>
+                          <UserProfileDetails
+                            title={item?.tasker_name}
+                            ratings={item.rating}
+                            count={item.totalReview}
+                            subTitle={item.completionRate}
+                            verified={item.verified}
+                            image={item?.tasker_image ?? null}
+                            amount={item?.amount}
+                            showPrice={
+                              item?.task_createdBy === userDetails?.user?.uid ||
+                              item.tasker_id === userDetails?.user?.uid
+                            }
+                          />
+                          {enableApprove && (
+                            <FlatButton
+                              disabled={!!taskDetails.assignedTo}
+                              colorType={
+                                !!taskDetails.assignedTo ? "gradeOut" : "yellow"
                               }
-                              colorType={"iconColor"}
-                              size={getWidthnHeight(6)?.width}
+                              activeOpacity={0.5}
+                              title={
+                                taskDetails.assignedTo === item.tasker_id
+                                  ? "Accepted"
+                                  : "Accept"
+                              }
+                              onPress={() => {
+                                Alert.alert(
+                                  "Approve Offer",
+                                  `The tasker has proposed an offer of ${item.amount}, accepting this offer would assign this task to ${item.tasker_name}.`,
+                                  [
+                                    {
+                                      text: "Approve",
+                                      onPress: async () => {
+                                        setLoading(true);
+                                        const timestamp =
+                                          firestore.FieldValue.serverTimestamp();
+                                        const updateTaskStatus: UpdateTaskStatus =
+                                          {
+                                            id: taskDetails?.id!,
+                                            status: "assigned",
+                                            assignedTo: item.tasker_id,
+                                            assignedOn: timestamp,
+                                          };
+                                        const { title } =
+                                          await updateTaskToFirestore(
+                                            updateTaskStatus
+                                          );
+                                        // const title = true;
+                                        if (title) {
+                                          await createChat({
+                                            id: taskDetails?.id!,
+                                            senderId: userDetails?.user?.uid,
+                                            senderName:
+                                              userDetails?.user?.displayName ??
+                                              "",
+                                            senderImage:
+                                              userDetails?.user?.photoURL ?? "",
+                                            recipientId: item?.tasker_id,
+                                            text: `Hi, ${item.tasker_name} you've been assigned this task.`,
+                                            seen: false,
+                                            seenAt: null,
+                                            taskDetails: {
+                                              tasker_image:
+                                                item?.tasker_image ?? "",
+                                              tasker_name:
+                                                item?.tasker_name ?? "",
+                                              title: taskDetails?.title ?? "",
+                                              status: updateTaskStatus?.status,
+                                              budget: `${currency}${taskDetails?.budget}`,
+                                            },
+                                          });
+                                        }
+                                        setLoading(false);
+                                        navigation.setParams({
+                                          details: {
+                                            ...taskDetails,
+                                            ...updateTaskStatus,
+                                          },
+                                        });
+                                        dispatch(
+                                          alertActions.setAlert({
+                                            visible: true,
+                                            title: "Task assigned",
+                                            subtitle: `You've successfully assigned this task to ${item?.tasker_name}`,
+                                            type: "success",
+                                            timeout: 4000,
+                                          })
+                                        );
+                                        navigation.navigate("messages");
+                                      },
+                                    },
+                                    {
+                                      text: "Cancel",
+                                    },
+                                  ]
+                                );
+                              }}
+                              style={[
+                                {
+                                  borderRadius: getWidthnHeight(10)?.width,
+                                  paddingHorizontal: getWidthnHeight(5)?.width,
+                                  borderWidth: 0,
+                                  width: "100%",
+                                },
+                                getMarginVertical(2),
+                              ]}
+                              textStyle={{
+                                paddingVertical: getWidthnHeight(3)?.width,
+                                fontSize: fontSizeH4().fontSize + 4,
+                              }}
                             />
-                          </TouchableOpacity>
-                        </ThemedView>
-                      </Animated.View>
-                    </Animated.View>
-                  </ThemedView>
+                          )}
+                          <ThemedView
+                            style={[
+                              {
+                                flex: 1,
+                              },
+                              getMarginTop(enableApprove ? 0 : 1),
+                              getMarginBottom(2),
+                            ]}
+                          >
+                            <Animated.View
+                              style={[
+                                {
+                                  padding: getWidthnHeight(4)?.width,
+                                  borderRadius: getWidthnHeight(2)?.width,
+                                  backgroundColor:
+                                    Colors[theme]["commonScreenBG"],
+                                },
+                                // animateHeight,
+                              ]}
+                            >
+                              <ThemedText
+                                style={[
+                                  {
+                                    fontSize: fontSizeH4().fontSize + 2,
+                                    textAlign: "justify",
+                                    borderWidth: 0,
+                                  },
+                                ]}
+                              >
+                                {item.offerDescription}
+                              </ThemedText>
+                              {/* <Animated.View
+                                style={[
+                                  { flex: 1 },
+                                  // animateVertically,
+                                  getMarginTop(2),
+                                ]}
+                              >
+                                <ThemedView
+                                  colorType={"commonScreenBG"}
+                                  style={{
+                                    flex: 1,
+                                    paddingTop: getWidthnHeight(5)?.width,
+                                  }}
+                                >
+                                  <TouchableOpacity
+                                    style={{
+                                      justifyContent: "flex-start",
+                                      flexDirection: "row",
+                                      alignItems: "center",
+                                      // paddingBottom: getMarginTop(4).marginTop,
+                                    }}
+                                    onPress={() => setExpand(!expand)}
+                                  >
+                                    <ThemedText>
+                                      {expand ? "More" : "Less"}
+                                    </ThemedText>
+                                    <ThemedMaterialIcons
+                                      name={
+                                        expand
+                                          ? "keyboard-arrow-down"
+                                          : "keyboard-arrow-up"
+                                      }
+                                      colorType={"iconColor"}
+                                      size={getWidthnHeight(6)?.width}
+                                    />
+                                  </TouchableOpacity>
+                                </ThemedView>
+                              </Animated.View> */}
+                            </Animated.View>
+                          </ThemedView>
+                        </>
+                      );
+                    }}
+                  />
                   <View
                     style={[
                       {
@@ -572,11 +815,11 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                           fontSize: fontSizeH4().fontSize + 4,
                           margin: getWidthnHeight(2)?.width,
                         }}
-                        value={commentText ?? ""}
+                        value={questionText ?? ""}
                         placeholder="Ask a question"
                         placeholderTextColor={"darkGray"}
                         onChangeText={(text) =>
-                          setCommentText(text.trimStart())
+                          setQuestionText(text.trimStart())
                         }
                       />
                       <View
@@ -606,23 +849,34 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                           <FlatButton
                             title={"Send"}
                             onPress={() => {
-                              if (commentText && taskDetails?.id) {
-                                const commentDetails: CommentDetailsProps = {
-                                  comment: commentText,
+                              if (!userDetails?.user?.displayName) {
+                                Alert.alert(
+                                  "Details required",
+                                  "Please update your name before continuing."
+                                );
+                                navigation.navigate("userProfile");
+                                return;
+                              }
+                              if (questionText && taskDetails?.id) {
+                                const questionDetails: QuestionDetailsProps = {
+                                  question: questionText,
                                   task_id: taskDetails.id,
+                                  user_id: userDetails?.user?.uid,
+                                  user_image: userDetails?.user?.photoURL ?? "",
+                                  createdBy: userDetails?.user?.displayName,
                                 };
                                 async function saveComment() {
                                   try {
                                     const commentRef =
-                                      await saveCommentToFirebase(
-                                        commentDetails
+                                      await saveQuestionToFirebase(
+                                        questionDetails
                                       );
                                     console.log(
                                       "$$$ COMMENT SAVED: ",
                                       commentRef.id
                                     );
                                     fetchComments();
-                                    setCommentText("");
+                                    setQuestionText("");
                                   } catch (error) {
                                     console.error(
                                       "!!! SAVE COMMENT ERROR: ",
@@ -652,9 +906,9 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                   <View style={[{ flex: 1 }, getMarginTop(2)]}>
                     {/* <ChatComponent />
                     <ChatComponent style={getMarginTop(2)} /> */}
-                    {Array.isArray(comments) && (
+                    {Array.isArray(sortTaskQuestions) && (
                       <FlatList
-                        data={comments}
+                        data={sortTaskQuestions}
                         keyExtractor={(item) => `${item.id}`}
                         renderItem={({ item, index }) => {
                           return (
@@ -662,7 +916,7 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                               style={[index > 0 && getMarginTop(2)]}
                               name={item.createdBy}
                               image={item.user_image || defaultUserImage}
-                              message={item.comment}
+                              message={item.question}
                             />
                           );
                         }}

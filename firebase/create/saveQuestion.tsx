@@ -5,7 +5,7 @@ import firestore, {
 import { verifyAuth } from "../authCheck/verifyAuth";
 import { SaveDetailsProps } from "../../screens/AuthStack/CreateTask/CreateTask";
 import { checkInternetConnectivity } from "../../netInfo";
-import { CommentDetailsProps } from "../../screens/AuthStack/MyTasksStack/MyTaskDetails";
+import { QuestionDetailsProps } from "../../screens/AuthStack/MyTasksStack/MyTaskDetails";
 import { store } from "../../redux/store";
 import { tasksActions } from "../../redux/slice/tasks";
 import moment from "moment";
@@ -15,8 +15,8 @@ export const defaultUserImage =
 
 export let preloadImages = [defaultUserImage];
 
-export const saveCommentToFirebase = async (
-  details: CommentDetailsProps
+export const saveQuestionToFirebase = async (
+  details: QuestionDetailsProps
 ): Promise<FirebaseFirestoreTypes.DocumentReference> => {
   try {
     const { isConnected } = await checkInternetConnectivity();
@@ -35,15 +35,12 @@ export const saveCommentToFirebase = async (
     const commentRef = firestore()
       .collection("tasks")
       .doc(details.task_id)
-      .collection("comments");
-    const newComment: CommentDetailsProps = {
+      .collection("questions");
+    const newComment: QuestionDetailsProps = {
       ...details,
-      user_id: userId,
-      user_image: user?.photoURL ?? "",
-      createdBy: user?.displayName ?? "",
       createdAt: moment().valueOf(),
     };
-
+    console.log("@@@ SAVE QUESTION: ", newComment);
     const docRef = await commentRef.add(newComment);
     store.dispatch(tasksActions.setLoading(false));
     return docRef;

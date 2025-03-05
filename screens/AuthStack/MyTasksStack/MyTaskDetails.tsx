@@ -12,13 +12,14 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  RefreshControl,
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
   View,
   ViewStyle,
 } from "react-native";
+import { useSelector } from "react-redux";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
@@ -59,10 +60,12 @@ import { CommonTaskDetails } from "../CommonTaskDetails";
 import { CustomBS } from "../../../components/BottomSheet/CustomBS";
 import { CloseButtonBS } from "../../../components/CloseButtonBS";
 import { CreateTask } from "../CreateTask/CreateTask";
-import { getSavedComments } from "../../../firebase/read/fetchComments";
-import { useSelector } from "react-redux";
+import { getSavedQuestions } from "../../../firebase/read/fetchQuestions";
 import { RootState } from "../../../redux/store";
 import { UserDetails } from "../../../redux/slice/auth";
+import { getTaskOffers } from "../../../firebase/read/fetchTaskOffers";
+import { TaskOffersProps } from "../../../redux/slice/tasks";
+import { Loader } from "../../../components/Loader";
 
 export type TaskDetailsRouteProp = RouteProp<
   TaskDetailsStackParamList,
@@ -76,14 +79,14 @@ type MoreOptionsProps = {
   title: string;
 };
 
-export type CommentDetailsProps = {
+export type QuestionDetailsProps = {
   id?: string;
   user_id?: string;
   user_image?: string;
   createdBy?: string;
   createdAt?: number;
   task_id: string;
-  comment: string;
+  question: string;
 };
 
 const moreOptions: MoreOptionsProps[] = [
@@ -116,6 +119,8 @@ type OptionsProp = "options" | "editTask";
 
 const MyTaskDetails: React.FC = () => {
   const theme = useColorScheme() ?? "light";
+  const { details } = useSelector((state: RootState) => state.auth);
+  const { isLoading } = useSelector((state: RootState) => state.tasks);
   const route = useRoute<TaskDetailsRouteProp>();
   const navigation = useNavigation<MyStackNavigationProps>();
   const taskDetails = route.params?.details;
@@ -123,9 +128,15 @@ const MyTaskDetails: React.FC = () => {
   const [animateSlide, setAnimateSlide] = useState<Animated.Value>(
     new Animated.Value(1)
   );
+  const [sortTaskOffers, setSortTaskOffers] = useState<TaskOffersProps[]>([]);
+  const [taskerName, setTaskerName] = useState<string>("");
+  const [refreshing, setRefreshing] = useState(false);
 
+  const [loading, setLoading] = useState(false);
   const moreOptionsRef = useRef<BottomSheetModal>(null);
   const editTaskRef = useRef<BottomSheetModal>(null);
+
+  const userDetails: UserDetails = JSON.parse(details as string);
 
   const handleSnapPress = useCallback(
     (sheetRef: BottomSheetModal, index: number) => {
@@ -138,6 +149,10 @@ const MyTaskDetails: React.FC = () => {
     },
     []
   );
+
+  useEffect(() => {
+    setLoading(false);
+  }, []);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -158,6 +173,17 @@ const MyTaskDetails: React.FC = () => {
       },
     });
   }, []);
+
+  useEffect(() => {
+    if (taskDetails?.assignedTo) {
+      const findTasker = sortTaskOffers.find(
+        (item) => item?.tasker_id === taskDetails?.assignedTo
+      );
+      if (findTasker) {
+        setTaskerName(findTasker.tasker_name);
+      }
+    }
+  }, [taskDetails, sortTaskOffers]);
 
   useEffect(() => {
     if (expand) {
@@ -188,6 +214,25 @@ const MyTaskDetails: React.FC = () => {
     }
   }
 
+  useEffect(() => {
+    if (taskDetails?.id) {
+      // getTaskOffers(taskDetails?.id).then(() => {});
+      // getSavedComments(taskDetails?.id).then(() => {});
+    }
+  }, [taskDetails]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+
+    setTimeout(() => {
+      if (taskDetails?.id) {
+        // getTaskOffers(taskDetails?.id);
+        // getSavedComments(taskDetails?.id);
+      }
+      setRefreshing(false);
+    }, 1500);
+  }, []);
+
   return (
     <ThemedView colorType={"screenBG"} style={{ flex: 1, borderWidth: 0 }}>
       <View style={[styles.header]}>
@@ -202,18 +247,20 @@ const MyTaskDetails: React.FC = () => {
             },
           ]}
         >
-          {taskDetails.status === "open" && (
-            <View>
-              <ThemedText
-                style={[
-                  {
-                    fontSize: fontSizeH4().fontSize + 5,
-                    fontWeight: "500",
-                  },
-                ]}
-              >
-                Your task is posted
-              </ThemedText>
+          <View>
+            <ThemedText
+              style={[
+                {
+                  fontSize: fontSizeH4().fontSize + 5,
+                  fontWeight: "500",
+                },
+              ]}
+            >
+              {taskDetails?.assignedTo
+                ? `Your task has been assigned to "${taskerName}"`
+                : "Your task is posted"}
+            </ThemedText>
+            {!taskDetails?.assignedTo && (
               <ThemedText
                 style={[
                   {
@@ -223,10 +270,12 @@ const MyTaskDetails: React.FC = () => {
                   getMarginTop(0.5),
                 ]}
               >
-                You'll soon receive offers from Taskers
+                {Array.isArray(sortTaskOffers) && sortTaskOffers.length > 0
+                  ? `${sortTaskOffers.length} Tasker(s) has made an offer`
+                  : "You'll soon receive offers from Taskers"}
               </ThemedText>
-            </View>
-          )}
+            )}
+          </View>
         </ThemedView>
       </View>
       <View style={{ flex: 1 }}>
@@ -234,17 +283,20 @@ const MyTaskDetails: React.FC = () => {
         <FlatList
           data={["MyTasksDummy"]}
           keyExtractor={() => "myTasksDummyId"}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
           renderItem={() => (
             <CommonTaskDetails
               style={{
                 marginTop: HEADER_MAX_HEIGHT,
               }}
+              sortTaskOffers={sortTaskOffers}
+              setSortTaskOffers={setSortTaskOffers}
               taskDetails={taskDetails}
-              fetchComments={() => {
-                if (taskDetails?.id) {
-                  getSavedComments(taskDetails?.id);
-                }
-              }}
+              fetchComments={() => {}}
+              enableApprove={taskDetails.createdBy === userDetails?.user?.uid}
+              setLoading={setLoading}
             />
           )}
         />
@@ -457,6 +509,8 @@ const MyTaskDetails: React.FC = () => {
           </View>
         </ThemedSafe>
       </CustomBS>
+
+      <Loader visible={loading} transparent title={"Assigning Task"} />
     </ThemedView>
   );
 };

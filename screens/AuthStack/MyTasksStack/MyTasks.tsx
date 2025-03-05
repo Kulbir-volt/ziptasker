@@ -1,7 +1,16 @@
-import React, { useEffect, useState, useLayoutEffect } from "react";
+import React, {
+  useEffect,
+  useState,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import { FlatList, View } from "react-native";
 import { Menu } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useDispatch, useSelector } from "react-redux";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 
 import { ThemedSafe } from "../../../components/ThemedSafe";
 import { ThemedView } from "../../../components/ThemedView";
@@ -16,18 +25,63 @@ import { useColorScheme } from "react-native";
 import { Colors } from "../../../constants/Colors";
 import { TaskCard } from "../../../components/TaskCard";
 import { BrowseStackNavigationProps, MyStackNavigationProps } from "..";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../redux/store";
+import { logoutUser, RootState } from "../../../redux/store";
 import { getSavedTasksList } from "../../../firebase/read/savedTasks";
 import { ThemedAntDesign } from "../../../components/ThemedAntDesign";
 import { LoadingIndicator } from "../../../components/LoadingIndicator";
+import { SaveDetailsProps } from "../CreateTask/CreateTask";
+import { UserDetails } from "../../../redux/slice/auth";
+import { verifyAuth } from "../../../firebase/authCheck/verifyAuth";
+import { tasksActions } from "../../../redux/slice/tasks";
 
 const MyTasks: React.FC = () => {
   const theme = useColorScheme() ?? "light";
-  const { myTasks, isLoading } = useSelector((state: RootState) => state.tasks);
+  const dispatch = useDispatch();
+  const { details } = useSelector((state: RootState) => state.auth);
+  const { isLoading } = useSelector((state: RootState) => state.tasks);
   const navigation = useNavigation<MyStackNavigationProps>();
   const [visible, setVisible] = React.useState(false);
   const [selectedItem, setSelectedItem] = useState<string>("All tasks");
+  const [myTasks, setMyTasks] = useState<SaveDetailsProps[]>();
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+
+  const tasksRef = firestore().collection("tasks");
+
+  useEffect(() => {
+    const parsedDetails: UserDetails = JSON.parse(details as string);
+    setUserDetails(parsedDetails);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!userDetails?.user?.uid) return;
+      console.log("^^^ MY TASKS USER DETAILS: ", userDetails?.user?.uid);
+      if (!userDetails?.user?.uid) return;
+      const unsubscribe = tasksRef
+        .orderBy("createdAt", "desc")
+        .where("createdBy", "==", userDetails?.user?.uid)
+        .onSnapshot(
+          (snapshot) => {
+            if (!snapshot?.empty) {
+              const allTasks: SaveDetailsProps[] = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              })) as SaveDetailsProps[];
+              console.log("^^^ MY TASKS: ", allTasks);
+              setMyTasks(allTasks);
+            } else {
+              console.log("^^^ MY TASKS EMPTY: ", snapshot.empty);
+              setMyTasks([]);
+            }
+          },
+          (error) => {
+            console.log("!!! MY TASKS SNAPSHOT ERROR: ", error);
+          }
+        );
+
+      return () => unsubscribe();
+    }, [userDetails?.user?.uid])
+  );
 
   const openMenu = () => setVisible(true);
 
@@ -60,19 +114,6 @@ const MyTasks: React.FC = () => {
     },
   ];
 
-  const data = [
-    {
-      id: "1",
-      title: "PDF to Excel",
-      status: "Completed",
-    },
-    {
-      id: "2",
-      title: "MS Word",
-      status: "Unpaid",
-    },
-  ];
-
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: true,
@@ -95,14 +136,6 @@ const MyTasks: React.FC = () => {
       ),
     });
   }, []);
-
-  useEffect(() => {
-    getSavedTasksList();
-  }, []);
-
-  useEffect(() => {
-    console.log("@@@ LOADING: ", isLoading);
-  }, [isLoading]);
 
   return (
     <ThemedView style={{ flex: 1 }}>

@@ -29,9 +29,10 @@
     },
     "android": {
       "userInterfaceStyle": "automatic",
+      "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#38b6ff"
       },
       "package": "com.alpha.ziptasker",
       "googleServicesFile": "./assets/google-services.json"
@@ -59,7 +60,16 @@
             "node_modules/@expo-google-fonts/cookie/Cookie_400Regular.ttf",
             "node_modules/@expo-google-fonts/pacifico/Pacifico_400Regular.ttf",
             "node_modules/@expo-google-fonts/squada-one/SquadaOne_400Regular.ttf",
-            "node_modules/@expo-google-fonts/whisper/Whisper_400Regular.ttf"
+            "node_modules/@expo-google-fonts/whisper/Whisper_400Regular.ttf",
+            "node_modules/@expo-google-fonts/lexend/Lexend_100Thin.ttf",
+            "node_modules/@expo-google-fonts/lexend/Lexend_200ExtraLight.ttf",
+            "node_modules/@expo-google-fonts/lexend/Lexend_300Light.ttf",
+            "node_modules/@expo-google-fonts/lexend/Lexend_400Regular.ttf",
+            "node_modules/@expo-google-fonts/lexend/Lexend_500Medium.ttf",
+            "node_modules/@expo-google-fonts/lexend/Lexend_600SemiBold.ttf",
+            "node_modules/@expo-google-fonts/lexend/Lexend_700Bold.ttf",
+            "node_modules/@expo-google-fonts/lexend/Lexend_800ExtraBold.ttf",
+            "node_modules/@expo-google-fonts/lexend/Lexend_900Black.ttf"
           ]
         }
       ],

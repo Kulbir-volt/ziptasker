@@ -26,9 +26,9 @@ export const getSavedTasksList = async () => {
         ...doc.data(),
       })) as SaveDetailsProps[];
       const myTasks = allTasks.filter((task) => task.createdBy === user.uid);
-      const othersTasks = allTasks.filter(
-        (task) => task.createdBy !== user.uid
-      );
+      const othersTasks = allTasks
+        .filter((task) => task.createdBy !== user.uid)
+        .filter((task) => task.status === "posted");
       store.dispatch(tasksActions.setLoading(false));
       store.dispatch(tasksActions.setMyTasks(myTasks));
       store.dispatch(tasksActions.setOthersTasks(othersTasks));

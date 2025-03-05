@@ -1,13 +1,21 @@
-import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import {
+  Alert,
   Animated,
   Dimensions,
   Easing,
   FlatList,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   NativeScrollEvent,
-  NativeSyntheticEvent,
+  RefreshControl,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -25,6 +33,7 @@ import {
   BottomSheetModal,
 } from "@gorhom/bottom-sheet";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 
 import { ThemedView } from "../../../components/ThemedView";
 import { ThemedSafe } from "../../../components/ThemedSafe";
@@ -49,17 +58,38 @@ import { CommonTaskDetails } from "../CommonTaskDetails";
 import { CustomBS } from "../../../components/BottomSheet/CustomBS";
 import { ThemedFoundation } from "../../../components/ThemedFoundation";
 import { currency } from "../../../constants/currency";
-import {
-  BottomSheetFlatListMethods,
-  BottomSheetFlatListProps,
-} from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetScrollable/types";
 import { ThemedMaterialIcons } from "../../../components/ThemedMaterialIcon";
 import { IconTextInput } from "../../../components/IconTextInput";
+import { saveTaskRequest } from "../../../firebase/create/createTaskOffers";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
+import { UserDetails } from "../../../redux/slice/auth";
+import { alertActions } from "../../../redux/slice/slidingAlert";
+import { Loader } from "../../../components/Loader";
+import { getTaskOffers } from "../../../firebase/read/fetchTaskOffers";
+import { LoadingIndicator } from "../../../components/LoadingIndicator";
+import { getSavedQuestions } from "../../../firebase/read/fetchQuestions";
+import { TaskOffersProps } from "../../../redux/slice/tasks";
 
 type TaskDetailsRouteProp = RouteProp<TaskDetailsStackParamList, "taskDetails">;
 // type MyTaskDetailsRouteProp = RouteProp<MyTaskDetailsStackParamList, "myTaskDetails">;
 const HEADER_MAX_HEIGHT = getWidthnHeight(35)?.width!; // Max header height
 const minimumCharacters = 15;
+
+export type SubmitTaskRequestProps = {
+  amount: string;
+  tasker_name: string;
+  tasker_id: string;
+  tasker_image: string;
+  task_id: string;
+  rating: string | number;
+  verified: boolean;
+  totalReview: string | number;
+  completionRate: string;
+  createdAt?: FirebaseFirestoreTypes.FieldValue;
+  task_createdBy: string;
+  offerDescription: string;
+};
 
 type RenderPriceDetailsProps = {
   showIcon?: boolean;
@@ -73,18 +103,66 @@ const { width } = Dimensions.get("window");
 
 const TaskDetails: React.FC = () => {
   const theme = useColorScheme() ?? "light";
+  const dispatch = useDispatch();
   const route = useRoute<TaskDetailsRouteProp>();
+  const { details } = useSelector((state: RootState) => state.auth);
+  const { isLoading } = useSelector((state: RootState) => state.tasks);
   const navigation = useNavigation<BrowseStackNavigationProps>();
   const taskDetails = route.params?.details;
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [expand, setExpand] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [offerDescription, setOfferDescription] = useState<string | null>(null);
+  const [amount, setAmount] = useState<string | null>(
+    taskDetails?.budget ?? ""
+  );
+  const [refreshing, setRefreshing] = useState(false);
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [animateSlide, setAnimateSlide] = useState<Animated.Value>(
     new Animated.Value(1)
   );
+  const [sortTaskOffers, setSortTaskOffers] = useState<TaskOffersProps[]>([]);
+  const [taskerDetails, setTaskerDetails] = useState<TaskOffersProps | null>(
+    null
+  );
+  const [offerSubmitted, setOfferSubmitted] = useState(false);
 
   const offerBSRef = useRef<BottomSheetModal>(null);
   const offerFlatlistRef = useRef<FlatList>(null);
+
+  useEffect(() => {
+    if (sortTaskOffers.length > 0) {
+      const findTasker = sortTaskOffers.find(
+        (task) => task.tasker_id === taskDetails?.assignedTo
+      );
+      if (findTasker) {
+        setTaskerDetails(findTasker);
+      }
+    }
+  }, [sortTaskOffers, taskDetails]);
+
+  useEffect(() => {
+    if (sortTaskOffers.length > 0) {
+      // console.log("$$$ TASK OFFERS: ", sortTaskOffers);
+      const findTaskerId = sortTaskOffers.find(
+        (offer) => offer.tasker_id === userDetails?.user?.uid
+      );
+      if (findTaskerId) {
+        setOfferSubmitted(true);
+      }
+    }
+  }, [sortTaskOffers]);
+
+  useEffect(() => {
+    if (details) {
+      const parsedDetails: UserDetails =
+        typeof details === "string" ? JSON.parse(details) : details;
+      // console.log("###$$$ USER DETAILS: ", details, "\n\n", parsedDetails);
+      if (parsedDetails?.user) {
+        setUserDetails(parsedDetails);
+      }
+    }
+  }, []);
 
   function openBottomSheet(sheetRef: BottomSheetModal) {
     sheetRef.present();
@@ -93,17 +171,6 @@ const TaskDetails: React.FC = () => {
   function closeBottomSheet(sheetRef: BottomSheetModal) {
     sheetRef.close();
   }
-
-  const items = [
-    {
-      label: "Post a similar task",
-      value: "item1",
-    },
-    {
-      label: "Set up Alerts",
-      value: "item2",
-    },
-  ];
 
   function RenderPriceDetails({
     title,
@@ -168,10 +235,6 @@ const TaskDetails: React.FC = () => {
   }
 
   useEffect(() => {
-    console.log("### BROWSE TASK DETAILS: ", route.name);
-  }, []);
-
-  useEffect(() => {
     if (expand) {
       slidingEffect(1);
     } else {
@@ -227,8 +290,7 @@ const TaskDetails: React.FC = () => {
               Make an offer
             </ThemedText>
           </View>
-          <ThemedView
-            colorType={"screenBG"}
+          <View
             style={[
               {
                 width: "40%",
@@ -237,7 +299,7 @@ const TaskDetails: React.FC = () => {
               getMarginVertical(2),
             ]}
           >
-            <ThemedText
+            {/* <ThemedText
               style={[
                 {
                   textAlign: "center",
@@ -248,8 +310,32 @@ const TaskDetails: React.FC = () => {
               ]}
             >
               ${route.params.details.budget}
-            </ThemedText>
-          </ThemedView>
+            </ThemedText> */}
+            <IconTextInput
+              value={"$" + " " + amount!}
+              keyboardType="phone-pad"
+              onChangeText={(text) => setAmount(text.replace(/[^0-9]/g, ""))}
+              containerStyle={[
+                {
+                  width: "100%",
+                  borderWidth: 0,
+                },
+                getMarginVertical(1),
+              ]}
+              showClearIcon={false}
+              icon={null}
+              placeholder="Amount"
+              placeholderTextColor={"gradeOut"}
+              style={{
+                flex: 1,
+                textAlign: "center",
+                paddingVertical: getWidthnHeight(3)?.width,
+                textAlignVertical: "center",
+                fontSize: fontSizeH3().fontSize + 8,
+                borderWidth: 0,
+              }}
+            />
+          </View>
           <RenderPriceDetails
             title="Bronze service fee"
             showIcon={true}
@@ -387,69 +473,101 @@ const TaskDetails: React.FC = () => {
     },
   ];
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+
+    setTimeout(() => {
+      if (taskDetails?.id) {
+      }
+      setRefreshing(false);
+    }, 1500);
+  }, []);
+
   return (
     <ThemedView colorType={"screenBG"} style={{ flex: 1, borderWidth: 0 }}>
-      <View pointerEvents="box-none" style={[styles.header]}>
-        <ThemedView
-          colorType={"screenBG"}
-          style={[
-            {
-              paddingHorizontal: getWidthnHeight(3)?.width,
-              borderWidth: 0,
-              flex: 1,
-            },
-          ]}
-        >
-          <ThemedText
-            style={[
-              {
-                fontSize: fontSizeH4().fontSize + 5,
-                fontWeight: "500",
-              },
-            ]}
-          >
-            Make an offer now
-          </ThemedText>
-          <ThemedText
-            style={[
-              {
-                fontSize: fontSizeH4().fontSize + 5,
-                fontWeight: "normal",
-              },
-              getMarginTop(1.5),
-            ]}
-          >
-            60 Taskers have viewed this task already
-          </ThemedText>
-          <FlatButton
-            activeOpacity={0.5}
-            lightColor={Colors[theme]["yellow"]}
-            darkColor={Colors[theme]["yellow"]}
-            title="Make an offer"
-            onPress={() => {
-              if (offerBSRef?.current) {
-                openBottomSheet(offerBSRef.current);
-              }
-            }}
-            style={[
-              {
-                borderRadius: getWidthnHeight(10)?.width,
-                paddingHorizontal: getWidthnHeight(5)?.width,
-                width: "100%",
-              },
-              getMarginTop(2),
-            ]}
-            textStyle={{
-              paddingVertical: getWidthnHeight(3)?.width,
-              fontSize: fontSizeH4().fontSize + 4,
-            }}
-          />
-        </ThemedView>
-      </View>
+      <ThemedView
+        colorType={"screenBG"}
+        pointerEvents="box-none"
+        style={[
+          styles.header,
+          offerSubmitted && { height: "7%" },
+          isLoading && { height: "7%" },
+        ]}
+      >
+        {isLoading ? (
+          <LoadingIndicator colorType={"black"} size={"large"} />
+        ) : (
+          <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
+            <View
+              style={[
+                {
+                  paddingHorizontal: getWidthnHeight(3)?.width,
+                  borderWidth: 0,
+                },
+              ]}
+            >
+              <ThemedText
+                style={[
+                  {
+                    fontSize: fontSizeH4().fontSize + 5,
+                    fontWeight: "500",
+                  },
+                ]}
+              >
+                {offerSubmitted
+                  ? "You've already made an offer"
+                  : "Make an offer now"}
+              </ThemedText>
+            </View>
+            {!offerSubmitted && (
+              <>
+                <ThemedText
+                  style={[
+                    {
+                      fontSize: fontSizeH4().fontSize + 5,
+                      fontWeight: "normal",
+                    },
+                    getMarginTop(1.5),
+                  ]}
+                >
+                  {`${sortTaskOffers.length} Tasker(s) has made an offer`}
+                </ThemedText>
+                <FlatButton
+                  activeOpacity={0.5}
+                  lightColor={Colors[theme]["yellow"]}
+                  darkColor={Colors[theme]["yellow"]}
+                  title="Make an offer"
+                  onPress={() => {
+                    if (offerBSRef?.current) {
+                      openBottomSheet(offerBSRef.current);
+                    }
+                  }}
+                  style={[
+                    {
+                      borderRadius: getWidthnHeight(10)?.width,
+                      paddingHorizontal: getWidthnHeight(5)?.width,
+                      borderWidth: 0,
+                      width: "93%",
+                    },
+                    getMarginVertical(2),
+                  ]}
+                  textStyle={{
+                    paddingVertical: getWidthnHeight(3)?.width,
+                    fontSize: fontSizeH4().fontSize + 4,
+                  }}
+                />
+              </>
+            )}
+          </View>
+        )}
+      </ThemedView>
       <View style={{ flex: 1 }}>
         <FlatList
           data={["dummyTaskDetails"]}
           keyExtractor={() => "dummyTaskDetailsId"}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
           renderItem={() => {
             return (
               <CommonTaskDetails
@@ -459,7 +577,13 @@ const TaskDetails: React.FC = () => {
                   }
                 }
                 taskDetails={taskDetails}
-                showOffersPrice={false}
+                sortTaskOffers={sortTaskOffers}
+                setSortTaskOffers={setSortTaskOffers}
+                fetchComments={() => {
+                  if (taskDetails?.id) {
+                    // getSavedComments(taskDetails?.id);
+                  }
+                }}
               />
             );
           }}
@@ -468,6 +592,10 @@ const TaskDetails: React.FC = () => {
 
       <CustomBS
         ref={offerBSRef}
+        onClose={() => {
+          setSelectedIndex(0);
+          setOfferDescription("");
+        }}
         snapPoints={["85%"]}
         bsStyle={{
           borderTopLeftRadius: getWidthnHeight(5)?.width,
@@ -516,7 +644,7 @@ const TaskDetails: React.FC = () => {
           <FlatButton
             activeOpacity={0.5}
             colorType={
-              selectedIndex === 0
+              selectedIndex === 0 && amount
                 ? "yellow"
                 : offerDescription &&
                   offerDescription.length >= minimumCharacters
@@ -525,7 +653,8 @@ const TaskDetails: React.FC = () => {
             }
             title="Continue"
             onPress={() => {
-              if (selectedIndex === 0) {
+              Keyboard.dismiss();
+              if (selectedIndex === 0 && amount) {
                 setSelectedIndex(1);
                 offerFlatlistRef.current?.scrollToIndex({
                   animated: true,
@@ -536,7 +665,59 @@ const TaskDetails: React.FC = () => {
                 offerDescription &&
                 offerDescription?.length >= minimumCharacters
               ) {
-                console.log("### DETAILS: ", taskDetails);
+                // console.log("### DETAILS: ", taskDetails);
+                Alert.alert(
+                  "Submit!",
+                  `Are you sure you want to submit this offer for ${currency}${amount} ?`,
+                  [
+                    {
+                      text: "Yes",
+                      onPress: async () => {
+                        if (!userDetails?.user?.displayName) {
+                          Alert.alert(
+                            "Details required",
+                            "Please update your name before continuing."
+                          );
+                          navigation.navigate("userProfile");
+                          return;
+                        }
+                        try {
+                          setLoading(true);
+                          const saveDetails: SubmitTaskRequestProps = {
+                            offerDescription,
+                            amount: `${currency}${amount}`!,
+                            completionRate: "85%",
+                            rating: "4.5",
+                            task_id: taskDetails?.id!,
+                            task_createdBy: taskDetails?.createdBy!,
+                            tasker_id: userDetails?.user?.uid!,
+                            tasker_image: userDetails?.user?.photoURL ?? "",
+                            tasker_name: userDetails?.user?.displayName ?? "",
+                            totalReview: 2,
+                            verified: false,
+                          };
+                          if (offerBSRef?.current) {
+                            closeBottomSheet(offerBSRef.current);
+                          }
+                          console.log(
+                            "@@@ SAVE DETAILS: ",
+                            JSON.stringify(saveDetails, null, 4)
+                          );
+                          const { status, offerRef } = await saveTaskRequest(
+                            saveDetails
+                          );
+                          setLoading(false);
+                        } catch (error) {
+                          setLoading(false);
+                          console.error("!!! Error submitting offer: ", error);
+                        }
+                      },
+                    },
+                    {
+                      text: "No",
+                    },
+                  ]
+                );
               }
             }}
             style={[
@@ -554,6 +735,7 @@ const TaskDetails: React.FC = () => {
           />
         </ThemedView>
       </CustomBS>
+      <Loader visible={loading} transparent title={"Submitting offer"} />
     </ThemedView>
   );
 };
@@ -571,6 +753,8 @@ const styles = StyleSheet.create({
     // position: "absolute",
     width: "100%",
     height: "20%",
+    alignItems: "center",
+    justifyContent: "center",
     // height: HEADER_MAX_HEIGHT,
     borderWidth: 0,
   },

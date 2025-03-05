@@ -19,7 +19,7 @@ export const getTaskOffers = async (task_id: string) => {
       const taskOffersRef = firestore()
         .collection("tasks")
         .doc(task_id)
-        .collection("requests");
+        .collection("offers");
       // .where("createdBy", "==", user.uid)
       const taskOffersSnapshot = await taskOffersRef.get();
       const taskRequests = taskOffersSnapshot.docs.map((doc) => ({
@@ -27,6 +27,7 @@ export const getTaskOffers = async (task_id: string) => {
         ...doc.data(),
       }));
       store.dispatch(tasksActions.setLoading(false));
+      store.dispatch(tasksActions.setTaskOffers(taskRequests));
     } else {
       store.dispatch(tasksActions.setLoading(false));
       logoutUser();
