@@ -571,11 +571,6 @@ const TaskDetails: React.FC = () => {
           renderItem={() => {
             return (
               <CommonTaskDetails
-                style={
-                  {
-                    // marginTop: HEADER_MAX_HEIGHT,
-                  }
-                }
                 taskDetails={taskDetails}
                 sortTaskOffers={sortTaskOffers}
                 setSortTaskOffers={setSortTaskOffers}
