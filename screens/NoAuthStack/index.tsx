@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import LoginPage from "./Login";
 import PhoneAuth from "./PhoneAuth";
-import { LoginResponseProps, OtpVerify } from "./OtpVerify";
+import { OtpVerify } from "./OtpVerify";
 import { Colors } from "../../constants/Colors";
 import {
   fontSizeH2,
