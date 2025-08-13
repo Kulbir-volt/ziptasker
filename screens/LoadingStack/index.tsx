@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "@react-native-firebase/app";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -36,7 +37,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useDispatch, useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import firebase from "@react-native-firebase/app";
-import auth from "@react-native-firebase/auth";
+import appCheck, { initializeAppCheck } from "@react-native-firebase/app-check";
 
 import { ThemedSafe } from "../../components/ThemedSafe";
 import { authActions } from "../../redux/slice/auth";
@@ -78,22 +79,9 @@ export enum AppFonts {
   Lexend_900Black = "Lexend_900Black",
 }
 
-export const firebaseConfig = {
-  apiKey: "AIzaSyArPtE4wvv9jhhWjzwHpSb3Y1GpEiCZBoc",
-  authDomain: "taskermanager.firebaseapp.com",
-  databaseURL: "https://taskermanager.firebaseio.com",
-  projectId: "taskermanager",
-  storageBucket: "taskermanager.appspot.com",
-  messagingSenderId: "1041321032917",
-  appId: "1:1041321032917:android:d83f90fbf2b7acc803f65c",
-  // measurementId: 'G-measurement-id'
-};
-
-// if (!firebase.apps.length && Platform.OS === "ios") {
-//   firebase.initializeApp(firebaseConfig);
-// }
-
 SplashScreen.preventAutoHideAsync();
+
+// globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
 // auth().settings.appVerificationDisabledForTesting = false;
 
@@ -132,6 +120,28 @@ function LoadingStack() {
     Lexend_900Black,
   });
 
+  const app = firebase.app();
+
+  // Determine the appropriate App Check provider based on the platform
+  let appCheckProvider;
+
+  useEffect(() => {
+    const provider = appCheck().newReactNativeFirebaseAppCheckProvider();
+    const app = firebase.app();
+    provider.configure({
+      android: {
+        provider: "playIntegrity", // Use 'debug' for development builds
+        // debugToken: "F42A84B7-D2E3-4754-A18B-8B9AC5B73642",
+      },
+    });
+    async function initAppCheck() {
+      await initializeAppCheck(app, {
+        provider,
+      });
+    }
+    initAppCheck();
+  });
+
   useEffect(() => {
     if (details) {
       dispatch(authActions.setIsLoggedIn(true));
@@ -166,7 +176,7 @@ function LoadingStack() {
       .then((userData) => {
         if (userData) {
           const parsedData: LoginResponseProps = JSON.parse(userData);
-          console.log("^^^ LOADING DATA: ", parsedData);
+          // console.log("^^^ LOADING DATA: ", parsedData);
           setUserProfileDetails(userData);
           if (!parsedData?.user?.displayName) {
             dispatch(authActions.setIsNewUser(true));

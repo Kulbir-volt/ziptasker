@@ -1,96 +1,26 @@
 {
   "project_info": {
-    "project_number": "1041321032917",
-    "firebase_url": "https://taskermanager-default-rtdb.firebaseio.com",
-    "project_id": "taskermanager",
-    "storage_bucket": "taskermanager.appspot.com"
+    "project_number": "1054966149181",
+    "project_id": "kulbir-ziptasker",
+    "storage_bucket": "kulbir-ziptasker.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1041321032917:android:d83f90fbf2b7acc803f65c",
+        "mobilesdk_app_id": "1:1054966149181:android:a4100ce459f100269b7a54",
         "android_client_info": {
-          "package_name": "com.alpha.ziptasker"
+          "package_name": "com.kulbir.ziptasker"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "1041321032917-e1lreh70hgi3gk9uac100497d2rn0dbe.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.alpha.ziptasker",
-            "certificate_hash": "3e7d04f59b0fadddd7c894d862c41fd37908833c"
-          }
-        },
-        {
-          "client_id": "1041321032917-g758kp7740c1gv11579d96i2a4prsuv4.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDV0XXwpwn_q22SFp6BXlvEcQh1FdAfcHI"
+          "current_key": "AIzaSyDsg2RkwMf95C3CujPzVcG79Z5l8IIAF7c"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "1041321032917-g758kp7740c1gv11579d96i2a4prsuv4.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "1041321032917-gieqojolqppim3u341s9u6jehhbahaie.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.ziptasker.user"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:1041321032917:android:53c5914b7f12a1f703f65c",
-        "android_client_info": {
-          "package_name": "com.ziptasker.android"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "1041321032917-qqkr9qfkoq1jm78fvij5d9k4t32di6ps.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.ziptasker.android",
-            "certificate_hash": "0df58515b621c2ffd0f8a3d7fb61bdea922ec061"
-          }
-        },
-        {
-          "client_id": "1041321032917-g758kp7740c1gv11579d96i2a4prsuv4.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDV0XXwpwn_q22SFp6BXlvEcQh1FdAfcHI"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "1041321032917-g758kp7740c1gv11579d96i2a4prsuv4.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "1041321032917-gieqojolqppim3u341s9u6jehhbahaie.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.ziptasker.user"
-              }
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

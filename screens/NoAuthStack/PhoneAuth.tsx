@@ -15,7 +15,12 @@ import {
 import { useDispatch } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
 
-import auth from "@react-native-firebase/auth";
+import {
+  getAuth,
+  PhoneAuthState,
+  verifyPhoneNumber,
+  FirebaseAuthTypes,
+} from "@react-native-firebase/auth";
 // import { PhoneAuthProvider } from "firebase/auth";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -47,9 +52,48 @@ function PhoneAuth() {
   const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const sendConfirmationCode = async (number: string) => {
+  const sendConfirmationCode = () => {
     try {
-      return auth().verifyPhoneNumber(`+91${number}`);
+      const phoneAuthListener = verifyPhoneNumber(
+        getAuth(),
+        `+91${phoneNumber}`,
+        false
+      );
+      phoneAuthListener.on(
+        "state_changed",
+        (phoneAuthSnapshot: FirebaseAuthTypes.PhoneAuthSnapshot) => {
+          switch (phoneAuthSnapshot.state) {
+            case PhoneAuthState.CODE_SENT: // or 'sent'
+              console.log("SMS code sent to phone.");
+              setLoading(false);
+              navigation.navigate("otpVerify", {
+                verificationId: phoneAuthSnapshot.verificationId,
+                phoneNumber: phoneNumber,
+              });
+              break;
+            case PhoneAuthState.ERROR: // or 'error'
+              console.error("Phone auth error:", phoneAuthSnapshot.error);
+              setLoading(false);
+              break;
+            case PhoneAuthState.AUTO_VERIFY_TIMEOUT: // or 'timeout'
+              console.log("Auto verification timed out.");
+              setLoading(false);
+              break;
+            case PhoneAuthState.AUTO_VERIFIED: // or 'verified'
+              console.log("Auto verified, code:", phoneAuthSnapshot.code);
+              setLoading(false);
+              // You can sign in directly if you have the verificationId + code
+              break;
+          }
+        },
+        (error) => {
+          // This is an extra safeguard — listener errors also come here
+          console.error("Listener error:", error);
+        },
+        () => {
+          console.log("Phone auth listener completed.");
+        }
+      );
     } catch (error: any) {
       console.log("!!! ERROR: ", error);
       // Alert.alert("Error!!", JSON.stringify(error, null, 4))
@@ -179,17 +223,8 @@ function PhoneAuth() {
                       try {
                         setLoading(true);
                         Keyboard.dismiss();
-                        const confirmation = await sendConfirmationCode(
-                          phoneNumber
-                        );
-                        setLoading(false);
-                        console.log("### CONFIRMATION: ", confirmation);
-                        if (confirmation?.verificationId) {
-                          navigation.navigate("otpVerify", {
-                            verificationId: confirmation.verificationId,
-                            phoneNumber: phoneNumber,
-                          });
-                        }
+                        console.log("### PHONE NUMBER: ", phoneNumber);
+                        sendConfirmationCode();
                       } catch (error) {
                         console.log("!!! OTP Verification error: ", error);
                         setLoading(false);

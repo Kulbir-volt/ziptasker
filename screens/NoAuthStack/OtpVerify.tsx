@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { OtpInput } from "react-native-otp-entry";
-import auth from "@react-native-firebase/auth";
+import auth, { PhoneAuthProvider, getAuth } from "@react-native-firebase/auth";
 // import { PhoneAuthProvider, signInWithCredential } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StackScreenProps } from "@react-navigation/stack";
@@ -85,44 +85,47 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ route, navigation }) => {
           otp
         );
         const response = await auth().signInWithCredential(credential);
-        const stringifyData = await getUserDetails(response.user.uid);
-        if (stringifyData) {
-          const parsedUserData: LoggedInUserDetailsProps =
-            JSON.parse(stringifyData);
-          const data: LoginResponseProps = {
-            additionalUserInfo: response.additionalUserInfo,
-            user: {
-              ...parsedUserData,
-              emailVerified: response.user.emailVerified,
-              providerId: response.user.providerId,
-              uid: response.user.uid,
-            },
-          };
-          console.log("^^ DATABASE DETAILS: ", data);
-          if (parsedUserData?.displayName) {
-            dispatch(authActions.setIsNewUser(false));
+        console.log("^^ RESPONSE: ", response);
+        if (response?.user?.uid) {
+          const stringifyData = await getUserDetails(response?.user?.uid);
+          if (stringifyData) {
+            const parsedUserData: LoggedInUserDetailsProps =
+              JSON.parse(stringifyData);
+            const data: LoginResponseProps = {
+              additionalUserInfo: response.additionalUserInfo,
+              user: {
+                ...parsedUserData,
+                emailVerified: response.user.emailVerified,
+                providerId: response.user.providerId,
+                uid: response.user.uid,
+              },
+            };
+            console.log("^^ DATABASE DETAILS: ", data);
+            if (parsedUserData?.displayName) {
+              dispatch(authActions.setIsNewUser(false));
+            }
+            AsyncStorage.setItem("userData", JSON.stringify(data));
+            dispatch(authActions.setUserDetails(JSON.stringify(data)));
+          } else {
+            const data: LoginResponseProps = {
+              additionalUserInfo: response.additionalUserInfo,
+              user: response.user,
+            };
+            console.log("^^ LOGIN RESPONSE: ", data);
+            if (response.user.displayName) {
+              dispatch(authActions.setIsNewUser(false));
+            }
+            console.log("### USER DETAILS: ", response.user.displayName);
+            AsyncStorage.setItem("userData", JSON.stringify(data));
+            dispatch(authActions.setUserDetails(JSON.stringify(data)));
           }
-          AsyncStorage.setItem("userData", JSON.stringify(data));
-          dispatch(authActions.setUserDetails(JSON.stringify(data)));
-        } else {
-          const data: LoginResponseProps = {
-            additionalUserInfo: response.additionalUserInfo,
-            user: response.user,
-          };
-          console.log("^^ LOGIN RESPONSE: ", data);
-          if (response.user.displayName) {
-            dispatch(authActions.setIsNewUser(false));
-          }
-          console.log("### USER DETAILS: ", response.user.displayName);
-          AsyncStorage.setItem("userData", JSON.stringify(data));
-          dispatch(authActions.setUserDetails(JSON.stringify(data)));
         }
       } catch (error: any) {
         console.log("!!!! confirmationERROR: ", JSON.stringify(error, null, 4));
       } finally {
       }
     }
-  }, [otp]);
+  }, [otp, verificationId]);
 
   return (
     <ThemedView style={{ flex: 1 }}>

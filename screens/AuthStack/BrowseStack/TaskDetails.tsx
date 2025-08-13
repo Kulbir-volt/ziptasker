@@ -31,6 +31,7 @@ import {
   BottomSheetFlashList,
   BottomSheetFlatList,
   BottomSheetModal,
+  BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
@@ -70,6 +71,8 @@ import { getTaskOffers } from "../../../firebase/read/fetchTaskOffers";
 import { LoadingIndicator } from "../../../components/LoadingIndicator";
 import { getSavedQuestions } from "../../../firebase/read/fetchQuestions";
 import { TaskOffersProps } from "../../../redux/slice/tasks";
+import { get } from "lodash";
+import { ThemedBSView } from "../../../components/ThemedBSView";
 
 type TaskDetailsRouteProp = RouteProp<TaskDetailsStackParamList, "taskDetails">;
 // type MyTaskDetailsRouteProp = RouteProp<MyTaskDetailsStackParamList, "myTaskDetails">;
@@ -258,7 +261,7 @@ const TaskDetails: React.FC = () => {
 
   const screens = [
     {
-      id: "offer1",
+      id: "offer@1",
       screen: (
         <View
           style={[
@@ -266,12 +269,10 @@ const TaskDetails: React.FC = () => {
               flex: 1,
               alignItems: "center",
             },
-            getWidthnHeight(100),
           ]}
         >
           <View
             style={{
-              width: "100%",
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "center",
@@ -299,18 +300,6 @@ const TaskDetails: React.FC = () => {
               getMarginVertical(2),
             ]}
           >
-            {/* <ThemedText
-              style={[
-                {
-                  textAlign: "center",
-                  fontSize: fontSizeH3().fontSize + 8,
-                  fontWeight: "500",
-                },
-                getMarginVertical(2),
-              ]}
-            >
-              ${route.params.details.budget}
-            </ThemedText> */}
             <IconTextInput
               value={"$" + " " + amount!}
               keyboardType="phone-pad"
@@ -357,35 +346,43 @@ const TaskDetails: React.FC = () => {
       ),
     },
     {
-      id: "offer2",
+      id: "offer@2",
       screen: (
-        <View style={[{ flex: 1, alignItems: "center" }, getWidthnHeight(100)]}>
+        <View
+          style={[
+            {
+              flex: 1,
+              borderWidth: 0,
+              borderColor: "cyan",
+            },
+          ]}
+        >
           <View
-            style={{
-              width: "100%",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            style={[
+              {
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: getWidthnHeight(2)?.width,
+              },
+            ]}
           >
-            <View style={{ position: "absolute", left: 0 }}>
-              <TouchableOpacity
-                style={{ borderWidth: 0, padding: getWidthnHeight(2)?.width }}
-                onPress={() => {
-                  setSelectedIndex(0);
-                  offerFlatlistRef.current?.scrollToIndex({
-                    animated: true,
-                    index: 0,
-                  });
-                }}
-              >
-                <ThemedMaterialIcons
-                  name={"keyboard-backspace"}
-                  size={getWidthnHeight(6)?.width}
-                  colorType={"iconColor"}
-                />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={{ borderWidth: 0, padding: getWidthnHeight(2)?.width }}
+              onPress={() => {
+                setSelectedIndex(0);
+                offerFlatlistRef.current?.scrollToIndex({
+                  animated: true,
+                  index: 0,
+                });
+              }}
+            >
+              <ThemedMaterialIcons
+                name={"keyboard-backspace"}
+                size={getWidthnHeight(6)?.width}
+                colorType={"iconColor"}
+              />
+            </TouchableOpacity>
             <ThemedText
               style={[
                 {
@@ -398,12 +395,15 @@ const TaskDetails: React.FC = () => {
             >
               Make an offer
             </ThemedText>
+            <View style={[{ borderWidth: 0 }, getWidthnHeight(12)]} />
           </View>
           <View
             style={[
               {
-                width: "100%",
-                paddingHorizontal: getWidthnHeight(3)?.width,
+                alignItems: "flex-start",
+                paddingLeft: getWidthnHeight(3)?.width,
+                borderWidth: 0,
+                borderColor: "cyan",
               },
             ]}
           >
@@ -428,27 +428,34 @@ const TaskDetails: React.FC = () => {
             >
               {`Help ${"client"} understand what they're paying for.`}
             </ThemedText>
+          </View>
+          <View style={{ borderWidth: 0 }}>
             <ThemedText
               colorType={"darkGray"}
               style={[
                 {
                   fontSize: fontSizeH4().fontSize + 1,
                   textAlign: "right",
+                  paddingRight: getWidthnHeight(5)?.width,
                 },
                 getMarginTop(1),
               ]}
             >
               {`Minimum ${minimumCharacters} characters`}
             </ThemedText>
+          </View>
+          <View style={{ alignItems: "center", width: "100%", height: "100%" }}>
             <IconTextInput
               value={offerDescription ?? ""}
               multiline
               onChangeText={(text) => setOfferDescription(text.trimStart())}
               containerStyle={[
                 {
-                  width: "100%",
+                  width: "90%",
+                  height: "25%",
+                  alignItems: "center",
+                  paddingHorizontal: getWidthnHeight(3)?.width,
                   borderWidth: 0,
-                  height: getWidthnHeight(40)?.width,
                 },
                 getMarginVertical(2),
               ]}
@@ -458,13 +465,10 @@ const TaskDetails: React.FC = () => {
               placeholderTextColor={"darkGray"}
               style={{
                 flex: 1,
-                // paddingHorizontal: getWidthnHeight(2)?.width,
                 textAlignVertical: "top",
-                marginVertical: getWidthnHeight(2)?.width,
-                // marginHorizontal: getWidthnHeight(1)?.width,
                 fontSize: fontSizeH4().fontSize + 5,
-                height: "100%",
                 borderWidth: 0,
+                height: "100%",
               }}
             />
           </View>
@@ -485,106 +489,108 @@ const TaskDetails: React.FC = () => {
 
   return (
     <ThemedView colorType={"screenBG"} style={{ flex: 1, borderWidth: 0 }}>
-      <ThemedView
-        colorType={"screenBG"}
-        pointerEvents="box-none"
-        style={[
-          styles.header,
-          offerSubmitted && { height: "7%" },
-          isLoading && { height: "7%" },
-        ]}
-      >
-        {isLoading ? (
-          <LoadingIndicator colorType={"black"} size={"large"} />
-        ) : (
-          <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
-            <View
-              style={[
-                {
-                  paddingHorizontal: getWidthnHeight(3)?.width,
-                  borderWidth: 0,
-                },
-              ]}
-            >
-              <ThemedText
+      <View style={{ flex: 1 }}>
+        <ThemedView
+          colorType={"screenBG"}
+          pointerEvents="box-none"
+          style={[
+            styles.header,
+            offerSubmitted && { height: "7%" },
+            isLoading && { height: "7%" },
+          ]}
+        >
+          {isLoading ? (
+            <LoadingIndicator colorType={"black"} size={"large"} />
+          ) : (
+            <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
+              <View
                 style={[
                   {
-                    fontSize: fontSizeH4().fontSize + 5,
-                    fontWeight: "500",
+                    paddingHorizontal: getWidthnHeight(3)?.width,
+                    borderWidth: 0,
                   },
                 ]}
               >
-                {offerSubmitted
-                  ? "You've already made an offer"
-                  : "Make an offer now"}
-              </ThemedText>
-            </View>
-            {!offerSubmitted && (
-              <>
                 <ThemedText
                   style={[
                     {
                       fontSize: fontSizeH4().fontSize + 5,
-                      fontWeight: "normal",
+                      fontWeight: "500",
                     },
-                    getMarginTop(1.5),
                   ]}
                 >
-                  {`${sortTaskOffers.length} Tasker(s) has made an offer`}
+                  {offerSubmitted
+                    ? "You've already made an offer"
+                    : "Make an offer now"}
                 </ThemedText>
-                <FlatButton
-                  activeOpacity={0.5}
-                  lightColor={Colors[theme]["yellow"]}
-                  darkColor={Colors[theme]["yellow"]}
-                  title="Make an offer"
-                  onPress={() => {
-                    if (offerBSRef?.current) {
-                      openBottomSheet(offerBSRef.current);
+              </View>
+              {!offerSubmitted && (
+                <>
+                  <ThemedText
+                    style={[
+                      {
+                        fontSize: fontSizeH4().fontSize + 5,
+                        fontWeight: "normal",
+                      },
+                      getMarginTop(1.5),
+                    ]}
+                  >
+                    {`${sortTaskOffers.length} Tasker(s) has made an offer`}
+                  </ThemedText>
+                  <FlatButton
+                    activeOpacity={0.5}
+                    lightColor={Colors[theme]["yellow"]}
+                    darkColor={Colors[theme]["yellow"]}
+                    title="Make an offer"
+                    onPress={() => {
+                      if (offerBSRef?.current) {
+                        openBottomSheet(offerBSRef.current);
+                      }
+                    }}
+                    style={[
+                      {
+                        borderRadius: getWidthnHeight(10)?.width,
+                        paddingHorizontal: getWidthnHeight(5)?.width,
+                        borderWidth: 0,
+                        width: "93%",
+                      },
+                      getMarginVertical(2),
+                    ]}
+                    textStyle={{
+                      paddingVertical: getWidthnHeight(3)?.width,
+                      fontSize: fontSizeH4().fontSize + 4,
+                    }}
+                  />
+                </>
+              )}
+            </View>
+          )}
+        </ThemedView>
+        <View style={{ flex: 1 }}>
+          <FlatList
+            data={["dummyTaskDetails"]}
+            keyExtractor={() => "dummyTaskDetailsId"}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            renderItem={() => {
+              return (
+                <CommonTaskDetails
+                  taskDetails={taskDetails}
+                  sortTaskOffers={sortTaskOffers}
+                  setSortTaskOffers={setSortTaskOffers}
+                  fetchComments={() => {
+                    if (taskDetails?.id) {
+                      // getSavedComments(taskDetails?.id);
                     }
                   }}
-                  style={[
-                    {
-                      borderRadius: getWidthnHeight(10)?.width,
-                      paddingHorizontal: getWidthnHeight(5)?.width,
-                      borderWidth: 0,
-                      width: "93%",
-                    },
-                    getMarginVertical(2),
-                  ]}
-                  textStyle={{
-                    paddingVertical: getWidthnHeight(3)?.width,
-                    fontSize: fontSizeH4().fontSize + 4,
-                  }}
                 />
-              </>
-            )}
-          </View>
-        )}
-      </ThemedView>
-      <View style={{ flex: 1 }}>
-        <FlatList
-          data={["dummyTaskDetails"]}
-          keyExtractor={() => "dummyTaskDetailsId"}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          renderItem={() => {
-            return (
-              <CommonTaskDetails
-                taskDetails={taskDetails}
-                sortTaskOffers={sortTaskOffers}
-                setSortTaskOffers={setSortTaskOffers}
-                fetchComments={() => {
-                  if (taskDetails?.id) {
-                    // getSavedComments(taskDetails?.id);
-                  }
-                }}
-              />
-            );
-          }}
-        />
+              );
+            }}
+          />
+        </View>
+        <Loader visible={loading} transparent title={"Submitting offer"} />
       </View>
-
       <CustomBS
         ref={offerBSRef}
         onClose={() => {
@@ -592,9 +598,18 @@ const TaskDetails: React.FC = () => {
           setOfferDescription("");
         }}
         snapPoints={["85%"]}
-        bsStyle={{
-          borderTopLeftRadius: getWidthnHeight(5)?.width,
-          borderTopRightRadius: getWidthnHeight(5)?.width,
+        bsStyle={[
+          {
+            borderTopLeftRadius: getWidthnHeight(5)?.width,
+            borderTopRightRadius: getWidthnHeight(5)?.width,
+            width: "100%",
+            height: "100%",
+          },
+        ]}
+        backgroundStyle={{
+          flex: 1,
+          width: "100%",
+          height: "100%",
         }}
         handleComponent={null}
         {...Platform.select({
@@ -603,22 +618,31 @@ const TaskDetails: React.FC = () => {
           },
         })}
       >
-        <ThemedView
-          style={{
-            flex: 1,
-            borderTopLeftRadius: getWidthnHeight(5)?.width,
-            borderTopRightRadius: getWidthnHeight(5)?.width,
-            alignItems: "center",
-          }}
+        <View
+          style={[
+            {
+              flex: 1,
+              borderTopLeftRadius: getWidthnHeight(5)?.width,
+              borderTopRightRadius: getWidthnHeight(5)?.width,
+              alignItems: "center",
+            },
+          ]}
         >
-          <View style={{ flex: 1, borderWidth: 0, width: "100%" }}>
+          <View
+            style={[
+              {
+                flex: 1,
+                borderWidth: 0,
+                borderColor: "blue",
+              },
+            ]}
+          >
             <FlatList
               ref={offerFlatlistRef}
               horizontal
               scrollEnabled={false}
               pagingEnabled
               data={screens}
-              snapToAlignment={"center"}
               keyExtractor={(item) => item.id}
               showsHorizontalScrollIndicator={false}
               renderItem={({ item }) => {
@@ -627,6 +651,8 @@ const TaskDetails: React.FC = () => {
                     style={[
                       {
                         flex: 1,
+                        width: getWidthnHeight(100)?.width,
+                        height: "100%",
                       },
                     ]}
                   >
@@ -728,9 +754,8 @@ const TaskDetails: React.FC = () => {
               fontSize: fontSizeH4().fontSize + 4,
             }}
           />
-        </ThemedView>
+        </View>
       </CustomBS>
-      <Loader visible={loading} transparent title={"Submitting offer"} />
     </ThemedView>
   );
 };

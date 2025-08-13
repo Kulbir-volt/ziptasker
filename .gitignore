@@ -10,10 +10,15 @@ shivam/
 dist/
 web-build/
 expo-env.d.ts
+google-services.json
+.env
+
+
+assets/google-services.json
 
 android/app/debug/app-debug.apk
 android/app/release/app-release.apk
-
+android/app/google-services.json
 # Native
 *.orig.*
 *.jks

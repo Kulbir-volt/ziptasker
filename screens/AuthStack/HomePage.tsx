@@ -153,7 +153,7 @@ function HomePage() {
         .then(() => console.log("Images preloaded"))
         .catch((err) => console.error("Error preloading images", err));
     }
-    loadImage();
+    // loadImage();
   }, []);
 
   useEffect(() => {
@@ -174,8 +174,9 @@ function HomePage() {
 
   useEffect(() => {
     if (taskTypesList.length > 0 && vectorIcons.length > 0) {
+      // console.log("@@@ TASKS: ", JSON.stringify(taskTypesList, null, 4));
       const updateTaskTypesList = taskTypesList
-        .map((item) => {
+        .map((item, index) => {
           const findItem = vectorIcons.find((subItem) => {
             return subItem.type === item.type;
           });
@@ -183,12 +184,13 @@ function HomePage() {
             const update = Object.assign({}, findItem, item);
             return {
               ...update,
-              id: `taskType#${findItem.id}-${item.uid}`,
+              id: `taskType#${findItem.id}-${index}`,
             };
           }
           return null;
         })
         .filter((item) => item !== null);
+      // console.log("@@@ TASKS: ", JSON.stringify(updateTaskTypesList, null, 4));
       if (Array.isArray(updateTaskTypesList) && updateTaskTypesList !== null) {
         setTodaysTasks(updateTaskTypesList);
       }
@@ -198,7 +200,7 @@ function HomePage() {
   useEffect(() => {
     if (chores.length > 0 && vectorIcons.length > 0) {
       const updateChoresList = chores
-        .map((item) => {
+        .map((item, index) => {
           const findItem = vectorIcons.find((subItem) => {
             return subItem.type === item.type;
           });
@@ -206,14 +208,17 @@ function HomePage() {
             const update = Object.assign({}, findItem, item);
             return {
               ...update,
-              id: `chores#${findItem.id}-${item.uid}`,
+              id: `chores#${findItem.id}-${index}`,
             };
           }
           return null;
         })
         .filter((item) => item !== null);
       if (Array.isArray(updateChoresList)) {
-        // console.log("^^^ CHORES LIST: ", updateChoresList);
+        console.log(
+          "^^^ CHORES LIST: ",
+          JSON.stringify(updateChoresList, null, 4)
+        );
         setChoresList(updateChoresList);
       }
     }

@@ -172,7 +172,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ route, navigation }) => {
     const userDetails: LoggedInUserDetailsProps = {
       phoneNumber: phone,
       uid: userProfileDetails?.user?.uid,
-      providerId: userProfileDetails?.additionalUserInfo?.providerId,
+      providerId:
+        userProfileDetails?.additionalUserInfo?.providerId ||
+        userProfileDetails?.user?.providerId,
       photoURL: downloadUrl,
       displayName: fullName?.trim(),
       email: email,
@@ -181,6 +183,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ route, navigation }) => {
     if (!image) {
       delete userDetails.photoURL;
     }
+    console.log("^^^ User Details: ", userDetails);
     saveUserToFirebase(userDetails)
       .then((saved) => {
         setLoading(false);
@@ -471,9 +474,15 @@ const UserProfile: React.FC<UserProfileProps> = ({ route, navigation }) => {
               if (email && emailError) {
                 return;
               }
+              console.log(
+                "^^^ Saving user details: ",
+                JSON.stringify(userProfileDetails, null, 4)
+              );
               if (
                 userProfileDetails &&
-                userProfileDetails?.additionalUserInfo?.providerId === "phone"
+                (userProfileDetails?.additionalUserInfo?.providerId ===
+                  "phone" ||
+                  userProfileDetails?.user?.providerId === "firebase")
               ) {
                 if (fullName && phone) {
                   uploadImage();

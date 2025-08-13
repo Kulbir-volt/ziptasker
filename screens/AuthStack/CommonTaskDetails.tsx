@@ -465,6 +465,7 @@ const CommonTaskDetails: React.FC<CommonTaskDetailsProps> = ({
                 {
                   flexDirection: "row",
                   borderRadius: getWidthnHeight(10)?.width,
+                  overflow: "hidden",
                 },
                 getMarginTop(2),
               ]}

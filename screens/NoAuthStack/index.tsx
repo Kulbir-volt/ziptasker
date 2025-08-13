@@ -13,6 +13,7 @@ import {
 } from "../../components/width";
 import { ThemedMaterialIcons } from "../../components/ThemedMaterialIcon";
 import { UserProfile } from "../AuthStack/UserProfile";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export type RootStackParamList = {
   startup: undefined;
@@ -58,48 +59,44 @@ function LoginTypes() {
     >
       <LoginTypesStack.Screen
         options={({ navigation }) => ({
-          ...Platform.select({
-            ios: {
-              headerShown: true,
+          headerShown: true,
 
-              headerLeft: () => (
-                <TouchableOpacity
-                  style={getMarginRight(3)}
-                  onPress={() => navigation.goBack()}
-                >
-                  <ThemedMaterialIcons
-                    name={"keyboard-backspace"}
-                    size={getWidthnHeight(6)?.width}
-                    colorType={"iconColor"}
-                  />
-                </TouchableOpacity>
-              ),
-            },
-          }),
+          headerLeft: () => (
+            <SafeAreaView edges={["top"]} style={{ alignItems: "center" }}>
+              <TouchableOpacity
+                style={getMarginRight(3)}
+                onPress={() => navigation.goBack()}
+              >
+                <ThemedMaterialIcons
+                  name={"keyboard-backspace"}
+                  size={getWidthnHeight(6)?.width}
+                  colorType={"iconColor"}
+                />
+              </TouchableOpacity>
+            </SafeAreaView>
+          ),
         })}
         name="phoneAuth"
         component={PhoneAuth}
       />
       <LoginTypesStack.Screen
         options={({ navigation }) => ({
-          ...Platform.select({
-            ios: {
-              headerShown: true,
+          headerShown: true,
 
-              headerLeft: () => (
-                <TouchableOpacity
-                  style={getMarginRight(3)}
-                  onPress={() => navigation.goBack()}
-                >
-                  <ThemedMaterialIcons
-                    name={"keyboard-backspace"}
-                    size={getWidthnHeight(6)?.width}
-                    colorType={"iconColor"}
-                  />
-                </TouchableOpacity>
-              ),
-            },
-          }),
+          headerLeft: () => (
+            <SafeAreaView edges={["top"]} style={{ alignItems: "center" }}>
+              <TouchableOpacity
+                style={getMarginRight(3)}
+                onPress={() => navigation.goBack()}
+              >
+                <ThemedMaterialIcons
+                  name={"keyboard-backspace"}
+                  size={getWidthnHeight(6)?.width}
+                  colorType={"iconColor"}
+                />
+              </TouchableOpacity>
+            </SafeAreaView>
+          ),
         })}
         name="otpVerify"
         component={OtpVerify}

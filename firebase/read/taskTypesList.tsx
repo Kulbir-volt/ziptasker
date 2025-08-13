@@ -1,4 +1,4 @@
-import firestore from "@react-native-firebase/firestore";
+import { getDoc, getFirestore, doc } from "@react-native-firebase/firestore";
 
 import { store } from "../../redux/store";
 import { authActions } from "../../redux/slice/auth";
@@ -33,36 +33,42 @@ export const getTaskTypesList = async () => {
   if (isAuthenticated) {
     try {
       store.dispatch(tasksActions.setLoading(true));
-      const taskTypesListRef = firestore()
-        .collection("task_types")
-        .doc("3Zu7yDVxPF5rWRqyJC89");
-      const data = (await taskTypesListRef.get()).data();
-      const list: VectorIconsProps<
-        | FontAwesomeNames
-        | FontAwesome5Names
-        | FontAwesome6Names
-        | FontistoNames
-        | FoundationNames
-        | MaterialIconsNames
-        | IoniconsNames
-        | AntDesignNames
-        | EntypoNames
-        | EvilIconsNames
-        | FeatherNames
-        | MaterialCommunityIconsNames
-        | OctIconsNames
-        | ZocialNames
-        | SimpleLineIconsNames
-      >[] = data?.list;
-      // console.log("$$$ taskTypesListRef: ", list);
-      store.dispatch(tasksActions.setLoading(false));
-      if (Array.isArray(list)) {
-        store.dispatch(tasksActions.setTaskTypesList(list));
-        // setTaskTypesList(list);
+      const db = getFirestore();
+
+      const documentRef = doc(db, "task_types", "3Zu7yDVxPF5rWRqyJC89");
+      const documentSnap = await getDoc(documentRef);
+      if (documentSnap.exists) {
+        const data = documentSnap.data();
+        console.log("Document data:", data);
+        const list: VectorIconsProps<
+          | FontAwesomeNames
+          | FontAwesome5Names
+          | FontAwesome6Names
+          | FontistoNames
+          | FoundationNames
+          | MaterialIconsNames
+          | IoniconsNames
+          | AntDesignNames
+          | EntypoNames
+          | EvilIconsNames
+          | FeatherNames
+          | MaterialCommunityIconsNames
+          | OctIconsNames
+          | ZocialNames
+          | SimpleLineIconsNames
+        >[] = data?.list;
+        console.log("$$$ TASK TYPES LIST: ", list);
+        store.dispatch(tasksActions.setLoading(false));
+        if (Array.isArray(list)) {
+          store.dispatch(tasksActions.setTaskTypesList(list));
+          // setTaskTypesList(list);
+        }
+      } else {
+        console.log("No such document!");
       }
     } catch (error) {
       store.dispatch(tasksActions.setLoading(false));
-      console.error("Error fetching tasks:", error);
+      console.error("@@@ Error fetching tasks:", error);
     }
   }
 };

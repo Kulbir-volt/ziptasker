@@ -34,6 +34,16 @@
 		ED037DA44E21461E8D9ED7BB /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = C982F6FE719A4687A5F7504B /* noop-file.swift */; };
 		F9BCB43C8B684B7EB94DA40C /* Inter_600SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FB62B99E136846FE9DF2FD9C /* Inter_600SemiBold.ttf */; };
 		F9C37594CCF247419C22927F /* Whisper_400Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F3A55B3408754647A6932AD5 /* Whisper_400Regular.ttf */; };
+		296F08510FDF4FBCB371E368 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3C872FD3F1914866B5D9A6E9 /* GoogleService-Info.plist */; };
+		4ECC19155C35409AA5E8484A /* Lexend_100Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F76EF184D6A84C479C61CE34 /* Lexend_100Thin.ttf */; };
+		5304A19BFA534ADDB2960A0D /* Lexend_200ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 853DF9A37FB14AFA91E17843 /* Lexend_200ExtraLight.ttf */; };
+		7015489B86434F8BACCE6354 /* Lexend_300Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 07032D6BE53741F2914120D7 /* Lexend_300Light.ttf */; };
+		8D29BDC4C3D64E95A9462B20 /* Lexend_400Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 71A0B2D3F6104FA18A34C4BA /* Lexend_400Regular.ttf */; };
+		14793191076E4C60B3976C5A /* Lexend_500Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6279671D98824F4984AA2BEF /* Lexend_500Medium.ttf */; };
+		08A2392AD2574AEBBECE2536 /* Lexend_600SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FFDCBC6A35714E199D56F9A4 /* Lexend_600SemiBold.ttf */; };
+		69804D2B3F554D079424BAF9 /* Lexend_700Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6A2F7960F01D420B96318987 /* Lexend_700Bold.ttf */; };
+		D5DF6BF9E3574E60A3289DD1 /* Lexend_800ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9FB4A252175C4B46ADA5B82D /* Lexend_800ExtraBold.ttf */; };
+		1F5C566F811E4ACEBECCD7A0 /* Lexend_900Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5470140345974E349C9BA744 /* Lexend_900Black.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -76,6 +86,16 @@
 		F3A55B3408754647A6932AD5 /* Whisper_400Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Whisper_400Regular.ttf; path = "../node_modules/@expo-google-fonts/whisper/Whisper_400Regular.ttf"; sourceTree = "<group>"; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ZipTasker/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		FB62B99E136846FE9DF2FD9C /* Inter_600SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Inter_600SemiBold.ttf; path = "../node_modules/@expo-google-fonts/inter/Inter_600SemiBold.ttf"; sourceTree = "<group>"; };
+		3C872FD3F1914866B5D9A6E9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; name = "GoogleService-Info.plist"; path = "ZipTasker/GoogleService-Info.plist"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = text.plist.xml; explicitFileType = undefined; includeInIndex = 0; };
+		F76EF184D6A84C479C61CE34 /* Lexend_100Thin.ttf */ = {isa = PBXFileReference; name = "Lexend_100Thin.ttf"; path = "../node_modules/@expo-google-fonts/lexend/Lexend_100Thin.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		853DF9A37FB14AFA91E17843 /* Lexend_200ExtraLight.ttf */ = {isa = PBXFileReference; name = "Lexend_200ExtraLight.ttf"; path = "../node_modules/@expo-google-fonts/lexend/Lexend_200ExtraLight.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		07032D6BE53741F2914120D7 /* Lexend_300Light.ttf */ = {isa = PBXFileReference; name = "Lexend_300Light.ttf"; path = "../node_modules/@expo-google-fonts/lexend/Lexend_300Light.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		71A0B2D3F6104FA18A34C4BA /* Lexend_400Regular.ttf */ = {isa = PBXFileReference; name = "Lexend_400Regular.ttf"; path = "../node_modules/@expo-google-fonts/lexend/Lexend_400Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		6279671D98824F4984AA2BEF /* Lexend_500Medium.ttf */ = {isa = PBXFileReference; name = "Lexend_500Medium.ttf"; path = "../node_modules/@expo-google-fonts/lexend/Lexend_500Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		FFDCBC6A35714E199D56F9A4 /* Lexend_600SemiBold.ttf */ = {isa = PBXFileReference; name = "Lexend_600SemiBold.ttf"; path = "../node_modules/@expo-google-fonts/lexend/Lexend_600SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		6A2F7960F01D420B96318987 /* Lexend_700Bold.ttf */ = {isa = PBXFileReference; name = "Lexend_700Bold.ttf"; path = "../node_modules/@expo-google-fonts/lexend/Lexend_700Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		9FB4A252175C4B46ADA5B82D /* Lexend_800ExtraBold.ttf */ = {isa = PBXFileReference; name = "Lexend_800ExtraBold.ttf"; path = "../node_modules/@expo-google-fonts/lexend/Lexend_800ExtraBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		5470140345974E349C9BA744 /* Lexend_900Black.ttf */ = {isa = PBXFileReference; name = "Lexend_900Black.ttf"; path = "../node_modules/@expo-google-fonts/lexend/Lexend_900Black.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,6 +124,7 @@
 				C982F6FE719A4687A5F7504B /* noop-file.swift */,
 				6D69330B22634BD0BD08201F /* ZipTasker-Bridging-Header.h */,
 				E2222A557820526A1942E188 /* PrivacyInfo.xcprivacy */,
+				3C872FD3F1914866B5D9A6E9 /* GoogleService-Info.plist */,
 			);
 			name = ZipTasker;
 			sourceTree = "<group>";
@@ -148,6 +169,15 @@
 				72ECFC8B1DD346A584B52427 /* Pacifico_400Regular.ttf */,
 				C59E40428920411BB293A0C7 /* SquadaOne_400Regular.ttf */,
 				F3A55B3408754647A6932AD5 /* Whisper_400Regular.ttf */,
+				F76EF184D6A84C479C61CE34 /* Lexend_100Thin.ttf */,
+				853DF9A37FB14AFA91E17843 /* Lexend_200ExtraLight.ttf */,
+				07032D6BE53741F2914120D7 /* Lexend_300Light.ttf */,
+				71A0B2D3F6104FA18A34C4BA /* Lexend_400Regular.ttf */,
+				6279671D98824F4984AA2BEF /* Lexend_500Medium.ttf */,
+				FFDCBC6A35714E199D56F9A4 /* Lexend_600SemiBold.ttf */,
+				6A2F7960F01D420B96318987 /* Lexend_700Bold.ttf */,
+				9FB4A252175C4B46ADA5B82D /* Lexend_800ExtraBold.ttf */,
+				5470140345974E349C9BA744 /* Lexend_900Black.ttf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -299,6 +329,16 @@
 				939E097C2D5389C600E6E443 /* main.jsbundle in Resources */,
 				441A4121FFE8D7D11D6A1E63 /* PrivacyInfo.xcprivacy in Resources */,
 				9359914F2D4E31FD007D4D7F /* GoogleService-Info.plist in Resources */,
+				296F08510FDF4FBCB371E368 /* GoogleService-Info.plist in Resources */,
+				4ECC19155C35409AA5E8484A /* Lexend_100Thin.ttf in Resources */,
+				5304A19BFA534ADDB2960A0D /* Lexend_200ExtraLight.ttf in Resources */,
+				7015489B86434F8BACCE6354 /* Lexend_300Light.ttf in Resources */,
+				8D29BDC4C3D64E95A9462B20 /* Lexend_400Regular.ttf in Resources */,
+				14793191076E4C60B3976C5A /* Lexend_500Medium.ttf in Resources */,
+				08A2392AD2574AEBBECE2536 /* Lexend_600SemiBold.ttf in Resources */,
+				69804D2B3F554D079424BAF9 /* Lexend_700Bold.ttf in Resources */,
+				D5DF6BF9E3574E60A3289DD1 /* Lexend_800ExtraBold.ttf in Resources */,
+				1F5C566F811E4ACEBECCD7A0 /* Lexend_900Black.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -523,7 +563,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.alpha.ziptasker;
-				PRODUCT_NAME = ZipTasker;
+				PRODUCT_NAME = "ZipTasker";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -562,7 +602,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.alpha.ziptasker;
-				PRODUCT_NAME = ZipTasker;
+				PRODUCT_NAME = "ZipTasker";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;

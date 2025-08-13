@@ -95,7 +95,7 @@ interface CertainTimeComponentProps {
   item: TimeOfDayProps;
 }
 
-const apiKey = "AIzaSyDVRsp7LueqZB-lS1fP5RaKeUwGLB6U8rY";
+const apiKey = process.env.EXPO_PUBLIC_API_KEY as string;
 interface Location {
   lat: number;
   lng: number;
@@ -381,10 +381,10 @@ const CreateTask: React.FC<CreateTaskProps> = ({
           place_id: item?.place_id,
         }));
         setLocations(extractDetails);
-        // console.log("@@@ RESPONSE: ", JSON.stringify(extractDetails, null, 4));
+        console.log("@@@ RESPONSE: ", JSON.stringify(extractDetails, null, 4));
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("*** Error fetching location:", error);
     }
   };
 
@@ -904,7 +904,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({
     <ThemedSafe
       edit={edit}
       colorType={edit ? "transparent" : "white"}
-      style={{ flex: 1 }}
+      style={{ flex: 1, borderWidth: 0 }}
     >
       {!edit && <Background />}
       <View style={{ flex: 1, borderWidth: 0 }}>
@@ -1472,12 +1472,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({
           },
         })}
       >
-        <View
-          style={[
-            { flex: 1, alignItems: "center", borderWidth: 0 },
-            getWidthnHeight(100),
-          ]}
-        >
+        <View style={[{ flex: 1, alignItems: "center", borderWidth: 0 }]}>
           {/* <IconTextInput
             ref={locationInputRef}
             value={searchText}
@@ -1511,9 +1506,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({
               height: "100%",
             }}
           /> */}
-          <View
-            style={[{ alignItems: "center", borderWidth: 0, width: "100%" }]}
-          >
+          <View style={[{ alignItems: "center" }]}>
             <BottomSheetFlatList
               keyboardShouldPersistTaps="always"
               data={locations}

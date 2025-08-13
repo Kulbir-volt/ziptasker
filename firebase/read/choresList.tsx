@@ -1,4 +1,4 @@
-import firestore from "@react-native-firebase/firestore";
+import { getDoc, getFirestore, doc } from "@react-native-firebase/firestore";
 
 import { store } from "../../redux/store";
 import {
@@ -32,9 +32,8 @@ export const getChoresList = async () => {
   if (isAuthenticated) {
     try {
       store.dispatch(tasksActions.setLoading(true));
-      const choresListRef = firestore()
-        .collection("chores")
-        .doc("MfT7YvcdO3ZuLZcEquNO");
+      const db = getFirestore();
+      const choresListRef = doc(db, "chores", "MfT7YvcdO3ZuLZcEquNO");
       const data = (await choresListRef.get()).data();
       const list: VectorIconsProps<
         | FontAwesomeNames
@@ -53,14 +52,14 @@ export const getChoresList = async () => {
         | ZocialNames
         | SimpleLineIconsNames
       >[] = data?.list;
-      // console.log("$$$ choresListRef: ", list);
+      console.log("$$$ choresListRef: ", list);
       store.dispatch(tasksActions.setLoading(false));
       if (Array.isArray(list)) {
         store.dispatch(tasksActions.setChores(list));
       }
     } catch (error) {
       store.dispatch(tasksActions.setLoading(false));
-      console.error("Error fetching tasks:", error);
+      console.error("### Error fetching chores:", error);
     }
   }
 };

@@ -60,13 +60,17 @@ export default function App() {
   }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Provider store={store}>
-          <PaperProvider>
-            <MainStack />
-          </PaperProvider>
-        </Provider>
-      </ThemeProvider>
+      <SafeAreaProvider>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        >
+          <Provider store={store}>
+            <PaperProvider>
+              <MainStack />
+            </PaperProvider>
+          </Provider>
+        </ThemeProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

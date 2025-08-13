@@ -4,7 +4,7 @@ import React, {
   useLayoutEffect,
   useCallback,
 } from "react";
-import { FlatList, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 import { Menu } from "react-native-paper";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
@@ -33,6 +33,7 @@ import { SaveDetailsProps } from "../CreateTask/CreateTask";
 import { UserDetails } from "../../../redux/slice/auth";
 import { verifyAuth } from "../../../firebase/authCheck/verifyAuth";
 import { tasksActions } from "../../../redux/slice/tasks";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const MyTasks: React.FC = () => {
   const theme = useColorScheme() ?? "light";
@@ -118,21 +119,31 @@ const MyTasks: React.FC = () => {
     navigation.setOptions({
       headerShown: true,
       headerShadowVisible: false,
-      headerTitle: "My Tasks",
-      headerTitleStyle: {
-        fontFamily: "DancingScript_700Bold",
-        fontSize: fontSizeH3().fontSize + 4,
-        color: Colors[theme]["iconColor"],
-      },
+      headerTitle: () => (
+        <SafeAreaView edges={["top"]} style={{}}>
+          <Text
+            style={{
+              fontFamily: "DancingScript_700Bold",
+              fontSize: fontSizeH3().fontSize + 4,
+              color: Colors[theme]["iconColor"],
+              textAlign: "left",
+            }}
+          >
+            My Tasks
+          </Text>
+        </SafeAreaView>
+      ),
       headerTitleAlign: "left",
       headerLeft: () => null,
       headerRight: () => (
-        <ThemedAntDesign
-          onPress={() => navigation?.navigate("notifications")}
-          name={"bells"}
-          size={getWidthnHeight(6)?.width}
-          colorType={"iconColor"}
-        />
+        <SafeAreaView edges={["top"]} style={{}}>
+          <ThemedAntDesign
+            onPress={() => navigation?.navigate("notifications")}
+            name={"bells"}
+            size={getWidthnHeight(6)?.width}
+            colorType={"iconColor"}
+          />
+        </SafeAreaView>
       ),
     });
   }, []);

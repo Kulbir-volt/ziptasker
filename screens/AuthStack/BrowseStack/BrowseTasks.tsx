@@ -52,6 +52,7 @@ import { RootState } from "../../../redux/store";
 import { authActions, UserDetails } from "../../../redux/slice/auth";
 import { SaveDetailsProps } from "../CreateTask/CreateTask";
 import { tasksActions } from "../../../redux/slice/tasks";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const SORT = "sort";
 const FILTER = "filter";
@@ -234,28 +235,40 @@ const BrowseTasks: React.FC = () => {
     navigation.setOptions({
       headerShown: true,
       headerShadowVisible: false,
-      headerTitle: "Browse Tasks",
-      headerTitleStyle: {
-        fontFamily: "DancingScript_700Bold",
-        fontSize: fontSizeH3().fontSize + 4,
-        color: Colors[theme]["iconColor"],
-      },
+      headerTitle: () => (
+        <SafeAreaView edges={["top"]} style={{}}>
+          <Text
+            style={{
+              fontFamily: "DancingScript_700Bold",
+              fontSize: fontSizeH3().fontSize + 4,
+              color: Colors[theme]["iconColor"],
+              textAlign: "left",
+            }}
+          >
+            Browse Tasks
+          </Text>
+        </SafeAreaView>
+      ),
       headerTitleAlign: "center",
       headerLeft: () => (
-        <ThemedIonicons
-          onPress={() => dispatch(authActions.setShowMap(!showMap))}
-          name={showMap ? "map-outline" : "menu"}
-          size={getWidthnHeight(6)?.width}
-          colorType={"iconColor"}
-        />
+        <SafeAreaView edges={["top"]} style={{}}>
+          <ThemedIonicons
+            onPress={() => dispatch(authActions.setShowMap(!showMap))}
+            name={showMap ? "map-outline" : "menu"}
+            size={getWidthnHeight(6)?.width}
+            colorType={"iconColor"}
+          />
+        </SafeAreaView>
       ),
       headerRight: () => (
-        <ThemedAntDesign
-          onPress={() => navigation?.navigate("notifications")}
-          name={"bells"}
-          size={getWidthnHeight(6)?.width}
-          colorType={"iconColor"}
-        />
+        <SafeAreaView edges={["top"]} style={{}}>
+          <ThemedAntDesign
+            onPress={() => navigation?.navigate("notifications")}
+            name={"bells"}
+            size={getWidthnHeight(6)?.width}
+            colorType={"iconColor"}
+          />
+        </SafeAreaView>
       ),
     });
   }, [showMap]);

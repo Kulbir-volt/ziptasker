@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.alpha.ziptasker",
+  "applicationId": "com.kulbir.ziptasker",
   "variantName": "debug",
   "elements": [
     {

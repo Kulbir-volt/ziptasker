@@ -66,6 +66,7 @@ import { UserDetails } from "../../../redux/slice/auth";
 import { getTaskOffers } from "../../../firebase/read/fetchTaskOffers";
 import { TaskOffersProps } from "../../../redux/slice/tasks";
 import { Loader } from "../../../components/Loader";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export type TaskDetailsRouteProp = RouteProp<
   TaskDetailsStackParamList,
@@ -158,17 +159,19 @@ const MyTaskDetails: React.FC = () => {
     navigation.setOptions({
       headerRight: () => {
         return (
-          <ThemedMaterialCommunityIcons
-            name="dots-horizontal"
-            size={getWidthnHeight(8)?.width}
-            colorType={"iconColor"}
-            onPress={() => {
-              if (moreOptionsRef?.current) {
-                // openBottomSheet(moreOptionsRef.current);
-                handleSnapPress(moreOptionsRef.current, 0);
-              }
-            }}
-          />
+          <SafeAreaView>
+            <ThemedMaterialCommunityIcons
+              name="dots-horizontal"
+              size={getWidthnHeight(8)?.width}
+              colorType={"iconColor"}
+              onPress={() => {
+                if (moreOptionsRef?.current) {
+                  // openBottomSheet(moreOptionsRef.current);
+                  handleSnapPress(moreOptionsRef.current, 0);
+                }
+              }}
+            />
+          </SafeAreaView>
         );
       },
     });

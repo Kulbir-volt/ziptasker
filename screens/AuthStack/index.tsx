@@ -2,6 +2,7 @@ import React from "react";
 import {
   ColorSchemeName,
   Platform,
+  Text,
   TouchableOpacity,
   useColorScheme,
   View,
@@ -56,6 +57,7 @@ import { RootState } from "../../redux/store";
 import { LoginResponseProps } from "../NoAuthStack/OtpVerify";
 import { UserProfile } from "./UserProfile";
 import { ChatsProps } from "../../redux/slice/chats";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export type PvtMessageProps = {
   userId: string;
@@ -276,25 +278,34 @@ const AppNavigator = () => {
         component={CreateTask}
         options={({ navigation }) => ({
           headerShown: true,
-          headerTitle: "Create Task",
+          headerTitle: () => (
+            <SafeAreaView edges={["top"]} style={{ alignItems: "center" }}>
+              <Text
+                style={{
+                  fontFamily: "DancingScript_700Bold",
+                  fontSize: fontSizeH3().fontSize + 4,
+                  color: Colors[theme]["iconColor"],
+                }}
+              >
+                Create Task
+              </Text>
+            </SafeAreaView>
+          ),
           headerTitleAlign: "center",
           headerShadowVisible: false,
-          headerTitleStyle: {
-            fontFamily: "DancingScript_700Bold",
-            fontSize: fontSizeH3().fontSize + 4,
-            color: Colors[theme]["iconColor"],
-          },
           headerLeft: () => {
             return (
-              <ThemedAntDesign
-                onPress={() => {
-                  navigation?.goBack();
-                }}
-                name={"close"}
-                size={getWidthnHeight(6)?.width}
-                lightColor={Colors[theme]["iconColor"]}
-                darkColor={Colors[theme]["iconColor"]}
-              />
+              <SafeAreaView>
+                <ThemedAntDesign
+                  onPress={() => {
+                    navigation?.goBack();
+                  }}
+                  name={"close"}
+                  size={getWidthnHeight(6)?.width}
+                  lightColor={Colors[theme]["iconColor"]}
+                  darkColor={Colors[theme]["iconColor"]}
+                />
+              </SafeAreaView>
             );
           },
         })}
@@ -342,9 +353,9 @@ function TabsNavigator() {
             paddingRight: getWidthnHeight(3)?.width,
           },
           tabBarStyle: {
-            height: getWidthnHeight(19)?.width,
+            height: getWidthnHeight(15)?.width,
             paddingTop: getWidthnHeight(1.5)?.width,
-            borderWidth: 1,
+            borderWidth: 0,
             borderColor: "transparent",
           },
           ...options,
@@ -540,12 +551,14 @@ function mutualTaskDetailsHeaderStyle(
     headerTitleAlign: "left",
     headerLeft: () => {
       return (
-        <ThemedMaterialIcons
-          name="keyboard-backspace"
-          size={getWidthnHeight(6)?.width}
-          colorType={"iconColor"}
-          onPress={callback}
-        />
+        <SafeAreaView edges={["top"]} style={{}}>
+          <ThemedMaterialIcons
+            name="keyboard-backspace"
+            size={getWidthnHeight(6)?.width}
+            colorType={"iconColor"}
+            onPress={callback}
+          />
+        </SafeAreaView>
       );
     },
     headerRight: () => null,
